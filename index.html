@@ -92,10 +92,12 @@
     const ARCHIVE_KEY = 'archive'; // GAS 側：アーカイブシート用の sheet 名
 
     const state = {
-      current: 'songs',                // 'songs' | 'gags'
+      current: 'songs',                 // 'songs' | 'gags'
       cache: { songs:null, gags:null, archive:null },
-      archiveMap: null,                // { key => [{date,url}] }  ※key = norm(artist)+'|'+norm(title)
-      rows: [], debounce:null, lastRequested: null
+      archiveMap: null,                 // { key => [{date,url}] }  ※key = norm(artist)+'|'+norm(title)
+      rows: [],
+      debounce: null,
+      lastRequested: null
     };
 
     /* ===== ユーティリティ ===== */
@@ -119,29 +121,25 @@
       return m ? m[0].replace(/[)\]\s]+$/,'') : '';
     }
 
-    // アーカイブの rows → map 生成（key=artist|title / 値= [{date,url}, …] 降順ソート）
+    // アーカイブの rows → map 生成（key=artist|title / 値= [{date,url}] 降順ソート）
     function buildArchiveMap(rows){
       const map = new Map();
       (rows||[]).forEach(({artist,title,dText,dUrl})=>{
         const key = `${normalize(artist)}|${normalize(title)}`;
         const txt = dText || '';
-        const m = /^(\d{8})/.exec(txt);                // 先頭 yyyymmdd を取得
+        const m = /^(\d{8})/.exec(txt);           // 先頭 yyyymmdd
         const date = m ? parseInt(m[1],10) : 0;
         const url = dUrl || urlFromText(dText);
         if (!url) return;
         if (!map.has(key)) map.set(key, []);
         map.get(key).push({date, url});
       });
-      // 降順に揃える（新しい→古い）
-      for (const [k,arr] of map) {
-        arr.sort((a,b)=> b.date - a.date || (a.url>b.url?1:-1));
-      }
+      for (const [k,arr] of map) arr.sort((a,b)=> b.date - a.date || (a.url>b.url?1:-1)); // 新→古
       return map;
     }
 
     /* ===== JSONP コールバック ===== */
     let __jsonpHit = false;
-    const __inflight = new Set(); // デバッグ用：飛ばしたURL群
 
     function onGviz(payload){
       __jsonpHit = true;
@@ -156,11 +154,15 @@
           state.archiveMap = buildArchiveMap(rows);
         }
 
-        if (state.current === tab || (tab===ARCHIVE_KEY && state.cache[state.current])) {
-          // 現在タブが揃っている／アーカイブが届いたので描画
+        // 初回描画は「現在タブのデータ」と「archive」の両方が揃ってから行う
+        const haveCurrent = !!state.cache[state.current];
+        const haveArchive = !!state.archiveMap;
+        if (haveCurrent && haveArchive) {
           state.rows = state.cache[state.current] || [];
           $('status').textContent = `読み込み完了：${state.rows.length}件`;
           render();
+        } else {
+          $('status').textContent = haveCurrent ? '履歴を読み込み中…' : '読み込み中…';
         }
       }catch(e){
         console.error(e);
@@ -183,9 +185,9 @@
       const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/'); // 正規化
       const mk = (u,auth0=true)=> `${u}?callback=onGviz&sheet=${encodeURIComponent(tab)}${auth0?'&authuser=0':''}&v=${Date.now()}`;
       const candidates = [
-        mk(baseNorm, true),                          // A: 正規 + authuser=0
+        mk(baseNorm, true),                                   // A: 正規 + authuser=0
         mk(baseNorm.replace('/macros/', '/macros/u/0/'), true), // B: /u/0/ を明示 + authuser=0
-        mk(baseNorm, false)                          // C: 正規（authuser 無し）
+        mk(baseNorm, false)                                   // C: 正規（authuser 無し）
       ];
 
       // デバッグ表示
@@ -200,7 +202,6 @@
       const tryNext = () => {
         if (hit || idx >= candidates.length) return;
         const url = candidates[idx++];
-        __inflight.add(url);
         const s = document.createElement('script');
         s.src = url;
         s.onerror = () => {
@@ -224,43 +225,44 @@
       tryNext();
     }
 
-    function ensureArchiveLoaded(){
-      if (state.archiveMap) return;
-      if (state.cache[ARCHIVE_KEY]) {
-        state.archiveMap = buildArchiveMap(state.cache[ARCHIVE_KEY]);
-        return;
-      }
-      // まだなら取得
-      requestData(ARCHIVE_KEY);
+    function requestCurrentAndArchive(tab){
+      // 現在タブ
+      if (!state.cache[tab]) requestData(tab);
+      // アーカイブ
+      if (!state.archiveMap) requestData(ARCHIVE_KEY);
     }
 
     function setActiveTab(tab){
       state.current = tab;
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
-
-      // 現在タブを優先ロード
-      if (state.cache[tab]) {
+      requestCurrentAndArchive(tab);
+      // すでに両方揃っていれば即描画
+      if (state.cache[tab] && state.archiveMap) {
         state.rows = state.cache[tab];
         $('status').textContent = `読み込み完了：${state.rows.length}件`;
         render();
-      } else {
-        requestData(tab);
       }
-      // 併せてアーカイブもバックグラウンドでロード（未取得なら）
-      ensureArchiveLoaded();
     }
 
-    /* ===== 描画（PC=テーブル、モバイル=2行リスト） ===== */
+    /* ===== 描画（PC=テーブル、モバイル=2行リスト／3つの▶を必ず試行） ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
       const hint = $('hint');
 
+      // 両方揃っていないなら描画しない（3つの▶を保証するため）
+      if (!state.cache[state.current] || !state.archiveMap) {
+        $('status').textContent = '履歴を読み込み中…';
+        tableWrap.style.display = 'none';
+        listWrap.style.display  = 'none';
+        return;
+      }
+
       const q = normalize($('q').value||'');
       const limit = Math.min(parseInt($('limit').value,10)||50, HARD_LIMIT);
 
-      let filtered = state.rows || [];
+      let filtered = state.cache[state.current] || [];
       if(q){
         filtered = filtered.filter(({artist,title})=>{
           const a=normalize(artist), t=normalize(title);
@@ -271,7 +273,7 @@
 
       $('status').textContent = q
         ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limit}件`
-        : `表示中 ${rows.length}件（全${(state.rows||[]).length}件）／表示上限 ${limit}件`;
+        : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）／表示上限 ${limit}件`;
 
       if(rows.length===0){
         hint.textContent = q ? '該当なし' : '検索結果がここに表示されます。';
@@ -283,26 +285,22 @@
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-      // アーカイブ参照用のヘルパ（2番目に新しい & 最古）
       const getArchiveLinks = (artist, title, latestUrl) => {
-        if (!state.archiveMap) return { second:'', oldest:'' };
         const key = `${normalize(artist)}|${normalize(title)}`;
         const arr = state.archiveMap.get(key) || [];
-        if (!arr.length) return { second:'', oldest:'' };
-
-        // URL重複を避けて抽出（最新=現在のURLは除外）
-        const uniq = [];
+        // 先に最新URLを登録して重複回避
         const seen = new Set([latestUrl||'']);
+        const uniq = [];
         for (const {url} of arr) {
           if (!url || seen.has(url)) continue;
           seen.add(url); uniq.push(url);
         }
-        const second = uniq[0] || '';                   // アーカイブ内で2番目に新しい
+        const second = uniq[0] || '';                         // 2番目に新しい
         const oldest = uniq.length ? uniq[uniq.length-1] : ''; // 最古
         return { second, oldest };
       };
 
-      // ---- PC: テーブル or モバイル: 2行リスト ----
+      // ── PC：テーブル
       if (!isMobile) {
         const table=document.createElement('table');
         const thead=document.createElement('thead');
@@ -326,33 +324,30 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
-          // ▶（最新：現在タブのD）
-          if (dUrl){
+          // ① 最新（歌唱曲/一発ネタのD列）
+          const latest = dUrl || urlFromText(dText);
+          if (latest){
             const a=document.createElement('a');
-            a.href=dUrl; a.target='_blank'; a.rel='noopener';
+            a.href=latest; a.target='_blank'; a.rel='noopener';
             a.className='link-icon'; a.textContent='▶';
-            a.setAttribute('aria-label', dText ? dText : '最新の履歴を開く');
-            a.title = dText ? dText : '最新の履歴を開く';
+            a.setAttribute('aria-label','最新の履歴を開く'); a.title='最新の履歴を開く';
             ops.appendChild(a);
           }
 
-          // アーカイブから 2番目に新しい・最古
-          const { second, oldest } = getArchiveLinks(artist, title, dUrl);
-
+          // ② 2番目（archiveの中で最新）／③ 最古（archiveの末尾）
+          const { second, oldest } = getArchiveLinks(artist, title, latest);
           if (second){
             const a2=document.createElement('a');
             a2.href=second; a2.target='_blank'; a2.rel='noopener';
             a2.className='link-icon'; a2.textContent='▶';
-            a2.setAttribute('aria-label','2番目に新しい履歴を開く');
-            a2.title='2番目に新しい履歴を開く';
+            a2.setAttribute('aria-label','2番目に新しい履歴を開く'); a2.title='2番目に新しい履歴を開く';
             ops.appendChild(a2);
           }
           if (oldest){
             const ao=document.createElement('a');
             ao.href=oldest; ao.target='_blank'; ao.rel='noopener';
             ao.className='link-icon link-icon--oldest'; ao.textContent='▶';
-            ao.setAttribute('aria-label','最も古い履歴を開く');
-            ao.title='最も古い履歴を開く';
+            ao.setAttribute('aria-label','最も古い履歴を開く'); ao.title='最も古い履歴を開く';
             ops.appendChild(ao);
           }
 
@@ -368,9 +363,12 @@
         tableWrap.appendChild(table);
         tableWrap.style.display = 'block';
         listWrap.style.display  = 'none';
+
+      // ── モバイル：2行リスト
       } else {
         rows.forEach(({artist,title,kind,dText,dUrl})=>{
           const item=document.createElement('div'); item.className='item';
+
           const l1=document.createElement('div'); l1.className='l1';
           const a1=document.createElement('span'); a1.className='artist'; a1.textContent=artist||'';
           const sep=document.createElement('span'); sep.className='sep'; sep.textContent='/';
@@ -379,26 +377,28 @@
 
           const l2=document.createElement('div'); l2.className='l2';
 
-          // 区分チップ（任意）
           if (kind){ const chip=document.createElement('span'); chip.className='chip'; chip.textContent=kind; l2.appendChild(chip); }
 
-          // ▶（最新／2番目／最古）
-          if (dUrl){
+          const latest = dUrl || urlFromText(dText);
+          if (latest){
             const a=document.createElement('a');
-            a.href=dUrl; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶';
-            a.setAttribute('aria-label', dText ? dText : '最新の履歴を開く'); a.title = dText ? dText : '最新の履歴を開く';
+            a.href=latest; a.target='_blank'; a.rel='noopener';
+            a.className='link-icon'; a.textContent='▶';
+            a.setAttribute('aria-label','最新の履歴を開く'); a.title='最新の履歴を開く';
             l2.appendChild(a);
           }
-          const { second, oldest } = getArchiveLinks(artist, title, dUrl);
+          const { second, oldest } = getArchiveLinks(artist, title, latest);
           if (second){
             const a2=document.createElement('a');
-            a2.href=second; a2.target='_blank'; a2.rel='noopener'; a2.className='link-icon'; a2.textContent='▶';
+            a2.href=second; a2.target='_blank'; a2.rel='noopener';
+            a2.className='link-icon'; a2.textContent='▶';
             a2.setAttribute('aria-label','2番目に新しい履歴を開く'); a2.title='2番目に新しい履歴を開く';
             l2.appendChild(a2);
           }
           if (oldest){
             const ao=document.createElement('a');
-            ao.href=oldest; ao.target='_blank'; ao.rel='noopener'; ao.className='link-icon link-icon--oldest'; ao.textContent='▶';
+            ao.href=oldest; ao.target='_blank'; aorel='noopener';
+            ao.className='link-icon link-icon--oldest'; ao.textContent='▶';
             ao.setAttribute('aria-label','最も古い履歴を開く'); ao.title='最も古い履歴を開く';
             l2.appendChild(ao);
           }
@@ -419,14 +419,14 @@
     // 画面幅変更に追随（軽いデバウンス）
     window.addEventListener('resize', scheduleSearch);
 
-    // 初期化
+    // 初期化（必ず現在タブ＋アーカイブを同時にロード）
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', scheduleSearch);
       $('limit').addEventListener('change', render);
-      setActiveTab('songs');   // 現在タブをロード
-      ensureArchiveLoaded();   // アーカイブをバックグラウンドでロード
+      setActiveTab('songs');             // 現在タブ
+      requestCurrentAndArchive('songs'); // アーカイブも並行ロード
     })();
   </script>
 </body>
