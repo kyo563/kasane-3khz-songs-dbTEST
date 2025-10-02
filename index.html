@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <meta name="theme-color" content="#e6f6ff">
-  <title>歌唱曲 検索</title>
+  <title>歌唱曲・一発ネタ 検索</title>
   <style>
     :root{
       --bg:#e6f6ff; --card:#ffffff; --text:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
@@ -63,6 +63,8 @@
       </select>
     </div>
     <div class="muted" id="status">読み込み中…</div>
+    <!-- デバッグ用：実際に読み込む JSONP URL を可視化 -->
+    <div class="muted" id="debug" style="margin-top:6px; word-break:break-all;"></div>
   </div>
 
   <!-- 結果表示 -->
@@ -74,9 +76,8 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
 
-  <!-- ▼▼▼ ここから下は必ず <script> に入れてください ▼▼▼ -->
   <script>
-    // ★ あなたの /exec をセット（JSONPで読み込みます）
+    // ★ あなたの /exec（u/N なしの正規URL）を設定
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
 
     const state = {
@@ -97,7 +98,7 @@
       }catch{ showToast('コピーに失敗しました'); }
     }
 
-    // JSONPコールバック（GASから onGviz({...}) が呼ばれる）
+    // JSONPコールバック
     let __jsonpHit = false;
     function onGviz(payload){
       __jsonpHit = true;
@@ -142,9 +143,17 @@
 
     function requestData(tab){
       state.lastRequested = tab;
+      // ★ ここで u/N を強制除去して正規の /macros/s/…/exec に揃える
+      const base = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/');
+      const url  = `${base}?callback=onGviz&sheet=${encodeURIComponent(tab)}&v=${Date.now()}`;
+
+      // デバッグ表示：実際に読みに行くURLを可視化（クリックで直叩きOK）
+      $('debug').innerHTML = `JSONP URL: <a target="_blank" rel="noopener" href="${url}">${url}</a>`;
+      console.log('JSONP src =', url);
+
       const s=document.createElement('script');
-      s.src = `${API_URL}?callback=onGviz&sheet=${encodeURIComponent(tab)}&v=${Date.now()}`;
-      s.onerror = ()=>{ $('status').textContent='データ取得に失敗しました（ネットワーク）'; };
+      s.src = url;
+      s.onerror = ()=>{ $('status').textContent='データ取得に失敗しました（ネットワーク/ブロック）'; };
       document.head.appendChild(s);
     }
 
@@ -241,7 +250,7 @@
       listWrap.style.display='block';
     }
 
-    // 初期化：タブとイベントをセット → songs をロード
+    // 初期化
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
@@ -250,6 +259,5 @@
       setActiveTab('songs');
     })();
   </script>
-  <!-- ▲▲▲ ここまでがスクリプトです。閉じ忘れに注意 ▲▲▲ -->
 </body>
 </html>
