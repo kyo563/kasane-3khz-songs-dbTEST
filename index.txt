@@ -131,7 +131,10 @@
 
   <script>
     /* ===== API（GAS /exec に差し替え） ===== */
-    const API_URL = '<<https://script.google.com/macros/s/AKfycbw5NcnlcXQLjg5w3XM9hvRAmNElamIv6IVEsDDEiF2Kr6N6w5fbteaeYnrnmLmpO34y8g/exec>>';
+    <script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbw5NcnlcXQLjg5w3XM9hvRAmNElamIv6IVEsDDEiF2Kr6N6w5fbteaeYnrnmLmpO34y8g/exec';
+</script>
+
     // GAS 側要件：
     //   /exec?callback=onGviz&sheet=songs → 「歌った曲リスト」A4:D を返す
     //   /exec?callback=onGviz&sheet=gags  → 「企画/一発ネタシリーズ」A4:D を返す
