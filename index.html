@@ -117,14 +117,116 @@
         if (state.current === tab){
           state.rows = rows;
           $('status').textContent = `読み込み完了：${rows.length}件`;
-          render();
-        }
-      }catch(e){
-        console.error(e);
-        $('status').textContent='読み込みに失敗しました';
+          function render(){
+  const tableWrap = $('table'); tableWrap.innerHTML = '';
+  const listWrap  = $('mblist'); listWrap.innerHTML = '';
+  const hint = $('hint');
+
+  const q = normalize($('q').value||'');
+  const limit = Math.min(parseInt($('limit').value,10)||50, 200);
+
+  let filtered = state.rows || [];
+  if(q){
+    filtered = filtered.filter(({artist,title})=>{
+      const a=normalize(artist), t=normalize(title);
+      return a.includes(q) || t.includes(q);
+    });
+  }
+  const rows = filtered.slice(0, limit);
+
+  $('status').textContent = q
+    ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limit}件`
+    : `表示中 ${rows.length}件（全${(state.rows||[]).length}件）／表示上限 ${limit}件`;
+
+  if(rows.length===0){
+    hint.textContent = q ? '該当なし' : '検索結果がここに表示されます。';
+    // どちらも非表示
+    tableWrap.style.display = 'none';
+    listWrap.style.display  = 'none';
+    return;
+  }
+  hint.textContent = '';
+
+  // 画面幅で片方だけ表示
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  if (!isMobile) {
+    // ---- PC: テーブルのみ ----
+    const table=document.createElement('table');
+    const thead=document.createElement('thead');
+    const trh=document.createElement('tr');
+    ['アーティスト名','曲名','区分','履歴'].forEach(h=>{
+      const th=document.createElement('th'); th.textContent=h; trh.appendChild(th);
+    });
+    thead.appendChild(trh); table.appendChild(thead);
+
+    const tbody=document.createElement('tbody');
+    rows.forEach(({artist,title,kind,dText,dUrl})=>{
+      const tr=document.createElement('tr');
+
+      let td=document.createElement('td'); td.textContent=artist||''; tr.appendChild(td);
+      td=document.createElement('td'); td.textContent=title||''; tr.appendChild(td);
+
+      td=document.createElement('td');
+      if (kind){ const chip=document.createElement('span'); chip.className='chip'; chip.textContent=kind; td.appendChild(chip); }
+      tr.appendChild(td);
+
+      const tdOps=document.createElement('td');
+      const ops=document.createElement('div'); ops.className='ops';
+
+      if (dUrl){
+        const a=document.createElement('a');
+        a.href=dUrl; a.target='_blank'; a.rel='noopener';
+        a.className='link-icon'; a.textContent='▶';
+        a.setAttribute('aria-label', dText ? dText : '出典を開く');
+        a.title = dText ? dText : '出典を開く';
+        ops.appendChild(a);
       }
-    }
-    window.onGviz = onGviz;
+
+      const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
+      btn.addEventListener('click', ()=>copyPair(title,artist));
+      ops.appendChild(btn);
+
+      tdOps.appendChild(ops);
+      tr.appendChild(tdOps);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    tableWrap.appendChild(table);
+    tableWrap.style.display = 'block';
+    listWrap.style.display  = 'none';   // ← モバイルリストは隠す
+  } else {
+    // ---- モバイル: 2行リストのみ ----
+    rows.forEach(({artist,title,kind,dText,dUrl})=>{
+      const item=document.createElement('div'); item.className='item';
+      const l1=document.createElement('div'); l1.className='l1';
+      const a1=document.createElement('span'); a1.className='artist'; a1.textContent=artist||'';
+      const sep=document.createElement('span'); sep.className='sep'; sep.textContent='/';
+      const t1=document.createElement('span'); t1.className='title'; t1.textContent=title||'';
+      l1.appendChild(a1); l1.appendChild(sep); l1.appendChild(t1);
+
+      const l2=document.createElement('div'); l2.className='l2';
+      if (kind){ const chip=document.createElement('span'); chip.className='chip'; chip.textContent=kind; l2.appendChild(chip); }
+      if (dUrl){
+        const a=document.createElement('a'); a.href=dUrl; a.target='_blank'; a.rel='noopener';
+        a.className='link-icon'; a.textContent='▶';
+        a.setAttribute('aria-label', dText ? dText : '出典を開く'); a.title = dText ? dText : '出典を開く';
+        l2.appendChild(a);
+      }
+      const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
+      btn.addEventListener('click', ()=>copyPair(title,artist));
+      l2.appendChild(btn);
+
+      item.appendChild(l1); item.appendChild(l2);
+      listWrap.appendChild(item);
+    });
+
+    listWrap.style.display  = 'block';
+    tableWrap.style.display = 'none';   // ← テーブルは隠す
+  }
+}
+
 
     // JSONP未着監視（4秒で警告）
     setTimeout(()=>{
