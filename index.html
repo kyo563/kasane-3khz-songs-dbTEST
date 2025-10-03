@@ -4,44 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <meta name="theme-color" content="#e6f6ff">
-  <title>歌唱曲・一発ネタ 検索（履歴対応）</title>
+  <title>歌唱曲・一発ネタ 検索（履歴 高速化版）</title>
   <style>
     :root{
       --bg:#e6f6ff; --card:#ffffff; --text:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
-      --thead:#dff1ff; --focus:#3897c9; --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1;
-      --link:#2563eb;
+      --thead:#dff1ff; --focus:#3897c9; --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1; --link:#2563eb;
     }
     *{box-sizing:border-box}
-    body{background:var(--bg);color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
-      line-height:1.7;margin:12px}
-
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;line-height:1.7;margin:12px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
     .row-controls{margin-top:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
     .row-controls .grow{flex:0 1 200px}
-
     .tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-    .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);
-      border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer}
+    .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer}
     .tab[aria-selected="true"]{background:var(--tab-active);font-weight:700}
     .tab:focus{outline:3px solid var(--focus);outline-offset:2px}
-
     input[type="search"],select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;background:#fff;color:var(--text);outline:none}
     input[type="search"]:focus,select:focus,.btn:focus,.link-icon:focus,.link-btn:focus{outline:3px solid var(--focus);outline-offset:2px}
     #limit{padding:6px 10px;font-size:14px;line-height:1.2}
-
     .muted{color:var(--muted);font-size:13px}
     .btn{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
     .btn:hover{background:#f9fafb}
     .btn:active{transform:translateY(1px)}
-    .link-btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-    .link-btn:hover{background:#f9fafb}
-    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-      background:rgba(17,24,39,.92);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s}
+    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(17,24,39,.92);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s}
     .toast.show{opacity:1}
-
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed}
     th,td{border-bottom:1px solid var(--line);padding:10px 8px;font-size:15px;vertical-align:top}
     th{position:sticky;top:0;background:var(--thead);z-index:1;font-weight:700}
@@ -49,12 +37,9 @@
     th:nth-child(2),td:nth-child(2){width:40%}
     th:nth-child(3),td:nth-child(3){width:32%}
     .ops{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-
-    .link-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;line-height:1;
-      text-decoration:none;font-size:18px;border-radius:8px}
+    .link-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;line-height:1;text-decoration:none;font-size:18px;border-radius:8px}
     .link-icon:hover{background:#f3f4f6}
     .link-icon:active{transform:translateY(1px)}
-
     @media (max-width:768px){
       table{display:none}
       .mobile-list{display:block;margin-top:10px}
@@ -63,12 +48,7 @@
       .l1 .sep{opacity:.6}
       .l2{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
     }
-
-    /* ===== ページ切替（SPA） ===== */
-    .page{display:none}
-    .page.active{display:block}
-
-    /* 履歴ページ */
+    .page{display:none}.page.active{display:block}
     .history-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
     .back{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
     .back:hover{background:#f9fafb}
@@ -77,10 +57,11 @@
     .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px}
     .history-item a{color:var(--link);text-decoration:none}
     .history-item a:hover{text-decoration:underline}
+    .skeleton{height:16px;background:#eef6ff;border-radius:6px;margin:6px 0}
   </style>
 </head>
 <body>
-  <!-- ====== 一覧ページ ====== -->
+  <!-- 一覧ページ -->
   <div id="page-list" class="page active">
     <div class="card">
       <div class="tabs" role="tablist" aria-label="検索対象">
@@ -101,27 +82,25 @@
       </div>
       <div class="muted" id="status">読み込み中…</div>
     </div>
-
     <div class="card" style="margin-top:12px;">
       <div class="muted" id="hint">検索結果がここに表示されます。</div>
-      <div id="table"   style="display:none;"></div>
-      <div id="mblist"  class="mobile-list" style="display:none;"></div>
+      <div id="table" style="display:none;"></div>
+      <div id="mblist" class="mobile-list" style="display:none;"></div>
     </div>
   </div>
 
-  <!-- ====== 履歴ページ ====== -->
+  <!-- 履歴ページ -->
   <div id="page-history" class="page">
     <div class="card">
       <div class="history-header">
         <button id="btn-back" class="back">← 戻る</button>
         <div class="title" id="hist-title">/</div>
       </div>
-      <div class="muted">「アーカイブ」シートの履歴を新しい順に表示します。</div>
+      <div class="muted" id="hist-sub">「アーカイブ」シートの履歴を新しい順に表示します。</div>
     </div>
-
     <div class="card" style="margin-top:12px;">
       <div id="hist-list" class="history-list"></div>
-      <div id="hist-empty" class="muted">該当する履歴が見つかりませんでした。</div>
+      <div id="hist-empty" class="muted" style="display:none;">該当する履歴が見つかりませんでした。</div>
     </div>
   </div>
 
@@ -131,38 +110,85 @@
     /* ===== 設定 ===== */
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
     const HARD_LIMIT = 10000;
+    const ARCHIVE_VERSION = 'v1';   // スキーマ変更時に更新してキャッシュを破棄
 
     const state = {
-      current: 'songs',                       // 'songs' | 'gags'
-      cache: { songs:null, gags:null },       // 各タブの全件
-      archive: null,                           // アーカイブ全件（初回履歴表示でロード）
+      current: 'songs',
+      cache: { songs:null, gags:null },
       rows: [],
       debounce: null,
-      lastScroll: 0,                           // 履歴→戻る用
-      histKey: null                            // 表示中の履歴キー
+      // 履歴用
+      archiveRaw: null,        // 取得した生配列
+      archiveByKey: null,      // Map: "artist|title" -> [{date,url}]
+      archiveByTitle: null,    // Map: "title" -> [{date,url}]
+      lastScroll: 0,
+      histKey: null
     };
 
     /* ===== ユーティリティ ===== */
-    function $(id){ return document.getElementById(id) }
-    function normalize(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim() }
-    function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400) }
+    const $ = id => document.getElementById(id);
+    const normalize = s => (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim();
+    const showToast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); };
     async function copyPair(title, artist){
       const text = `${(title||'').trim()} / ${(artist||'').trim()}`.trim();
       try{
         if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
-        else{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
-              ta.select(); document.execCommand('copy'); ta.remove(); }
+        else{ const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
         showToast('コピーしました：' + text);
       }catch{ showToast('コピーに失敗しました'); }
     }
-    function scheduleSearch(){ clearTimeout(state.debounce); state.debounce=setTimeout(render,220); }
-    function urlFromText(s){ if (!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; }
-    function extractDate8(s){ const m = /^(\d{8})/.exec(String(s||'')); return m ? parseInt(m[1],10) : 0; }
+    const urlFromText = s => { if(!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; };
+    const extractDate8 = s => { const m=/^(\d{8})/.exec(String(s||'')); return m ? parseInt(m[1],10) : 0; };
 
-    /* ===== ルーター ===== */
+    /* ===== ページ切替 ===== */
     function showPage(id){
       document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       $(id).classList.add('active');
+    }
+
+    /* ===== アーカイブ・インデックス化（高速化の核） ===== */
+    function buildArchiveIndex(rows){
+      // rows: [{artist,title,dText,dUrl}]
+      const byKey = new Map();
+      const byTitle = new Map();
+      for(const r of rows){
+        const a = normalize(r.artist), t = normalize(r.title);
+        const url = r.dUrl || urlFromText(r.dText);
+        if(!url) continue;
+        const date = extractDate8(r.dText);
+        const key = `${a}|${t}`, tkey = t;
+
+        (byKey.get(key)  || byKey.set(key,[]).get(key)).push({date,url});
+        (byTitle.get(tkey)|| byTitle.set(tkey,[]).get(tkey)).push({date,url});
+      }
+      const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
+      for(const arr of byKey.values()) sortDesc(arr);
+      for(const arr of byTitle.values()) sortDesc(arr);
+
+      state.archiveByKey = byKey;
+      state.archiveByTitle = byTitle;
+    }
+
+    /* ===== ローカルキャッシュ ===== */
+    function tryLoadArchiveFromCache(){
+      try{
+        const ver = localStorage.getItem('archiveVersion');
+        const json = localStorage.getItem('archiveJson');
+        if(ver===ARCHIVE_VERSION && json){
+          const rows = JSON.parse(json);
+          state.archiveRaw = rows;
+          buildArchiveIndex(rows);
+          return true;
+        }
+      }catch{}
+      return false;
+    }
+    function saveArchiveToCache(rows){
+      try{
+        localStorage.setItem('archiveVersion', ARCHIVE_VERSION);
+        localStorage.setItem('archiveJson', JSON.stringify(rows));
+        localStorage.setItem('archiveUpdatedAt', String(Date.now()));
+      }catch{}
     }
 
     /* ===== JSONP コールバック ===== */
@@ -173,7 +199,7 @@
         if (!payload || !Array.isArray(payload.rows)) {
           const name = (payload && payload.sheet) ? String(payload.sheet) : 'unknown';
           if (name === 'archive') {
-            // 履歴ページ側の失敗表示
+            // 履歴側
             $('hist-list').innerHTML = '';
             $('hist-empty').style.display = 'block';
           } else {
@@ -184,15 +210,11 @@
         const tab = String(payload.sheet||'').toLowerCase();
 
         if (tab === 'archive') {
-          // {artist,title,dText,dUrl}
-          state.archive = (payload.rows||[])
-            .map(r => ({
-              ...r,
-              _na: normalize(r.artist),
-              _nt: normalize(r.title),
-              _date: extractDate8(r.dText) // 先頭yyyymmdd
-            }));
-          // 履歴ページが開いている場合は再描画
+          const rows = (payload.rows||[]).map(r => ({ artist:r.artist, title:r.title, dText:r.dText, dUrl:r.dUrl }));
+          state.archiveRaw = rows;
+          buildArchiveIndex(rows);
+          saveArchiveToCache(rows);
+          // 履歴ページが開いていれば再描画
           if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
           return;
         }
@@ -223,9 +245,8 @@
     }
     window.onGviz = onGviz;
 
-    // JSONP未着監視（4秒で警告：一覧側のみ）
     setTimeout(()=>{
-      if(!__jsonpHit && document.getElementById('page-list').classList.contains('active')){
+      if(!__jsonpHit && $('page-list').classList.contains('active')){
         $('status').textContent = 'データ取得に失敗しました（JSONP未着／API_URLとデプロイ設定を確認）';
       }
     }, 4000);
@@ -234,7 +255,7 @@
     function jsonp(url){
       const s=document.createElement('script');
       s.src=url;
-      s.onerror=()=>{ if (document.getElementById('page-list').classList.contains('active')) $('status').textContent='データ取得に失敗しました（ネットワーク/ブロック）'; };
+      s.onerror=()=>{ if ($('page-list').classList.contains('active')) $('status').textContent='データ取得に失敗しました（ネットワーク/ブロック）'; };
       document.head.appendChild(s);
     }
     function requestData(tab){ // songs/gags/archive
@@ -245,8 +266,10 @@
     function requestCurrent(tab){
       if (!state.cache[tab]) requestData(tab);
     }
-    function ensureArchive(){
-      if (!state.archive) requestData('archive');
+    function ensureArchiveFast(){
+      // 1) localStorage から即時復元（あれば即使う）
+      const ok = tryLoadArchiveFromCache();
+      if (!ok) requestData('archive');  // 2) なければ取得
     }
 
     /* ===== タブ制御 ===== */
@@ -262,68 +285,61 @@
       }
     }
 
-    /* ===== 履歴ページ描画 ===== */
+    /* ===== 履歴ページ描画（高速：インデックス直参照 & 分割描画） ===== */
     function renderHistory(artist, title){
       state.histKey = { artist, title };
-
-      // 見出し
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
 
       const wrap = $('hist-list');
       const empty = $('hist-empty');
       wrap.innerHTML = '';
-
-      if (!state.archive) {
-        // まだ未取得ならロードして待つ
-        ensureArchive();
-        empty.textContent = '履歴を読み込み中…';
-        empty.style.display = 'block';
-        return;
-      }
-
-      // フィルタ：まず厳密（アーティスト+曲名）、無ければ曲名のみ
-      const na = normalize(artist), nt = normalize(title);
-      let list = state.archive.filter(r => r._na === na && r._nt === nt);
-      if (list.length === 0) list = state.archive.filter(r => r._nt === nt);
-
-      // ソート：_date 降順（同一なら dUrl で安定化）
-      list.sort((a,b)=> b._date - a._date || (a.dUrl > b.dUrl ? 1 : -1));
-
-      if (list.length === 0) {
-        empty.textContent = '該当する履歴が見つかりませんでした。';
-        empty.style.display = 'block';
-        return;
-      }
       empty.style.display = 'none';
 
-      // 行生成：左=日付(yyyymmdd表示) 右=リンク
-      list.forEach(({dText,dUrl})=>{
-        const url = dUrl || urlFromText(dText);
-        const d8  = extractDate8(dText);
-        const yyyy = Math.floor(d8/10000);
-        const mm   = Math.floor((d8%10000)/100);
-        const dd   = d8%100;
-        const dateLabel = d8 ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
+      // インデックスがまだ無ければキャッシュ→取得を開始し、簡易スケルトンを出す
+      if (!state.archiveByKey || !state.archiveByTitle) {
+        ensureArchiveFast();
+        for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
+        $('hist-sub').textContent = '履歴を読み込み中…';
+        return;
+      }
 
-        const row = document.createElement('div'); row.className='history-item';
+      const key = `${normalize(artist)}|${normalize(title)}`;
+      let list = state.archiveByKey.get(key);
+      if (!list || list.length===0) list = state.archiveByTitle.get(normalize(title)) || [];
 
-        const left = document.createElement('div'); left.textContent = dateLabel;
-        const right = document.createElement('div');
-        if (url) {
-          const a = document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
-          a.textContent = '▶ 開く';
-          right.appendChild(a);
-        } else {
-          const span = document.createElement('span'); span.className='muted'; span.textContent='リンクなし';
-          right.appendChild(span);
+      if (list.length===0){
+        empty.style.display = 'block';
+        return;
+      }
+
+      $('hist-sub').textContent = '新しい順に表示しています。';
+
+      // 分割描画：DOMブロックを小分けにして固まりを回避
+      const CHUNK = 50;
+      let i = 0;
+      function drawChunk(){
+        const frag = document.createDocumentFragment();
+        const end = Math.min(i+CHUNK, list.length);
+        for(; i<end; i++){
+          const {date,url} = list[i];
+          const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
+          const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
+
+          const row = document.createElement('div'); row.className='history-item';
+          const left = document.createElement('div'); left.textContent = dateLabel;
+          const right = document.createElement('div');
+          if (url) { const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='▶ 開く'; right.appendChild(a); }
+          else { const span=document.createElement('span'); span.className='muted'; span.textContent='リンクなし'; right.appendChild(span); }
+          row.appendChild(left); row.appendChild(right);
+          frag.appendChild(row);
         }
-
-        row.appendChild(left); row.appendChild(right);
-        wrap.appendChild(row);
-      });
+        wrap.appendChild(frag);
+        if (i < list.length) requestAnimationFrame(drawChunk);
+      }
+      requestAnimationFrame(drawChunk);
     }
 
-    /* ===== 一覧描画（PC=テーブル、モバイル=2行） ===== */
+    /* ===== 一覧描画（既存のまま） ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
@@ -359,17 +375,13 @@
       hint.textContent = '';
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-
       const latestUrl = (r)=> r.dUrl || urlFromText(r.dText);
 
       if (!isMobile) {
-        // PC：テーブル
         const table=document.createElement('table');
         const thead=document.createElement('thead');
         const trh=document.createElement('tr');
-        ['アーティスト名','曲名','操作'].forEach(h=>{
-          const th=document.createElement('th'); th.textContent=h; trh.appendChild(th);
-        });
+        ['アーティスト名','曲名','操作'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
         thead.appendChild(trh); table.appendChild(thead);
 
         const tbody=document.createElement('tbody');
@@ -382,46 +394,33 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
-          // ▶（直リンク）
           const url = latestUrl({dText,dUrl});
           if (url){
-            const a=document.createElement('a');
-            a.href=url; a.target='_blank'; a.rel='noopener';
-            a.className='link-icon'; a.textContent='▶';
-            a.setAttribute('aria-label','履歴リンクを開く'); a.title='履歴リンクを開く';
+            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='履歴リンクを開く';
             ops.appendChild(a);
           }
 
-          // 履歴（ボタン）… クリックで履歴ページへ
-          const hbtn = document.createElement('button');
-          hbtn.className = 'btn';
-          hbtn.textContent = '履歴';
+          const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
           hbtn.addEventListener('click', ()=>{
-            // スクロール位置保持 → ページ遷移 → 履歴描画
             state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
             showPage('page-history');
-            renderHistory(artist, title); // archive 未取得なら読み込み中表示→取得後自動再描画
+            // 高速：インデックス即参照（無ければキャッシュ→取得→再描画）
+            if (!state.archiveByKey) ensureArchiveFast();
+            renderHistory(artist, title);
           });
           ops.appendChild(hbtn);
 
-          // コピー
           const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
           btn.addEventListener('click', ()=>copyPair(title,artist));
           ops.appendChild(btn);
 
-          tdOps.appendChild(ops);
-          tr.appendChild(tdOps);
-          tbody.appendChild(tr);
+          tdOps.appendChild(ops); tr.appendChild(tdOps); tbody.appendChild(tr);
         });
-        table.appendChild(tbody);
-        tableWrap.appendChild(table);
-        tableWrap.style.display = 'block';
-        listWrap.style.display  = 'none';
+        table.appendChild(tbody); tableWrap.appendChild(table);
+        tableWrap.style.display = 'block'; listWrap.style.display = 'none';
       } else {
-        // モバイル：2行
         rows.forEach(({artist,title,dText,dUrl})=>{
           const item=document.createElement('div'); item.className='item';
-
           const l1=document.createElement('div'); l1.className='l1';
           const a1=document.createElement('span'); a1.className='artist'; a1.textContent=artist||'';
           const sep=document.createElement('span'); sep.className='sep'; sep.textContent='/';
@@ -429,22 +428,16 @@
           l1.appendChild(a1); l1.appendChild(sep); l1.appendChild(t1);
 
           const l2=document.createElement('div'); l2.className='l2';
-
           const url = latestUrl({dText,dUrl});
           if (url){
-            const a=document.createElement('a');
-            a.href=url; a.target='_blank'; a.rel='noopener';
-            a.className='link-icon'; a.textContent='▶';
-            a.setAttribute('aria-label','履歴リンクを開く'); a.title='履歴リンクを開く';
+            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='履歴リンクを開く';
             l2.appendChild(a);
           }
-
-          const hbtn = document.createElement('button');
-          hbtn.className = 'btn';
-          hbtn.textContent = '履歴';
+          const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
           hbtn.addEventListener('click', ()=>{
             state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
             showPage('page-history');
+            if (!state.archiveByKey) ensureArchiveFast();
             renderHistory(artist, title);
           });
           l2.appendChild(hbtn);
@@ -453,38 +446,32 @@
           btn.addEventListener('click', ()=>copyPair(title,artist));
           l2.appendChild(btn);
 
-          item.appendChild(l1); item.appendChild(l2);
-          listWrap.appendChild(item);
+          item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
-
-        listWrap.style.display  = 'block';
-        tableWrap.style.display = 'none';
+        $('mblist').style.display = 'block'; $('table').style.display = 'none';
       }
     }
 
     // 戻る
     $('btn-back').addEventListener('click', ()=>{
-      showPage('page-list');
-      // スクロール位置復元
-      window.scrollTo({ top: state.lastScroll || 0 });
+      showPage('page-list'); window.scrollTo({ top: state.lastScroll || 0 });
     });
 
-    // 画面幅変更に追随
-    window.addEventListener('resize', scheduleSearch);
+    // 画面幅変更
+    window.addEventListener('resize', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,150); });
 
-    // 初期化（各タブを全件取得）
+    // 初期化
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
-      $('q').addEventListener('input', scheduleSearch);
+      $('q').addEventListener('input', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,200); });
       $('limit').addEventListener('change', render);
 
-      // 一覧ページから開始
       showPage('page-list');
       setActiveTab('songs');
       if (!state.cache['songs']) requestData('songs');
-      if (!state.cache['gags'])  requestData('gags');   // 任意：先読み
-      // 履歴ページは遷移時に ensureArchive() 内で取得
+      if (!state.cache['gags'])  requestData('gags');
+      // 履歴は初回ページ遷移時に ensureArchiveFast() が走る（キャッシュがあれば即使う）
     })();
   </script>
 </body>
