@@ -426,9 +426,21 @@
           const row = document.createElement('div'); row.className='history-item';
 
           const left = document.createElement('div'); left.className='history-left';
-          if ((kind||'').trim()!==''){
-            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
-            left.appendChild(k);
+
+// 先に日付
+const dt = document.createElement('span');
+dt.className = 'history-date';
+dt.textContent = dateLabel;
+left.appendChild(dt);
+
+// 次に C列（区分）※空なら出さない
+if ((kind || '').trim() !== '') {
+  const k = document.createElement('span');
+  k.className = 'kind-chip';
+  k.textContent = kind;
+  left.appendChild(k);
+}
+
           }
           const dt=document.createElement('span'); dt.className='history-date'; dt.textContent=dateLabel;
           left.appendChild(dt);
