@@ -96,6 +96,9 @@
       cache: { songs:null, gags:null, archive:null },
       archiveByKey: null,                // Map<"artist|title", [{date,url}]>（新→古）
       archiveByTitle: null,              // Map<"title", [{date,url}]>（新→古）
+      // 初回だけAPIを limit=50 で叩く。全件が必要になったらフル取得をかける。
+      fullLoaded: { songs:false, gags:false },
+      expectFull: { songs:false, gags:false },
       rows: [],
       debounce: null
     };
@@ -163,7 +166,12 @@
     function onGviz(payload){
       __jsonpHit = true;
       try{
-        if (!payload || !payload.rows) throw new Error('payload.rows missing');
+        if (!payload || !Array.isArray(payload.rows)) {
+          console.warn('payload.rows missing or invalid:', payload);
+          const name = (payload && payload.sheet) ? String(payload.sheet) : 'unknown';
+          $('status').textContent = `データ取得（${name}）に失敗しました`;
+          return;
+        }
 
         const tab = normSheetName(payload.sheet);
         if (!['songs','gags','archive'].includes(tab)) {
@@ -171,7 +179,9 @@
           return;
         }
 
-        const rows = (payload.rows||[]).filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
+        const rows = (payload.rows||[])
+          .map(r => ({...r, _na: normalize(r.artist), _nt: normalize(r.title)}))
+          .filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
         state.cache[tab] = rows;
 
         if (tab === 'archive') {
@@ -180,14 +190,23 @@
           state.archiveByTitle = maps.byTitle;
         }
 
+        // 「フル取得」を要求した後の応答なら fullLoaded にマーク
+        if ((tab === 'songs' || tab === 'gags') && state.expectFull[tab]) {
+          state.fullLoaded[tab] = true;
+          state.expectFull[tab] = false;
+        }
+
         const haveCurrent = !!state.cache[state.current];
-        const haveArchive = !!state.archiveByKey;
-        if (haveCurrent && haveArchive) {
+        // archive 未着でもまず描画（最新▶のみ）。到着後に自動で 2番目/最古 ▶ が出る
+        if (haveCurrent) {
           state.rows = state.cache[state.current] || [];
-          $('status').textContent = `読み込み完了：${state.rows.length}件`;
+          const haveArchive = !!state.archiveByKey;
+          $('status').textContent = haveArchive
+            ? `読み込み完了：${state.rows.length}件`
+            : `表示中：${state.rows.length}件（履歴読み込み中…）`;
           render();
         } else {
-          $('status').textContent = haveCurrent ? '履歴を読み込み中…' : '読み込み中…';
+          $('status').textContent = '読み込み中…';
         }
 
         const dbg = $('debug');
@@ -209,14 +228,22 @@
       }
     }, 4000);
 
-    /* ===== データ取得（リダイレクト強耐性：A/B/C フォールバック） ===== */
-    function requestData(tab){
+    /* ===== データ取得（初回だけ limit=50／必要時にフル再取得） ===== */
+    function requestData(tab, opts){
+      const { initial=false, forceFull=false } = (opts||{});
       const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/'); // 正規化
-      const mk = (u,auth0=true)=> `${u}?callback=onGviz&sheet=${encodeURIComponent(tab)}${auth0?'&authuser=0':''}&v=${Date.now()}`;
+
+      // 初回のみ songs/gags は limit=50 を付与。archive は常にフル。
+      const limitParam = (tab !== 'archive' && initial && !forceFull) ? '&limit=50' : '';
+      if (forceFull && (tab==='songs' || tab==='gags')) {
+        state.expectFull[tab] = true; // 応答時に fullLoaded を立てる
+      }
+
+      const mk = (u,auth0=true)=> `${u}?callback=onGviz&sheet=${encodeURIComponent(tab)}${limitParam}${auth0?'&authuser=0':''}&v=${Date.now()}`;
       const candidates = [
-        mk(baseNorm, true),                                   // A: 正規 + authuser=0
+        mk(baseNorm, true),                                     // A: 正規 + authuser=0
         mk(baseNorm.replace('/macros/', '/macros/u/0/'), true), // B: /u/0/ を明示 + authuser=0
-        mk(baseNorm, false)                                   // C: 正規（authuser 無し）
+        mk(baseNorm, false)                                     // C: 正規（authuser 無し）
       ];
 
       $('debug').innerHTML = `JSONP URL 候補:<br>` + candidates.map(u =>
@@ -248,13 +275,16 @@
         try { orig(payload); } finally { window.onGviz = orig; }
       };
 
-      $('status').textContent = '読み込み中…（リダイレクト対策中）';
+      const note = (limitParam ? '（初回50件）' : (forceFull ? '（フル取得）' : ''));
+      $('status').textContent = `読み込み中…${note}`;
       tryNext();
     }
 
     function requestCurrentAndArchive(tab){
-      if (!state.cache[tab]) requestData(tab);                           // 現在タブ
-      if (!state.archiveByKey && !state.cache[ARCHIVE_KEY]) requestData(ARCHIVE_KEY); // アーカイブ
+      // 現在タブ：未取得なら「初回50件」で取得
+      if (!state.cache[tab]) requestData(tab, { initial:true });
+      // アーカイブ：常にフル（最初に1回だけ）
+      if (!state.archiveByKey && !state.cache[ARCHIVE_KEY]) requestData(ARCHIVE_KEY, { initial:false });
     }
 
     function setActiveTab(tab){
@@ -262,9 +292,9 @@
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
       requestCurrentAndArchive(tab);
-      if (state.cache[tab] && state.archiveByKey) {
+      if (state.cache[tab]) {
         state.rows = state.cache[tab];
-        $('status').textContent = `読み込み完了：${state.rows.length}件`;
+        $('status').textContent = `表示中：${state.rows.length}件`;
         render();
       }
     }
@@ -275,8 +305,8 @@
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
       const hint = $('hint');
 
-      if (!state.cache[state.current] || !state.archiveByKey) {
-        $('status').textContent = '履歴を読み込み中…';
+      if (!state.cache[state.current]) {
+        $('status').textContent = '読み込み中…';
         tableWrap.style.display = 'none';
         listWrap.style.display  = 'none';
         return;
@@ -284,21 +314,22 @@
 
       const q = normalize($('q').value||'');
 
-      // ★ 上限の解釈：10 / 50 / 全て
+      // 上限の解釈：10 / 50 / 全て（全て選択時、フル未取得なら自動再取得）
       const rawLimit = $('limit').value;
+      if (rawLimit === 'all' && !state.fullLoaded[state.current]) {
+        // 現在タブのフル取得を要求（戻りで fullLoaded が立つ）
+        requestData(state.current, { forceFull:true });
+      }
       const limitParsed = (rawLimit === 'all') ? Number.POSITIVE_INFINITY : parseInt(rawLimit,10) || 10;
       const effectiveLimit = Math.min(limitParsed, HARD_LIMIT);
 
       let filtered = state.cache[state.current] || [];
       if(q){
-        filtered = filtered.filter(({artist,title})=>{
-          const a=normalize(artist), t=normalize(title);
-          return a.includes(q) || t.includes(q);
-        });
+        filtered = filtered.filter(r => r._na.includes(q) || r._nt.includes(q));
       }
       const rows = filtered.slice(0, effectiveLimit);
 
-      const limitLabel = (rawLimit === 'all') ? '全て' : `${effectiveLimit}件`;
+      const limitLabel = (rawLimit === 'all') ? (state.fullLoaded[state.current] ? '全て' : '全て（取得中…）') : `${effectiveLimit}件`;
       $('status').textContent = q
         ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limitLabel}`
         : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）／表示上限 ${limitLabel}`;
@@ -313,7 +344,7 @@
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-      // アーカイブ参照：厳密キー→タイトルキーの順で探索
+      // アーカイブ参照：厳密キー→タイトルキーの順で探索（archive未着でも空扱い）
       const getArchiveLinks = (artist, title, latestUrl) => {
         const key  = `${normalize(artist)}|${normalize(title)}`;
         const tkey = normalize(title);
@@ -325,7 +356,7 @@
 
         const seen = new Set([latestUrl||'']);
         const uniq = [];
-        for (const {url} of arr) {
+        for (const {url} of (arr||[])) {
           if (!url || seen.has(url)) continue;
           seen.add(url); uniq.push(url);
         }
@@ -368,7 +399,7 @@
             ops.appendChild(a);
           }
 
-          // ② 2番目（archive）／③ 最古（archive）
+          // ② 2番目（archive）／③ 最古（archive）※ archive 未着なら自然に出ない
           const { second, oldest } = getArchiveLinks(artist, title, latest);
           if (second){
             const a2=document.createElement('a');
@@ -451,14 +482,14 @@
     // 画面幅変更に追随（軽いデバウンス）
     window.addEventListener('resize', scheduleSearch);
 
-    // 初期化（現在タブ＋アーカイブを同時ロード）
+    // 初期化（現在タブは「初回50件」、archive はフルを並行ロード）
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', scheduleSearch);
       $('limit').addEventListener('change', render);
-      setActiveTab('songs');             // 現在タブ
-      requestCurrentAndArchive('songs'); // アーカイブも並行ロード
+      setActiveTab('songs');
+      requestCurrentAndArchive('songs');
     })();
   </script>
 </body>
