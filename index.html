@@ -108,9 +108,9 @@
 
   <script>
     /* ===== 設定 ===== */
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzQ56SNwqQgZxkb4g6zMnfnvQQ2aFWFoNJM1oETYJ4qGbhRvvMND8gd1mNaWiSamBIlMg/exec';
     const HARD_LIMIT = 10000;
-    const ARCHIVE_VERSION = 'v1';   // スキーマ変更時に更新してキャッシュを破棄
+    const ARCHIVE_VERSION = 'v1';   // スキーマ変更時に更新してキャッシュ破棄
 
     const state = {
       current: 'songs',
@@ -118,9 +118,9 @@
       rows: [],
       debounce: null,
       // 履歴用
-      archiveRaw: null,        // 取得した生配列
-      archiveByKey: null,      // Map: "artist|title" -> [{date,url}]
-      archiveByTitle: null,    // Map: "title" -> [{date,url}]
+      archiveRaw: null,
+      archiveByKey: null,      // Map "artist|title" -> [{date,url}]
+      archiveByTitle: null,    // Map "title" -> [{date,url}]
       lastScroll: 0,
       histKey: null
     };
@@ -146,9 +146,8 @@
       $(id).classList.add('active');
     }
 
-    /* ===== アーカイブ・インデックス化（高速化の核） ===== */
+    /* ===== アーカイブ・インデックス化 ===== */
     function buildArchiveIndex(rows){
-      // rows: [{artist,title,dText,dUrl}]
       const byKey = new Map();
       const byTitle = new Map();
       for(const r of rows){
@@ -157,14 +156,12 @@
         if(!url) continue;
         const date = extractDate8(r.dText);
         const key = `${a}|${t}`, tkey = t;
-
         (byKey.get(key)  || byKey.set(key,[]).get(key)).push({date,url});
         (byTitle.get(tkey)|| byTitle.set(tkey,[]).get(tkey)).push({date,url});
       }
       const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
       for(const arr of byKey.values()) sortDesc(arr);
       for(const arr of byTitle.values()) sortDesc(arr);
-
       state.archiveByKey = byKey;
       state.archiveByTitle = byTitle;
     }
@@ -197,47 +194,90 @@
       __jsonpHit = true;
       try{
         if (!payload || !Array.isArray(payload.rows)) {
-          const name = (payload && payload.sheet) ? String(payload.sheet) : 'unknown';
-          if (name === 'archive') {
-            // 履歴側
+          const name = (payload && (payload.sheet || payload.sheetName || payload.name)) ? String(payload.sheet || payload.sheetName || payload.name) : 'unknown';
+          if (state.histKey) {
             $('hist-list').innerHTML = '';
             $('hist-empty').style.display = 'block';
+            $('hist-sub').textContent = '履歴の取得に失敗しました。';
           } else {
             $('status').textContent = `データ取得（${name}）に失敗しました`;
           }
           return;
         }
-        const tab = String(payload.sheet||'').toLowerCase();
+
+        const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
+        const looksArchive = payload.rows.length > 0 && payload.rows[0] && (
+          ('dText' in payload.rows[0]) || ('dtext' in payload.rows[0]) ||
+          ('dUrl' in payload.rows[0])  || ('durl' in payload.rows[0])
+        );
+        const tab = rawSheet || (looksArchive && state.histKey ? 'archive' : '');
 
         if (tab === 'archive') {
-          const rows = (payload.rows||[]).map(r => ({ artist:r.artist, title:r.title, dText:r.dText, dUrl:r.dUrl }));
+          const rows = (payload.rows||[]).map(r => ({
+            artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
+            title : r.title  ?? r.Title  ?? r.曲名       ?? '',
+            dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
+            dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
+          }));
           state.archiveRaw = rows;
           buildArchiveIndex(rows);
           saveArchiveToCache(rows);
-          // 履歴ページが開いていれば再描画
           if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
           return;
         }
 
-        if (!['songs','gags'].includes(tab)) return;
+        if (tab === 'songs' || tab === 'gags') {
+          const rows = (payload.rows||[])
+            .map(r => ({
+              artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
+              title : r.title  ?? r.Title  ?? r.曲名       ?? '',
+              kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
+              dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
+              dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? '',
+              _na   : normalize(r.artist ?? r.Artist ?? r.アーティスト ?? ''),
+              _nt   : normalize(r.title  ?? r.Title  ?? r.曲名       ?? '')
+            }))
+            .filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
+          state.cache[tab] = rows;
 
-        const rows = (payload.rows||[])
-          .map(r => ({...r, _na: normalize(r.artist), _nt: normalize(r.title)}))
-          .filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
-        state.cache[tab] = rows;
+          if (state.cache[state.current]) {
+            state.rows = state.cache[state.current] || [];
+            $('status').textContent = `読み込み完了：${state.rows.length}件`;
+            render();
+          } else {
+            $('status').textContent = '読み込み中…';
+          }
+          return;
+        }
 
-        if (state.cache[state.current]) {
-          state.rows = state.cache[state.current] || [];
-          $('status').textContent = `読み込み完了：${state.rows.length}件`;
-          render();
+        // 履歴中で archive 判定にできるレス → archive として扱う
+        if (state.histKey && looksArchive) {
+          const rows = (payload.rows||[]).map(r => ({
+            artist: r.artist ?? '',
+            title : r.title  ?? '',
+            dText : r.dText  ?? r.text ?? '',
+            dUrl  : r.dUrl   ?? r.url  ?? ''
+          }));
+          state.archiveRaw = rows;
+          buildArchiveIndex(rows);
+          saveArchiveToCache(rows);
+          renderHistory(state.histKey.artist, state.histKey.title);
+          return;
+        }
+
+        if (state.histKey) {
+          $('hist-list').innerHTML = '';
+          $('hist-empty').style.display = 'block';
+          $('hist-sub').textContent = '不明なレスポンスを受信しました。';
         } else {
-          $('status').textContent = '読み込み中…';
+          $('status').textContent = '不明なレスポンスを受信しました。';
         }
       }catch(e){
         console.error(e);
         if (state.histKey) {
           $('hist-list').innerHTML = '';
           $('hist-empty').style.display = 'block';
+          $('hist-sub').textContent = '履歴の描画に失敗しました。';
         } else {
           $('status').textContent='読み込みに失敗しました';
         }
@@ -267,9 +307,8 @@
       if (!state.cache[tab]) requestData(tab);
     }
     function ensureArchiveFast(){
-      // 1) localStorage から即時復元（あれば即使う）
       const ok = tryLoadArchiveFromCache();
-      if (!ok) requestData('archive');  // 2) なければ取得
+      if (!ok) requestData('archive');
     }
 
     /* ===== タブ制御 ===== */
@@ -285,7 +324,7 @@
       }
     }
 
-    /* ===== 履歴ページ描画（高速：インデックス直参照 & 分割描画） ===== */
+    /* ===== 履歴ページ描画（インデックス直参照 & 分割描画） ===== */
     function renderHistory(artist, title){
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
@@ -295,7 +334,6 @@
       wrap.innerHTML = '';
       empty.style.display = 'none';
 
-      // インデックスがまだ無ければキャッシュ→取得を開始し、簡易スケルトンを出す
       if (!state.archiveByKey || !state.archiveByTitle) {
         ensureArchiveFast();
         for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
@@ -314,7 +352,6 @@
 
       $('hist-sub').textContent = '新しい順に表示しています。';
 
-      // 分割描画：DOMブロックを小分けにして固まりを回避
       const CHUNK = 50;
       let i = 0;
       function drawChunk(){
@@ -324,7 +361,6 @@
           const {date,url} = list[i];
           const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
           const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
-
           const row = document.createElement('div'); row.className='history-item';
           const left = document.createElement('div'); left.textContent = dateLabel;
           const right = document.createElement('div');
@@ -339,7 +375,7 @@
       requestAnimationFrame(drawChunk);
     }
 
-    /* ===== 一覧描画（既存のまま） ===== */
+    /* ===== 一覧描画 ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
@@ -404,7 +440,6 @@
           hbtn.addEventListener('click', ()=>{
             state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
             showPage('page-history');
-            // 高速：インデックス即参照（無ければキャッシュ→取得→再描画）
             if (!state.archiveByKey) ensureArchiveFast();
             renderHistory(artist, title);
           });
@@ -471,7 +506,7 @@
       setActiveTab('songs');
       if (!state.cache['songs']) requestData('songs');
       if (!state.cache['gags'])  requestData('gags');
-      // 履歴は初回ページ遷移時に ensureArchiveFast() が走る（キャッシュがあれば即使う）
+      // 履歴は遷移時に ensureArchiveFast() が動作（localStorage があれば即利用）
     })();
   </script>
 </body>
