@@ -9,6 +9,7 @@
     :root{
       --bg:#e6f6ff; --card:#ffffff; --text:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
       --thead:#dff1ff; --focus:#3897c9; --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1; --link:#2563eb;
+      --chip-bg:#f3f4f6; --chip-text:#111827;
     }
     *{box-sizing:border-box}
     body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;line-height:1.7;margin:12px}
@@ -54,6 +55,19 @@
     .link-icon:hover{background:#f3f4f6}
     .link-icon:active{transform:translateY(1px)}
 
+    /* 区分チップ（C列の素の文字列用） */
+    .kind-chip{
+      display:inline-flex;align-items:center;
+      max-width:100%;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:13px;
+      background:var(--chip-bg);
+      color:var(--chip-text);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      border:1px solid var(--line);
+    }
+
     @media (max-width:768px){
       table{display:none}
       .mobile-list{display:block;margin-top:10px}
@@ -61,7 +75,6 @@
       .l1{font-size:16px;line-height:1.6;font-weight:700;display:flex;gap:6px;flex-wrap:wrap}
       .l1 .sep{opacity:.6}
       .l2{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-      /* モバイルでも 7:3 を維持（必要なら 6:4 に変更可） */
       .dm-select-wrap{flex:7 1 0}
       .dm-btn-wrap{flex:3 1 0}
     }
@@ -72,7 +85,9 @@
     .back:hover{background:#f9fafb}
     .title{font-weight:700}
     .history-list{margin-top:8px}
-    .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px}
+    .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px;gap:8px}
+    .history-left{display:flex;align-items:center;gap:8px;min-width:0}
+    .history-date{white-space:nowrap;color:#374151}
     .history-item a{color:var(--link);text-decoration:none}
     .history-item a:hover{text-decoration:underline}
     .skeleton{height:16px;background:#eef6ff;border-radius:6px;margin:6px 0}
@@ -109,7 +124,7 @@
           <select id="dm-select" title="弾幕の種類を選択">
             <option value="⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*">⚛️🌐ꕤ.‎˖٭（花）</option>
             <option value="⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+">⚛️🌐♬*.+（音符）</option>
-            <option value="✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵">✨⚛️🌐🎵 …（星）</option>
+            <option value="✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵">✨⚛️🌐🎵（キラ音符）</option>
           </select>
         </div>
         <div class="dm-btn-wrap">
@@ -191,7 +206,7 @@
       $(id).classList.add('active');
     }
 
-    /* ===== アーカイブ・インデックス化 ===== */
+    /* ===== アーカイブ・インデックス化（C列の kind も保持） ===== */
     function buildArchiveIndex(rows){
       const byKey = new Map();
       const byTitle = new Map();
@@ -200,9 +215,10 @@
         const url = r.dUrl || urlFromText(r.dText);
         if(!url) continue;
         const date = extractDate8(r.dText);
+        const kind = (r.kind || '').toString();
         const key = `${a}|${t}`, tkey = t;
-        (byKey.get(key)  || byKey.set(key,[]).get(key)).push({date,url});
-        (byTitle.get(tkey)|| byTitle.set(tkey,[]).get(tkey)).push({date,url});
+        (byKey.get(key)  || byKey.set(key,[]).get(key)).push({date,url,kind});
+        (byTitle.get(tkey)|| byTitle.set(tkey,[]).get(tkey)).push({date,url,kind});
       }
       const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
       for(const arr of byKey.values()) sortDesc(arr);
@@ -260,6 +276,7 @@
           const rows = (payload.rows||[]).map(r => ({
             artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
             title : r.title  ?? r.Title  ?? r.曲名       ?? '',
+            kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
             dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
             dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
           }));
@@ -279,7 +296,7 @@
               dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
               dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? '',
               _na   : normalize(r.artist ?? r.Artist ?? r.アーティスト ?? ''),
-              _nt   : normalize(r.title  ?? r. Title ?? r.曲名       ?? '')
+              _nt   : normalize(r.title  ?? r.Title  ?? r.曲名       ?? '')
             }))
             .filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
           state.cache[tab] = rows;
@@ -298,8 +315,9 @@
           const rows = (payload.rows||[]).map(r => ({
             artist: r.artist ?? '',
             title : r.title  ?? '',
-            dText : r.dText  ?? r.text ?? '',
-            dUrl  : r.dUrl   ?? r.url  ?? ''
+            kind  : r.kind   ?? r.区分   ?? '',
+            dText : r.dText  ?? r.text  ?? '',
+            dUrl  : r.dUrl   ?? r.url   ?? ''
           }));
           state.archiveRaw = rows;
           buildArchiveIndex(rows);
@@ -367,7 +385,7 @@
       }
     }
 
-    /* ===== 履歴ページ描画 ===== */
+    /* ===== 履歴ページ描画（区分を表示） ===== */
     function renderHistory(artist, title){
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
@@ -401,14 +419,24 @@
         const frag = document.createDocumentFragment();
         const end = Math.min(i+CHUNK, list.length);
         for(; i<end; i++){
-          const {date,url} = list[i];
+          const {date,url,kind} = list[i];
           const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
           const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
+
           const row = document.createElement('div'); row.className='history-item';
-          const left = document.createElement('div'); left.textContent = dateLabel;
+
+          const left = document.createElement('div'); left.className='history-left';
+          if ((kind||'').trim()!==''){
+            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
+            left.appendChild(k);
+          }
+          const dt=document.createElement('span'); dt.className='history-date'; dt.textContent=dateLabel;
+          left.appendChild(dt);
+
           const right = document.createElement('div');
           if (url) { const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='▶ 開く'; right.appendChild(a); }
           else { const span=document.createElement('span'); span.className='muted'; span.textContent='リンクなし'; right.appendChild(span); }
+
           row.appendChild(left); row.appendChild(right);
           frag.appendChild(row);
         }
@@ -418,7 +446,7 @@
       requestAnimationFrame(drawChunk);
     }
 
-    /* ===== 一覧描画 ===== */
+    /* ===== 一覧描画（区分を▶の左に挿入） ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
@@ -464,7 +492,7 @@
         thead.appendChild(trh); table.appendChild(thead);
 
         const tbody=document.createElement('tbody');
-        rows.forEach(({artist,title,dText,dUrl})=>{
+        rows.forEach(({artist,title,kind,dText,dUrl})=>{
           const tr=document.createElement('tr');
 
           let td=document.createElement('td'); td.textContent=artist||''; tr.appendChild(td);
@@ -473,12 +501,20 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
+          /* C列（区分）を▶の左に表示 */
+          if ((kind||'').trim()!==''){
+            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
+            ops.appendChild(k);
+          }
+
+          /* ▶（直リンク） */
           const url = latestUrl({dText,dUrl});
           if (url){
-            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='履歴リンクを開く';
+            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='リンクを開く';
             ops.appendChild(a);
           }
 
+          /* 履歴ページへ */
           const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
           hbtn.addEventListener('click', ()=>{
             state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
@@ -488,6 +524,7 @@
           });
           ops.appendChild(hbtn);
 
+          /* コピー */
           const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
           btn.addEventListener('click', ()=>copyPair(title,artist));
           ops.appendChild(btn);
@@ -497,7 +534,7 @@
         table.appendChild(tbody); tableWrap.appendChild(table);
         tableWrap.style.display = 'block'; listWrap.style.display = 'none';
       } else {
-        rows.forEach(({artist,title,dText,dUrl})=>{
+        rows.forEach(({artist,title,kind,dText,dUrl})=>{
           const item=document.createElement('div'); item.className='item';
           const l1=document.createElement('div'); l1.className='l1';
           const a1=document.createElement('span'); a1.className='artist'; a1.textContent=artist||'';
@@ -506,11 +543,21 @@
           l1.appendChild(a1); l1.appendChild(sep); l1.appendChild(t1);
 
           const l2=document.createElement('div'); l2.className='l2';
+
+          /* C列（区分） */
+          if ((kind||'').trim()!==''){
+            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
+            l2.appendChild(k);
+          }
+
+          /* ▶ */
           const url = latestUrl({dText,dUrl});
           if (url){
-            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='履歴リンクを開く';
+            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='リンクを開く';
             l2.appendChild(a);
           }
+
+          /* 履歴 */
           const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
           hbtn.addEventListener('click', ()=>{
             state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
@@ -520,6 +567,7 @@
           });
           l2.appendChild(hbtn);
 
+          /* コピー */
           const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
           btn.addEventListener('click', ()=>copyPair(title,artist));
           l2.appendChild(btn);
@@ -549,6 +597,9 @@
       setActiveTab('songs');
       if (!state.cache['songs']) requestData('songs');
       if (!state.cache['gags'])  requestData('gags');
+
+      /* 履歴ページで必要になるため、アーカイブを先行読み込み（キャッシュ利用） */
+      ensureArchiveFast();
     })();
   </script>
 </body>
