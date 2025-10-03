@@ -43,7 +43,7 @@
     .link-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;line-height:1;text-decoration:none;font-size:18px;border-radius:8px}
     .link-icon:hover{background:#f3f4f6}
     .link-icon:active{transform:translateY(1px)}
-    .link-icon--oldest{color:var(--violet)} /* 最古▶を紫に */
+    .link-icon--oldest{color:var(--violet)}
     @media (max-width:768px){
       table{display:none}
       .mobile-list{display:block;margin-top:10px}
@@ -89,15 +89,14 @@
     // 必ず /macros/s/<DEPLOY_ID>/exec（/u/N なし）を設定
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
     const HARD_LIMIT = 200;
-    const ARCHIVE_KEY = 'archive'; // GAS 側：アーカイブシート用の sheet 名
+    const ARCHIVE_KEY = 'archive'; // GAS 側：アーカイブシート用の sheet 名（/exec?sheet=archive）
 
     const state = {
-      current: 'songs',                 // 'songs' | 'gags'
+      current: 'songs',                  // 'songs' | 'gags'
       cache: { songs:null, gags:null, archive:null },
-      archiveMap: null,                 // { key => [{date,url}] }  ※key = norm(artist)+'|'+norm(title)
+      archiveMap: null,                  // Map<"artist|title", [{date,url}]> （新しい→古いで整列）
       rows: [],
-      debounce: null,
-      lastRequested: null
+      debounce: null
     };
 
     /* ===== ユーティリティ ===== */
@@ -121,7 +120,7 @@
       return m ? m[0].replace(/[)\]\s]+$/,'') : '';
     }
 
-    // アーカイブの rows → map 生成（key=artist|title / 値= [{date,url}] 降順ソート）
+    // アーカイブの rows → map 生成（key=artist|title / 値= [{date,url}] 新→古）
     function buildArchiveMap(rows){
       const map = new Map();
       (rows||[]).forEach(({artist,title,dText,dUrl})=>{
@@ -138,15 +137,20 @@
       return map;
     }
 
-    /* ===== JSONP コールバック ===== */
+    /* ===== JSONP コールバック（sheet 名で確実にルーティング） ===== */
     let __jsonpHit = false;
-
     function onGviz(payload){
       __jsonpHit = true;
       try{
         if (!payload || !payload.rows) throw new Error('payload.rows missing');
 
-        const tab = state.lastRequested || state.current;
+        // ★ GAS が返した sheet 名を採用（songs | gags | archive）
+        const tab = String(payload.sheet || '').toLowerCase();
+        if (!['songs','gags','archive'].includes(tab)) {
+          console.warn('Unknown sheet payload ignored:', tab);
+          return;
+        }
+
         const rows = (payload.rows||[]).filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
         state.cache[tab] = rows;
 
@@ -154,9 +158,9 @@
           state.archiveMap = buildArchiveMap(rows);
         }
 
-        // 初回描画は「現在タブのデータ」と「archive」の両方が揃ってから行う
         const haveCurrent = !!state.cache[state.current];
         const haveArchive = !!state.archiveMap;
+
         if (haveCurrent && haveArchive) {
           state.rows = state.cache[state.current] || [];
           $('status').textContent = `読み込み完了：${state.rows.length}件`;
@@ -180,9 +184,8 @@
 
     /* ===== データ取得（リダイレクト強耐性：A/B/C フォールバック） ===== */
     function requestData(tab){
-      state.lastRequested = tab;
-
-      const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/'); // 正規化
+      // /macros/u/N を除去した正規URLに矯正し、authuser=0 を付与して /u/N への強制リダイレクトを抑止
+      const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/');
       const mk = (u,auth0=true)=> `${u}?callback=onGviz&sheet=${encodeURIComponent(tab)}${auth0?'&authuser=0':''}&v=${Date.now()}`;
       const candidates = [
         mk(baseNorm, true),                                   // A: 正規 + authuser=0
@@ -226,10 +229,8 @@
     }
 
     function requestCurrentAndArchive(tab){
-      // 現在タブ
-      if (!state.cache[tab]) requestData(tab);
-      // アーカイブ
-      if (!state.archiveMap) requestData(ARCHIVE_KEY);
+      if (!state.cache[tab]) requestData(tab);          // 現在タブ
+      if (!state.archiveMap && !state.cache[ARCHIVE_KEY]) requestData(ARCHIVE_KEY); // アーカイブ
     }
 
     function setActiveTab(tab){
@@ -237,7 +238,6 @@
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
       requestCurrentAndArchive(tab);
-      // すでに両方揃っていれば即描画
       if (state.cache[tab] && state.archiveMap) {
         state.rows = state.cache[tab];
         $('status').textContent = `読み込み完了：${state.rows.length}件`;
@@ -245,13 +245,13 @@
       }
     }
 
-    /* ===== 描画（PC=テーブル、モバイル=2行リスト／3つの▶を必ず試行） ===== */
+    /* ===== 描画（PC=テーブル、モバイル=2行リスト／3つの▶を表示） ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
       const hint = $('hint');
 
-      // 両方揃っていないなら描画しない（3つの▶を保証するため）
+      // 両方揃っていないなら描画しない（3つの▶を保証）
       if (!state.cache[state.current] || !state.archiveMap) {
         $('status').textContent = '履歴を読み込み中…';
         tableWrap.style.display = 'none';
@@ -288,7 +288,6 @@
       const getArchiveLinks = (artist, title, latestUrl) => {
         const key = `${normalize(artist)}|${normalize(title)}`;
         const arr = state.archiveMap.get(key) || [];
-        // 先に最新URLを登録して重複回避
         const seen = new Set([latestUrl||'']);
         const uniq = [];
         for (const {url} of arr) {
@@ -300,8 +299,8 @@
         return { second, oldest };
       };
 
-      // ── PC：テーブル
       if (!isMobile) {
+        // ── PC：テーブル
         const table=document.createElement('table');
         const thead=document.createElement('thead');
         const trh=document.createElement('tr');
@@ -324,7 +323,7 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
-          // ① 最新（歌唱曲/一発ネタのD列）
+          // ① 最新（現在タブのD）
           const latest = dUrl || urlFromText(dText);
           if (latest){
             const a=document.createElement('a');
@@ -363,9 +362,8 @@
         tableWrap.appendChild(table);
         tableWrap.style.display = 'block';
         listWrap.style.display  = 'none';
-
-      // ── モバイル：2行リスト
       } else {
+        // ── モバイル：2行リスト
         rows.forEach(({artist,title,kind,dText,dUrl})=>{
           const item=document.createElement('div'); item.className='item';
 
@@ -376,7 +374,6 @@
           l1.appendChild(a1); l1.appendChild(sep); l1.appendChild(t1);
 
           const l2=document.createElement('div'); l2.className='l2';
-
           if (kind){ const chip=document.createElement('span'); chip.className='chip'; chip.textContent=kind; l2.appendChild(chip); }
 
           const latest = dUrl || urlFromText(dText);
@@ -419,13 +416,13 @@
     // 画面幅変更に追随（軽いデバウンス）
     window.addEventListener('resize', scheduleSearch);
 
-    // 初期化（必ず現在タブ＋アーカイブを同時にロード）
+    // 初期化（現在タブ＋アーカイブを同時ロード）
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', scheduleSearch);
       $('limit').addEventListener('change', render);
-      setActiveTab('songs');             // 現在タブ
+      setActiveTab('songs');             // 現在タブをリクエスト
       requestCurrentAndArchive('songs'); // アーカイブも並行ロード
     })();
   </script>
