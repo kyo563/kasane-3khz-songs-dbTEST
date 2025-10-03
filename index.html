@@ -8,8 +8,7 @@
   <style>
     :root{
       --bg:#e6f6ff; --card:#ffffff; --text:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
-      --thead:#dff1ff; --focus:#3897c9; --chip-bg:#f3f4f6; --chip-text:#111827;
-      --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1;
+      --thead:#dff1ff; --focus:#3897c9; --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1;
     }
     *{box-sizing:border-box}
     body{background:var(--bg);color:var(--text);
@@ -95,7 +94,6 @@
 
   <script>
     /* ===== 設定 ===== */
-    // 必ず /macros/s/<DEPLOY_ID>/exec（/u/N なし）を設定
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
     const HARD_LIMIT = 10000;
 
@@ -232,7 +230,6 @@
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-      // D列（直リンク）：dUrl 優先、無ければ dText 内のURL抽出
       const latestUrl = (r)=> r.dUrl || urlFromText(r.dText);
 
       if (!isMobile) {
@@ -323,7 +320,7 @@
 
       setActiveTab('songs');
       if (!state.cache['songs']) requestData('songs');
-      if (!state.cache['gags'])  requestData('gags'); // 先読み（任意）
+      if (!state.cache['gags'])  requestData('gags'); // 任意の先読み
     })();
   </script>
 </body>
