@@ -89,12 +89,13 @@
     // 必ず /macros/s/<DEPLOY_ID>/exec（/u/N なし）を設定
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
     const HARD_LIMIT = 200;
-    const ARCHIVE_KEY = 'archive'; // GAS 側：アーカイブシート用の sheet 名（/exec?sheet=archive）
+    const ARCHIVE_KEY = 'archive'; // /exec?sheet=archive を返す想定
 
     const state = {
       current: 'songs',                  // 'songs' | 'gags'
       cache: { songs:null, gags:null, archive:null },
-      archiveMap: null,                  // Map<"artist|title", [{date,url}]> （新しい→古いで整列）
+      archiveByKey: null,                // Map<"artist|title", [{date,url}]>（新→古）
+      archiveByTitle: null,              // Map<"title", [{date,url}]>（新→古）
       rows: [],
       debounce: null
     };
@@ -120,21 +121,41 @@
       return m ? m[0].replace(/[)\]\s]+$/,'') : '';
     }
 
-    // アーカイブの rows → map 生成（key=artist|title / 値= [{date,url}] 新→古）
-    function buildArchiveMap(rows){
-      const map = new Map();
+    /* ===== アーカイブ地図（厳密キー＋タイトルキー） ===== */
+    function buildArchiveMaps(rows){
+      const byKey = new Map();    // key = norm(artist)+'|'+norm(title)
+      const byTitle = new Map();  // key = norm(title)
+
       (rows||[]).forEach(({artist,title,dText,dUrl})=>{
-        const key = `${normalize(artist)}|${normalize(title)}`;
-        const txt = dText || '';
-        const m = /^(\d{8})/.exec(txt);           // 先頭 yyyymmdd
+        const key  = `${normalize(artist)}|${normalize(title)}`;
+        const tkey = normalize(title);
+        const txt  = dText || '';
+        const m    = /^(\d{8})/.exec(txt);          // 先頭 yyyymmdd
         const date = m ? parseInt(m[1],10) : 0;
-        const url = dUrl || urlFromText(dText);
+        const url  = dUrl || urlFromText(dText);
         if (!url) return;
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push({date, url});
+
+        if (!byKey.has(key))   byKey.set(key, []);
+        if (!byTitle.has(tkey))byTitle.set(tkey, []);
+        byKey.get(key).push({date,url});
+        byTitle.get(tkey).push({date,url});
       });
-      for (const [k,arr] of map) arr.sort((a,b)=> b.date - a.date || (a.url>b.url?1:-1)); // 新→古
-      return map;
+
+      const sortDesc = arr => arr.sort((a,b)=> b.date - a.date || (a.url>b.url?1:-1));
+      for (const arr of byKey.values())   sortDesc(arr);
+      for (const arr of byTitle.values()) sortDesc(arr);
+
+      return { byKey, byTitle };
+    }
+
+    /* ===== シート名の正規化（日本語表記にも耐性） ===== */
+    function normSheetName(s){
+      const raw = String(s || '').trim();
+      const low = raw.toLowerCase();
+      if (['archive','archives'].includes(low)) return 'archive';
+      if (/アーカイブ/.test(raw)) return 'archive';
+      if (['songs','gags'].includes(low)) return low;
+      return low; // 不明はそのまま返す（ログ用）
     }
 
     /* ===== JSONP コールバック（sheet 名で確実にルーティング） ===== */
@@ -144,29 +165,35 @@
       try{
         if (!payload || !payload.rows) throw new Error('payload.rows missing');
 
-        // ★ GAS が返した sheet 名を採用（songs | gags | archive）
-        const tab = String(payload.sheet || '').toLowerCase();
+        const tab = normSheetName(payload.sheet);
         if (!['songs','gags','archive'].includes(tab)) {
-          console.warn('Unknown sheet payload ignored:', tab);
+          console.warn('Unknown sheet payload ignored:', payload.sheet);
           return;
         }
 
         const rows = (payload.rows||[]).filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
         state.cache[tab] = rows;
 
-        if (tab === ARCHIVE_KEY) {
-          state.archiveMap = buildArchiveMap(rows);
+        if (tab === 'archive') {
+          const maps = buildArchiveMaps(rows);
+          state.archiveByKey   = maps.byKey;
+          state.archiveByTitle = maps.byTitle;
         }
 
         const haveCurrent = !!state.cache[state.current];
-        const haveArchive = !!state.archiveMap;
-
+        const haveArchive = !!state.archiveByKey;
         if (haveCurrent && haveArchive) {
           state.rows = state.cache[state.current] || [];
           $('status').textContent = `読み込み完了：${state.rows.length}件`;
           render();
         } else {
           $('status').textContent = haveCurrent ? '履歴を読み込み中…' : '読み込み中…';
+        }
+
+        const dbg = $('debug');
+        if (dbg) {
+          const aCnt = state.archiveByKey ? [...state.archiveByKey.values()].reduce((n,a)=>n+a.length,0) : 0;
+          dbg.innerHTML = `loaded: ${tab}, rows=${rows.length}, archiveLinks=${aCnt}`;
         }
       }catch(e){
         console.error(e);
@@ -184,8 +211,7 @@
 
     /* ===== データ取得（リダイレクト強耐性：A/B/C フォールバック） ===== */
     function requestData(tab){
-      // /macros/u/N を除去した正規URLに矯正し、authuser=0 を付与して /u/N への強制リダイレクトを抑止
-      const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/');
+      const baseNorm = API_URL.replace(/\/macros\/u\/\d+\//, '/macros/'); // 正規化
       const mk = (u,auth0=true)=> `${u}?callback=onGviz&sheet=${encodeURIComponent(tab)}${auth0?'&authuser=0':''}&v=${Date.now()}`;
       const candidates = [
         mk(baseNorm, true),                                   // A: 正規 + authuser=0
@@ -193,12 +219,10 @@
         mk(baseNorm, false)                                   // C: 正規（authuser 無し）
       ];
 
-      // デバッグ表示
       $('debug').innerHTML = `JSONP URL 候補:<br>` + candidates.map(u =>
         `<a target="_blank" rel="noopener" href="${u}">${u}</a>`
       ).join('<br>');
 
-      // 順次トライ
       let idx = 0, hit = false, timer = null;
       __jsonpHit = false;
 
@@ -229,8 +253,8 @@
     }
 
     function requestCurrentAndArchive(tab){
-      if (!state.cache[tab]) requestData(tab);          // 現在タブ
-      if (!state.archiveMap && !state.cache[ARCHIVE_KEY]) requestData(ARCHIVE_KEY); // アーカイブ
+      if (!state.cache[tab]) requestData(tab);                           // 現在タブ
+      if (!state.archiveByKey && !state.cache[ARCHIVE_KEY]) requestData(ARCHIVE_KEY); // アーカイブ
     }
 
     function setActiveTab(tab){
@@ -238,21 +262,20 @@
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
       requestCurrentAndArchive(tab);
-      if (state.cache[tab] && state.archiveMap) {
+      if (state.cache[tab] && state.archiveByKey) {
         state.rows = state.cache[tab];
         $('status').textContent = `読み込み完了：${state.rows.length}件`;
         render();
       }
     }
 
-    /* ===== 描画（PC=テーブル、モバイル=2行リスト／3つの▶を表示） ===== */
+    /* ===== 描画（PC=テーブル、モバイル=2行リスト／3つの▶） ===== */
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
       const hint = $('hint');
 
-      // 両方揃っていないなら描画しない（3つの▶を保証）
-      if (!state.cache[state.current] || !state.archiveMap) {
+      if (!state.cache[state.current] || !state.archiveByKey) {
         $('status').textContent = '履歴を読み込み中…';
         tableWrap.style.display = 'none';
         listWrap.style.display  = 'none';
@@ -285,9 +308,16 @@
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
+      // アーカイブ参照：厳密キー→タイトルキーの順で探索
       const getArchiveLinks = (artist, title, latestUrl) => {
-        const key = `${normalize(artist)}|${normalize(title)}`;
-        const arr = state.archiveMap.get(key) || [];
+        const key  = `${normalize(artist)}|${normalize(title)}`;
+        const tkey = normalize(title);
+
+        let arr = (state.archiveByKey && state.archiveByKey.get(key)) || null;
+        if (!arr || arr.length === 0) {
+          arr = (state.archiveByTitle && state.archiveByTitle.get(tkey)) || [];
+        }
+
         const seen = new Set([latestUrl||'']);
         const uniq = [];
         for (const {url} of arr) {
@@ -300,7 +330,7 @@
       };
 
       if (!isMobile) {
-        // ── PC：テーブル
+        // PC：テーブル
         const table=document.createElement('table');
         const thead=document.createElement('thead');
         const trh=document.createElement('tr');
@@ -323,7 +353,7 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
-          // ① 最新（現在タブのD）
+          // ① 最新（現在タブ）
           const latest = dUrl || urlFromText(dText);
           if (latest){
             const a=document.createElement('a');
@@ -333,7 +363,7 @@
             ops.appendChild(a);
           }
 
-          // ② 2番目（archiveの中で最新）／③ 最古（archiveの末尾）
+          // ② 2番目（archive）／③ 最古（archive）
           const { second, oldest } = getArchiveLinks(artist, title, latest);
           if (second){
             const a2=document.createElement('a');
@@ -363,7 +393,7 @@
         tableWrap.style.display = 'block';
         listWrap.style.display  = 'none';
       } else {
-        // ── モバイル：2行リスト
+        // モバイル：2行リスト
         rows.forEach(({artist,title,kind,dText,dUrl})=>{
           const item=document.createElement('div'); item.className='item';
 
@@ -422,7 +452,7 @@
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', scheduleSearch);
       $('limit').addEventListener('change', render);
-      setActiveTab('songs');             // 現在タブをリクエスト
+      setActiveTab('songs');             // 現在タブ
       requestCurrentAndArchive('songs'); // アーカイブも並行ロード
     })();
   </script>
