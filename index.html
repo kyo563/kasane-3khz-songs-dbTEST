@@ -66,8 +66,9 @@
     </div>
     <div class="row row-controls">
       <select id="limit">
-        <option value="10">上限 10件</option>        
+        <option value="10" selected>上限 10件</option>
         <option value="50">上限 50件</option>
+        <option value="all">全て</option>
       </select>
     </div>
     <div class="muted" id="status">読み込み中…</div>
@@ -87,7 +88,7 @@
     /* ===== 設定 ===== */
     // 必ず /macros/s/<DEPLOY_ID>/exec（/u/N なし）を設定
     const API_URL = 'https://script.google.com/macros/s/AKfycbzmWYRODUKMurNKLDzq23Ct5IEogfXk1BDucSY4KjzepJwOgVpV0EVgvwuzjS9KJW2axQ/exec';
-    const HARD_LIMIT = 200;
+    const HARD_LIMIT = 10000; // 「全て」選択時の安全上限
     const ARCHIVE_KEY = 'archive'; // /exec?sheet=archive を返す想定
 
     const state = {
@@ -282,7 +283,11 @@
       }
 
       const q = normalize($('q').value||'');
-      const limit = Math.min(parseInt($('limit').value,10)||50, HARD_LIMIT);
+
+      // ★ 上限の解釈：10 / 50 / 全て
+      const rawLimit = $('limit').value;
+      const limitParsed = (rawLimit === 'all') ? Number.POSITIVE_INFINITY : parseInt(rawLimit,10) || 10;
+      const effectiveLimit = Math.min(limitParsed, HARD_LIMIT);
 
       let filtered = state.cache[state.current] || [];
       if(q){
@@ -291,11 +296,12 @@
           return a.includes(q) || t.includes(q);
         });
       }
-      const rows = filtered.slice(0, limit);
+      const rows = filtered.slice(0, effectiveLimit);
 
+      const limitLabel = (rawLimit === 'all') ? '全て' : `${effectiveLimit}件`;
       $('status').textContent = q
-        ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limit}件`
-        : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）／表示上限 ${limit}件`;
+        ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limitLabel}`
+        : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）／表示上限 ${limitLabel}`;
 
       if(rows.length===0){
         hint.textContent = q ? '該当なし' : '検索結果がここに表示されます。';
