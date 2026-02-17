@@ -26,7 +26,7 @@
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
     input[type="search"],select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;background:#fff;color:var(--text);outline:none}
-    input[type="search"]:focus,select:focus,.btn:focus,.link-icon:focus,.link-btn:focus{outline:3px solid var(--focus);outline-offset:2px}
+    input[type="search"]:focus,select:focus,.btn:focus,.link-icon:focus{outline:3px solid var(--focus);outline-offset:2px}
 
     .dm-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
     .dm-select-wrap{flex:7 1 0}
@@ -160,9 +160,7 @@
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
-      rows: [],
       debounce: null,
-      archiveRaw: null,
       archiveByKey: null,
       archiveByTitle: null,
       lastScroll: 0,
@@ -222,7 +220,6 @@
         const json = localStorage.getItem('archiveJson');
         if(ver===ARCHIVE_VERSION && json){
           const rows = JSON.parse(json);
-          state.archiveRaw = rows;
           buildArchiveIndex(rows);
           return true;
         }
@@ -324,7 +321,6 @@
             dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
             dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
           }));
-          state.archiveRaw = rows;
           buildArchiveIndex(rows);
           saveArchiveToCache(rows);
           if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
@@ -347,8 +343,7 @@
           state.cache[tab] = rows;
 
           if (state.cache[state.current]) {
-            state.rows = state.cache[state.current] || [];
-            $('status').textContent = `読み込み完了：${state.rows.length}件`;
+            $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
             render();
           } else {
             $('status').textContent = '読み込み中…';
@@ -365,7 +360,6 @@
             dText : r.dText  ?? r.text  ?? '',
             dUrl  : r.dUrl   ?? r.url   ?? ''
           }));
-          state.archiveRaw = rows;
           buildArchiveIndex(rows);
           saveArchiveToCache(rows);
           renderHistory(state.histKey.artist, state.histKey.title);
@@ -425,9 +419,6 @@
       const url  = `${base}?callback=onGviz&sheet=${encodeURIComponent(tab)}&authuser=0&v=${Date.now()}`;
       jsonp(url, tab, attempt);
     }
-    function requestCurrent(tab){
-      if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
-    }
     function ensureArchiveFast(){
       const hasCache = tryLoadArchiveFromCache();
       if (!requestState.archive.inflight) requestData('archive');
@@ -438,10 +429,9 @@
       state.current = tab;
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
-      requestCurrent(tab);
+      if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
       if (state.cache[tab]) {
-        state.rows = state.cache[tab];
-        $('status').textContent = `表示中：${state.rows.length}件`;
+        $('status').textContent = `表示中：${state.cache[tab].length}件`;
         render();
       }
     }
@@ -512,6 +502,34 @@
       requestAnimationFrame(drawChunk);
     }
 
+
+    function openHistory(artist, title){
+      state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
+      showPage('page-history');
+      if (!state.archiveByKey) ensureArchiveFast();
+      renderHistory(artist, title);
+    }
+
+    function appendItemActions(target, {artist, title, kind, dText, dUrl}){
+      if ((kind||'').trim()!==''){
+        const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
+        target.appendChild(k);
+      }
+
+      const url = dUrl || urlFromText(dText);
+      if (url){
+        const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='リンクを開く';
+        target.appendChild(a);
+      }
+
+      const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
+      hbtn.addEventListener('click', ()=>openHistory(artist, title));
+      target.appendChild(hbtn);
+
+      const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
+      btn.addEventListener('click', ()=>copyPair(title,artist));
+      target.appendChild(btn);
+    }
     function render(){
       const tableWrap = $('table'); tableWrap.innerHTML = '';
       const listWrap  = $('mblist'); listWrap.innerHTML = '';
@@ -547,8 +565,6 @@
       hint.textContent = '';
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const latestUrl = (r)=> r.dUrl || urlFromText(r.dText);
-
       if (!isMobile) {
         const table=document.createElement('table');
         const thead=document.createElement('thead');
@@ -566,29 +582,7 @@
           const tdOps=document.createElement('td');
           const ops=document.createElement('div'); ops.className='ops';
 
-          if ((kind||'').trim()!==''){
-            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
-            ops.appendChild(k);
-          }
-
-          const url = latestUrl({dText,dUrl});
-          if (url){
-            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='リンクを開く';
-            ops.appendChild(a);
-          }
-
-          const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
-          hbtn.addEventListener('click', ()=>{
-            state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
-            showPage('page-history');
-            if (!state.archiveByKey) ensureArchiveFast();
-            renderHistory(artist, title);
-          });
-          ops.appendChild(hbtn);
-
-          const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
-          btn.addEventListener('click', ()=>copyPair(title,artist));
-          ops.appendChild(btn);
+          appendItemActions(ops, {artist, title, kind, dText, dUrl});
 
           tdOps.appendChild(ops); tr.appendChild(tdOps); tbody.appendChild(tr);
         });
@@ -605,29 +599,7 @@
 
           const l2=document.createElement('div'); l2.className='l2';
 
-          if ((kind||'').trim()!==''){
-            const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
-            l2.appendChild(k);
-          }
-
-          const url = latestUrl({dText,dUrl});
-          if (url){
-            const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.className='link-icon'; a.textContent='▶'; a.title='リンクを開く';
-            l2.appendChild(a);
-          }
-
-          const hbtn=document.createElement('button'); hbtn.className='btn'; hbtn.textContent='履歴';
-          hbtn.addEventListener('click', ()=>{
-            state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
-            showPage('page-history');
-            if (!state.archiveByKey) ensureArchiveFast();
-            renderHistory(artist, title);
-          });
-          l2.appendChild(hbtn);
-
-          const btn=document.createElement('button'); btn.className='btn'; btn.textContent='コピー';
-          btn.addEventListener('click', ()=>copyPair(title,artist));
-          l2.appendChild(btn);
+          appendItemActions(l2, {artist, title, kind, dText, dUrl});
 
           item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
@@ -649,7 +621,6 @@
 
       showPage('page-list');
       setActiveTab('songs');
-      if (!state.cache['songs']) requestData('songs');
       if (!state.cache['gags'])  requestData('gags');
 
       ensureArchiveFast();
