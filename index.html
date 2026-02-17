@@ -220,7 +220,7 @@
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     const API_URL = DEPLOY_URL;
     const HARD_LIMIT = 10000;
-    const ARCHIVE_VERSION = 'v2.5';
+    const ARCHIVE_VERSION = 'v2.6';
 
     const state = {
       current: 'songs',
@@ -400,13 +400,28 @@
       showRequestError(tab, reason);
     }
 
+    function pickFirst(obj, keys){
+      for (const key of keys){
+        if (obj[key] !== undefined && obj[key] !== null) return obj[key];
+      }
+      return '';
+    }
     function normalizeBaseRow(r){
+      const row = r || {};
+      const rawUrl = pickFirst(row, ['dUrl','durl','DURL','url','URL','リンク','Link','link','動画URL','履歴URL']);
+      const rawDate = pickFirst(row, ['date','Date','DATE','日付','配信日','投稿日','dDate','DDATE']);
+      const rawText = pickFirst(row, ['dText','dtext','DTEXT','text','TEXT','詳細','備考']);
+      const normalizedText = String(rawText || '').trim();
+      const normalizedDate = String(rawDate || '').trim();
+      const normalizedUrl = String(rawUrl || '').trim();
+
+      const dText = normalizedText || `${normalizedDate} ${normalizedUrl}`.trim();
       return {
-        artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
-        title : r.title  ?? r.Title  ?? r.曲名       ?? '',
-        kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
-        dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
-        dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
+        artist: pickFirst(row, ['artist','Artist','アーティスト','歌手','アーティスト名']),
+        title : pickFirst(row, ['title','Title','曲名','タイトル']),
+        kind  : pickFirst(row, ['kind','Kind','区分','種別']),
+        dText,
+        dUrl  : normalizedUrl
       };
     }
     function normalizeListRows(payloadRows){
