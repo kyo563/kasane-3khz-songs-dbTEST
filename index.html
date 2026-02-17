@@ -19,6 +19,7 @@
       line-height:1.6;
       margin:0;
       padding:14px;
+      padding-bottom:170px;
     }
     .app-shell{max-width:760px;margin:0 auto}
     .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 18px 28px rgba(0,0,0,.28)}
@@ -50,6 +51,25 @@
     .btn-full{width:100%}
 
     .muted{color:var(--muted);font-size:13px}
+    .input-dock{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:40;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      background:linear-gradient(180deg,rgba(11,18,32,0) 0%,rgba(11,18,32,.92) 35%,rgba(11,18,32,.98) 100%);
+      backdrop-filter:blur(4px);
+    }
+    .input-console{
+      max-width:760px;
+      margin:0 auto;
+      background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      box-shadow:0 12px 24px rgba(0,0,0,.3);
+    }
     .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(17,24,39,.92);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s}
     .toast.show{opacity:1}
 
@@ -78,6 +98,7 @@
 
     @media (max-width:768px){
       body{padding:10px}
+      body{padding-bottom:180px}
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
@@ -88,6 +109,8 @@
       .l2{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
       .dm-select-wrap{flex:7 1 0}
       .dm-btn-wrap{flex:3 1 0}
+      .input-dock{padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+      .input-console{padding:9px}
     }
 
     .page{display:none}.page.active{display:block}
@@ -128,23 +151,6 @@
         </div>
       </div>
 
-      <div class="row">
-        <input id="q" type="search" placeholder="曲名／アーティスト名で検索" autocomplete="off">
-      </div>
-
-      <div class="dm-wrap" aria-label="弾幕コピー">
-        <div class="dm-select-wrap">
-          <select id="dm-select" title="弾幕の種類を選択">
-            <option value="⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*">⚛️🌐ꕤ.‎˖٭（花）</option>
-            <option value="⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+">⚛️🌐♬*.+（音符）</option>
-            <option value="✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵">✨⚛️🌐🎵（キラ音符）</option>
-          </select>
-        </div>
-        <div class="dm-btn-wrap">
-          <button id="dm-copy" class="btn btn-full" type="button" title="選択した弾幕をコピー">コピー</button>
-        </div>
-      </div>
-
       <div class="muted" id="status">読み込み中…</div>
     </div>
 
@@ -171,6 +177,25 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
+  <div class="input-dock" aria-label="入力コンソール">
+    <div class="input-console">
+      <div class="row">
+        <input id="q" type="search" placeholder="曲名／アーティスト名で検索" autocomplete="off">
+      </div>
+      <div class="dm-wrap" aria-label="弾幕コピー">
+        <div class="dm-select-wrap">
+          <select id="dm-select" title="弾幕の種類を選択">
+            <option value="⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*⚛️🌐ꕤ.‎˖٭*">⚛️🌐ꕤ.‎˖٭（花）</option>
+            <option value="⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+⚛️🌐♬*.+">⚛️🌐♬*.+（音符）</option>
+            <option value="✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵✨⚛️🌐🎵">✨⚛️🌐🎵（キラ音符）</option>
+          </select>
+        </div>
+        <div class="dm-btn-wrap">
+          <button id="dm-copy" class="btn btn-full" type="button" title="選択した弾幕をコピー">コピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
   </div>
 
   <script>
