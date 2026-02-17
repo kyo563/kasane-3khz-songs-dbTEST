@@ -394,83 +394,71 @@
       showRequestError(tab, reason);
     }
 
-    function normalizeRows(payloadRows){
-      return (payloadRows||[])
-        .map(r => ({
-          artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
-          title : r.title  ?? r.Title  ?? r.曲名       ?? '',
-          kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
-          dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
-          dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
-        }))
-        .filter(r => ((r.artist||'')+(r.title||'')).trim()!=='');
+    function normalizeBaseRow(r){
+      return {
+        artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
+        title : r.title  ?? r.Title  ?? r.曲名       ?? '',
+        kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
+        dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
+        dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
+      };
+    }
+    function normalizeListRows(payloadRows){
+      return (payloadRows || [])
+        .map(normalizeBaseRow)
+        .filter(r => ((r.artist||'')+(r.title||'')).trim() !== '');
+    }
+    function normalizeArchiveRows(payloadRows){
+      return (payloadRows || [])
+        .map(normalizeBaseRow)
+        .filter(r => {
+          const hasMain = ((r.artist||'') + (r.title||'')).trim() !== '';
+          const hasArchiveOnly = String(r.dText||'').trim() !== '' || String(r.dUrl||'').trim() !== '';
+          return hasMain || hasArchiveOnly;
+        });
     }
 
     function handlePayload(tab, payload){
       __jsonpHit = true;
-      try{
-        if (!payload || !Array.isArray(payload.rows)) {
-          if (tab === 'archive' && state.histKey) {
-            $('hist-list').innerHTML = '';
-            $('hist-empty').style.display = 'block';
-            $('hist-sub').textContent = '履歴の取得に失敗しました。';
-          } else {
-            $('status').textContent = '不正なレスポンスを受信しました。';
-          }
-          return;
-        }
-
-        const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
-        const shouldStrictMatch = tab === 'songs' || tab === 'gags';
-        if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
-          throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
-        }
-
-        if (tab === 'archive') {
-          markRequestSuccess('archive');
-          const rows = normalizeRows(payload.rows);
-          buildArchiveIndex(rows);
-          saveArchiveToCache(rows);
-          if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
-          return;
-        }
-
-        if (tab === 'songs' || tab === 'gags') {
-          markRequestSuccess(tab);
-          const rows = normalizeRows(payload.rows)
-            .map(r => ({
-              ...r,
-              _na: normalize(r.artist),
-              _nt: normalize(r.title)
-            }));
-          state.cache[tab] = rows;
-
-          if (state.cache[state.current]) {
-            $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
-            render();
-          } else {
-            $('status').textContent = '読み込み中…';
-          }
-          return;
-        }
-
-        if (tab === 'archive' && state.histKey) {
-          $('hist-list').innerHTML = '';
-          $('hist-empty').style.display = 'block';
-          $('hist-sub').textContent = '不明なレスポンスを受信しました。';
-        } else {
-          $('status').textContent = '不明なレスポンスを受信しました。';
-        }
-      }catch(e){
-        console.error(e);
-        if (tab === 'archive' && state.histKey) {
-          $('hist-list').innerHTML = '';
-          $('hist-empty').style.display = 'block';
-          $('hist-sub').textContent = '履歴の描画に失敗しました。';
-        } else {
-          $('status').textContent='読み込みに失敗しました';
-        }
+      if (!payload || !Array.isArray(payload.rows)) {
+        throw new Error('不正なレスポンス');
       }
+
+      const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
+      const shouldStrictMatch = tab === 'songs' || tab === 'gags';
+      if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
+        throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
+      }
+
+      if (tab === 'archive') {
+        markRequestSuccess('archive');
+        const rows = normalizeArchiveRows(payload.rows);
+        buildArchiveIndex(rows);
+        saveArchiveToCache(rows);
+        if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
+        return;
+      }
+
+      if (tab === 'songs' || tab === 'gags') {
+        markRequestSuccess(tab);
+        const rows = normalizeListRows(payload.rows)
+          .map(r => ({
+            ...r,
+            _na: normalize(r.artist),
+            _nt: normalize(r.title)
+          }));
+        state.cache[tab] = rows;
+
+        if (state.cache[state.current]) {
+          $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
+          render();
+        } else {
+          $('status').textContent = '読み込み中…';
+        }
+        return;
+      }
+
+      throw new Error('不明なタブ種別');
     }
 
     setTimeout(()=>{
