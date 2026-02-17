@@ -80,6 +80,8 @@
     .toast.show{opacity:1}
     .to-top{position:fixed;right:16px;bottom:134px;z-index:35;display:none;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:10px 12px;font-size:13px;cursor:pointer;box-shadow:0 8px 18px rgba(29,77,60,.18)}
     .to-top.show{display:inline-flex}
+    .cache-refresh{position:fixed;right:14px;top:12px;z-index:45;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:5px 9px;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 14px rgba(29,77,60,.15)}
+    .cache-refresh:disabled{opacity:.65;cursor:wait}
 
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed}
     th,td{border-bottom:1px solid var(--line);padding:10px 8px;font-size:15px;vertical-align:top}
@@ -189,6 +191,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
   <button id="to-top" class="to-top" type="button" aria-label="ページ上部へ戻る">↑ 上へ</button>
+  <button id="cache-refresh" class="cache-refresh" type="button" title="キャッシュを破棄して再取得">更新</button>
   <div class="input-dock" aria-label="入力コンソール">
     <div class="input-console">
       <div class="row">
@@ -254,6 +257,37 @@
     });
     document.getElementById('to-top').addEventListener('click', ()=>{
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.getElementById('cache-refresh').addEventListener('click', ()=>{
+      const btn = $('cache-refresh');
+      btn.disabled = true;
+
+      state.cache.songs = null;
+      state.cache.gags = null;
+      state.archiveByKey = null;
+      state.archiveByTitle = null;
+      state.kindFilter = '';
+
+      localStorage.removeItem('archiveVersion');
+      localStorage.removeItem('archiveJson');
+      localStorage.removeItem('archiveUpdatedAt');
+
+      $('q').value = '';
+      $('status').textContent = 'キャッシュを破棄して再取得中…';
+      $('stats-row').innerHTML = '';
+      $('quick-filters').innerHTML = '';
+      $('hint').textContent = '検索結果がここに表示されます。';
+      $('table').innerHTML = '';
+      $('mblist').innerHTML = '';
+      $('table').style.display = 'none';
+      $('mblist').style.display = 'none';
+
+      requestData('songs', 0, true, 'fetch');
+      requestData('gags', 0, true, 'fetch');
+      requestData('archive', 0, true, 'fetch');
+
+      showToast('キャッシュを破棄して更新しました');
+      setTimeout(()=>{ btn.disabled = false; }, 1000);
     });
 
     const urlFromText = s => { if(!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; };
