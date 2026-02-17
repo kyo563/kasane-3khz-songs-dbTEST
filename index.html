@@ -322,7 +322,8 @@
         }
 
         const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
-        if (rawSheet && rawSheet !== tab) {
+        const shouldStrictMatch = tab === 'songs' || tab === 'gags';
+        if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
           throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
         }
 
