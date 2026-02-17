@@ -31,14 +31,16 @@
     .tabs{display:flex;gap:8px;flex-wrap:wrap;flex:1}
     .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:10px 15px;font-size:14px;cursor:pointer;transition:.2s}
     .tab[aria-selected="true"]{background:var(--tab-active);border-color:transparent;color:#062033;font-weight:700;box-shadow:0 8px 18px rgba(76,201,240,.35)}
-    .tab:focus{outline:3px solid var(--focus);outline-offset:2px}
+    .tab:focus{outline:none}
     .limit-wrap{display:flex;align-items:center;gap:8px;background:#ecf8f1;border:1px solid var(--line);padding:6px 8px;border-radius:999px}
     #limit{padding:6px 10px;font-size:14px;line-height:1.2;width:auto;min-width:88px;border-radius:999px}
 
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
+    #q{flex:8 1 0}
+    #clear-search{flex:2 1 0;min-width:84px}
     input[type="search"],select{width:100%;padding:12px 14px;border:1px solid #9cc8b6;border-radius:13px;font-size:16px;background:#f7fffb;color:var(--text);outline:none}
-    input[type="search"]:focus,select:focus,.btn:focus,.link-icon:focus{outline:3px solid var(--focus);outline-offset:2px}
+    :where(button,[href],input,select):focus-visible{outline:3px solid var(--focus);outline-offset:2px}
     input::placeholder{color:#759789}
 
     .dm-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
@@ -136,6 +138,10 @@
     .history-item a{color:var(--link);text-decoration:none}
     .history-item a:hover{text-decoration:underline}
     .skeleton{height:16px;background:#d9ece2;border-radius:6px;margin:6px 0}
+
+    @supports not selector(:focus-visible){
+      :where(button,[href],input,select):focus{outline:3px solid var(--focus);outline-offset:2px}
+    }
   </style>
 </head>
 <body>
@@ -418,9 +424,18 @@
         });
     }
 
+    function resolvePayloadRows(payload){
+      if (Array.isArray(payload?.rows)) return payload.rows;
+      if (Array.isArray(payload?.data)) return payload.data;
+      if (Array.isArray(payload?.result?.rows)) return payload.result.rows;
+      if (Array.isArray(payload)) return payload;
+      return null;
+    }
+
     function handlePayload(tab, payload){
       __jsonpHit = true;
-      if (!payload || !Array.isArray(payload.rows)) {
+      const rowsPayload = resolvePayloadRows(payload);
+      if (!rowsPayload) {
         throw new Error('不正なレスポンス');
       }
 
@@ -432,7 +447,7 @@
 
       if (tab === 'archive') {
         markRequestSuccess('archive');
-        const rows = normalizeArchiveRows(payload.rows);
+        const rows = normalizeArchiveRows(rowsPayload);
         buildArchiveIndex(rows);
         saveArchiveToCache(rows);
         if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
@@ -441,7 +456,7 @@
 
       if (tab === 'songs' || tab === 'gags') {
         markRequestSuccess(tab);
-        const rows = normalizeListRows(payload.rows)
+        const rows = normalizeListRows(rowsPayload)
           .map(r => ({
             ...r,
             _na: normalize(r.artist),
