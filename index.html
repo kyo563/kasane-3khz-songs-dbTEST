@@ -49,8 +49,14 @@
     .btn:hover{filter:brightness(1.05)}
     .btn:active{transform:translateY(1px)}
     .btn-full{width:100%}
+    .btn-subtle{background:#12213d;color:#d7e6ff;border-color:#365381}
 
     .muted{color:var(--muted);font-size:13px}
+    .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#12203d;font-size:12px;color:#cfe0ff}
+    .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+    .filter-chip{appearance:none;border:1px solid #39517d;border-radius:999px;background:#12213f;color:#dce8ff;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
+    .filter-chip.active{background:linear-gradient(135deg,#6dd3ff,#6fb1ff);color:#05233d;border-color:transparent;font-weight:700}
     .input-dock{
       position:fixed;
       left:0;
@@ -72,6 +78,8 @@
     }
     .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(17,24,39,.92);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s}
     .toast.show{opacity:1}
+    .to-top{position:fixed;right:16px;bottom:134px;z-index:35;display:none;appearance:none;border:1px solid #3f5685;background:#122241;color:#ddebff;border-radius:999px;padding:10px 12px;font-size:13px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.3)}
+    .to-top.show{display:inline-flex}
 
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed}
     th,td{border-bottom:1px solid var(--line);padding:10px 8px;font-size:15px;vertical-align:top}
@@ -111,6 +119,7 @@
       .dm-btn-wrap{flex:3 1 0}
       .input-dock{padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
       .input-console{padding:9px}
+      .to-top{right:10px;bottom:126px}
     }
 
     .page{display:none}.page.active{display:block}
@@ -152,6 +161,8 @@
       </div>
 
       <div class="muted" id="status">読み込み中…</div>
+      <div class="stats-row" id="stats-row" aria-live="polite"></div>
+      <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
     </div>
 
     <div class="card" style="margin-top:12px;">
@@ -177,10 +188,12 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
+  <button id="to-top" class="to-top" type="button" aria-label="ページ上部へ戻る">↑ 上へ</button>
   <div class="input-dock" aria-label="入力コンソール">
     <div class="input-console">
       <div class="row">
         <input id="q" type="search" placeholder="曲名／アーティスト名で検索" autocomplete="off">
+        <button id="clear-search" class="btn btn-subtle" type="button" title="検索条件をクリア">クリア</button>
       </div>
       <div class="dm-wrap" aria-label="弾幕コピー">
         <div class="dm-select-wrap">
@@ -211,7 +224,8 @@
       archiveByKey: null,
       archiveByTitle: null,
       lastScroll: 0,
-      histKey: null
+      histKey: null,
+      kindFilter: ""
     };
 
     const $ = id => document.getElementById(id);
@@ -231,6 +245,15 @@
     document.getElementById('dm-copy').addEventListener('click', ()=>{
       const v = $('dm-select').value || '';
       copyText(v);
+    });
+    document.getElementById('clear-search').addEventListener('click', ()=>{
+      $('q').value = '';
+      state.kindFilter = '';
+      render();
+      $('q').focus();
+    });
+    document.getElementById('to-top').addEventListener('click', ()=>{
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     const urlFromText = s => { if(!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; };
@@ -565,6 +588,7 @@
 
     function setActiveTab(tab){
       state.current = tab;
+      state.kindFilter = "";
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
       if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
@@ -701,13 +725,38 @@
       }
 
       const q = normalize($('q').value||'');
+      const kindFilter = state.kindFilter;
       const rawLimit = $('limit').value;
       const limitParsed = (rawLimit === 'all') ? Number.POSITIVE_INFINITY : parseInt(rawLimit,10) || 10;
       const effectiveLimit = Math.min(limitParsed, HARD_LIMIT);
 
       let filtered = state.cache[state.current] || [];
       if(q){ filtered = filtered.filter(r => r._na.includes(q) || r._nt.includes(q)); }
+      if (kindFilter) filtered = filtered.filter(r => (r.kind || '').trim() === kindFilter);
       const rows = filtered.slice(0, effectiveLimit);
+
+      const allRows = state.cache[state.current] || [];
+      const uniqueArtists = new Set(allRows.map(r => r._na).filter(Boolean)).size;
+      const stats = [
+        `${state.current === 'songs' ? '歌唱曲' : '一発ネタ'}: ${allRows.length}件`,
+        `アーティスト数: ${uniqueArtists}人`,
+        kindFilter ? `絞り込み: ${kindFilter}` : '絞り込み: なし'
+      ];
+      $('stats-row').innerHTML = stats.map(text => `<span class="pill">${text}</span>`).join('');
+
+      const kinds = [...new Set(allRows.map(r => (r.kind || '').trim()).filter(Boolean))].slice(0, 10);
+      const filterButtons = ['すべて', ...kinds].map(kind => {
+        const active = (kind === 'すべて' && !kindFilter) || kindFilter === kind;
+        const value = kind === 'すべて' ? '' : kind;
+        return `<button type="button" class="filter-chip${active ? ' active' : ''}" data-kind="${value}">${kind}</button>`;
+      }).join('');
+      $('quick-filters').innerHTML = filterButtons;
+      $('quick-filters').querySelectorAll('.filter-chip').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          state.kindFilter = btn.dataset.kind || '';
+          render();
+        });
+      });
 
       const limitLabel = (rawLimit === 'all') ? '全て' : `${effectiveLimit}件`;
       $('status').textContent = q
@@ -770,6 +819,10 @@
     });
 
     window.addEventListener('resize', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,150); });
+    window.addEventListener('scroll', ()=>{
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      $('to-top').classList.toggle('show', y > 280);
+    });
 
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
