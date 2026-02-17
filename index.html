@@ -238,17 +238,72 @@
     }
 
     let __jsonpHit = false;
+    const REQUEST_MAX_RETRY = 2;
+    const REQUEST_TIMEOUT_MS = 4500;
+    const REQUEST_RETRY_DELAY_MS = 500;
+    const requestState = {
+      songs: { id:0, timer:null, inflight:false },
+      gags: { id:0, timer:null, inflight:false },
+      archive: { id:0, timer:null, inflight:false }
+    };
+
+    function clearRequestTimer(tab){
+      const req = requestState[tab];
+      if (!req) return;
+      if (req.timer) clearTimeout(req.timer);
+      req.timer = null;
+    }
+    function markRequestSuccess(tab){
+      if (!requestState[tab]) return;
+      const req = requestState[tab];
+      req.inflight = false;
+      clearRequestTimer(tab);
+    }
+    function showRequestError(tab, reason){
+      if (tab === 'archive') {
+        if (state.histKey) {
+          $('hist-sub').textContent = state.archiveByKey
+            ? `履歴の更新に失敗しました（キャッシュ表示中）: ${reason}`
+            : `履歴の取得に失敗しました: ${reason}`;
+          if (!state.archiveByKey) {
+            $('hist-list').innerHTML = '';
+            $('hist-empty').style.display = 'block';
+          }
+        }
+        return;
+      }
+
+      if (state.current === tab || !state.cache[state.current]) {
+        $('status').textContent = `データ取得（${tab}）に失敗しました: ${reason}`;
+      }
+    }
+
+    function handleRequestFailure(tab, attempt, reason){
+      const req = requestState[tab];
+      if (!req) return;
+      req.inflight = false;
+      clearRequestTimer(tab);
+
+      if (attempt < REQUEST_MAX_RETRY) {
+        const next = attempt + 1;
+        console.warn(`[${tab}] request failed: ${reason}. retry=${next}/${REQUEST_MAX_RETRY}`);
+        setTimeout(()=>requestData(tab, next), REQUEST_RETRY_DELAY_MS * next);
+        return;
+      }
+
+      showRequestError(tab, reason);
+    }
+
     function onGviz(payload){
       __jsonpHit = true;
       try{
         if (!payload || !Array.isArray(payload.rows)) {
-          const name = (payload && (payload.sheet || payload.sheetName || payload.name)) ? String(payload.sheet || payload.sheetName || payload.name) : 'unknown';
           if (state.histKey) {
             $('hist-list').innerHTML = '';
             $('hist-empty').style.display = 'block';
             $('hist-sub').textContent = '履歴の取得に失敗しました。';
           } else {
-            $('status').textContent = `データ取得（${name}）に失敗しました`;
+            $('status').textContent = '不正なレスポンスを受信しました。';
           }
           return;
         }
@@ -261,6 +316,7 @@
         const tab = rawSheet || (looksArchive && state.histKey ? 'archive' : '');
 
         if (tab === 'archive') {
+          markRequestSuccess('archive');
           const rows = (payload.rows||[]).map(r => ({
             artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
             title : r.title  ?? r.Title  ?? r.曲名       ?? '',
@@ -276,6 +332,7 @@
         }
 
         if (tab === 'songs' || tab === 'gags') {
+          markRequestSuccess(tab);
           const rows = (payload.rows||[])
             .map(r => ({
               artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
@@ -300,6 +357,7 @@
         }
 
         if (state.histKey && looksArchive) {
+          markRequestSuccess('archive');
           const rows = (payload.rows||[]).map(r => ({
             artist: r.artist ?? '',
             title : r.title  ?? '',
@@ -340,23 +398,40 @@
       }
     }, 4000);
 
-    function jsonp(url){
+    function jsonp(url, tab, attempt){
+      const req = requestState[tab];
+      if (!req) return;
+
+      clearRequestTimer(tab);
+      req.id += 1;
+      req.inflight = true;
+      const requestId = req.id;
+
       const s=document.createElement('script');
       s.src=url;
-      s.onerror=()=>{ if ($('page-list').classList.contains('active')) $('status').textContent='データ取得に失敗しました（ネットワーク/ブロック）'; };
+      s.onerror=()=>{
+        if (req.id !== requestId) return;
+        handleRequestFailure(tab, attempt, 'ネットワーク/ブロック');
+      };
       document.head.appendChild(s);
+
+      req.timer = setTimeout(()=>{
+        if (req.id !== requestId || !req.inflight) return;
+        handleRequestFailure(tab, attempt, 'タイムアウト');
+      }, REQUEST_TIMEOUT_MS);
     }
-    function requestData(tab){
+    function requestData(tab, attempt = 0){
       const base = API_URL.replace(/\/macros\/u\/\d+\//,'/macros/');
       const url  = `${base}?callback=onGviz&sheet=${encodeURIComponent(tab)}&authuser=0&v=${Date.now()}`;
-      jsonp(url);
+      jsonp(url, tab, attempt);
     }
     function requestCurrent(tab){
-      if (!state.cache[tab]) requestData(tab);
+      if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
     }
     function ensureArchiveFast(){
-      const ok = tryLoadArchiveFromCache();
-      if (!ok) requestData('archive');
+      const hasCache = tryLoadArchiveFromCache();
+      if (!requestState.archive.inflight) requestData('archive');
+      if (state.histKey && hasCache) renderHistory(state.histKey.artist, state.histKey.title);
     }
 
     function setActiveTab(tab){
