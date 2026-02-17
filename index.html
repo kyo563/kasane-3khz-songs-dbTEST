@@ -7,33 +7,45 @@
   <title>歌唱曲・一発ネタ 検索（履歴 高速化版）</title>
   <style>
     :root{
-      --bg:#e6f6ff; --card:#ffffff; --text:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
-      --thead:#dff1ff; --focus:#3897c9; --tab-bg:#ffffff; --tab-active:#c8e7ff; --tab-border:#cbd5e1; --link:#2563eb;
-      --chip-bg:#f3f4f6; --chip-text:#111827;
+      --bg:#0b1220; --card:#131d34; --card-soft:#1b2743; --text:#eff4ff; --muted:#9fb0d3; --line:#2d3a59;
+      --thead:#1c2d52; --focus:#7bc6ff; --tab-bg:#16223d; --tab-active:#4cc9f0; --tab-border:#334566; --link:#8bd3ff;
+      --chip-bg:#25365c; --chip-text:#eaf1ff; --accent:#7bc6ff;
     }
     *{box-sizing:border-box}
-    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;line-height:1.7;margin:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    body{
+      background:radial-gradient(120% 70% at 50% 0%,#1c2d52 0%,var(--bg) 55%);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
+      line-height:1.6;
+      margin:0;
+      padding:14px;
+    }
+    .app-shell{max-width:760px;margin:0 auto}
+    .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 18px 28px rgba(0,0,0,.28)}
+    .hero{margin-bottom:12px}
+    .hero-title{margin:0;font-size:20px;line-height:1.35;letter-spacing:.02em}
+    .hero-sub{margin:6px 0 0;color:var(--muted);font-size:13px}
 
     .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin-bottom:8px}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer}
-    .tab[aria-selected="true"]{background:var(--tab-active);font-weight:700}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+    .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:10px 15px;font-size:14px;cursor:pointer;transition:.2s}
+    .tab[aria-selected="true"]{background:var(--tab-active);border-color:transparent;color:#062033;font-weight:700;box-shadow:0 8px 18px rgba(76,201,240,.35)}
     .tab:focus{outline:3px solid var(--focus);outline-offset:2px}
-    .limit-wrap{display:flex;align-items:center;gap:8px}
-    #limit{padding:6px 10px;font-size:14px;line-height:1.2;width:auto;min-width:120px}
+    .limit-wrap{display:flex;align-items:center;gap:8px;background:#15213b;border:1px solid var(--line);padding:6px 8px;border-radius:999px}
+    #limit{padding:6px 10px;font-size:14px;line-height:1.2;width:auto;min-width:88px;border-radius:999px}
 
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
-    input[type="search"],select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;background:#fff;color:var(--text);outline:none}
+    input[type="search"],select{width:100%;padding:12px 14px;border:1px solid #31456f;border-radius:13px;font-size:16px;background:#0f1930;color:var(--text);outline:none}
     input[type="search"]:focus,select:focus,.btn:focus,.link-icon:focus{outline:3px solid var(--focus);outline-offset:2px}
+    input::placeholder{color:#8ca0c9}
 
     .dm-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
     .dm-select-wrap{flex:7 1 0}
     .dm-btn-wrap{flex:3 1 0;display:flex}
     #dm-select{width:100%;padding:6px 10px;font-size:14px;line-height:1.2}
-    .btn{appearance:none;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
-    .btn:hover{background:#f9fafb}
+    .btn{appearance:none;border:1px solid transparent;background:linear-gradient(135deg,#4cc9f0,#4895ef);color:#05223d;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
     .btn:active{transform:translateY(1px)}
     .btn-full{width:100%}
 
@@ -48,8 +60,8 @@
     th:nth-child(2),td:nth-child(2){width:40%}
     th:nth-child(3),td:nth-child(3){width:32%}
     .ops{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-    .link-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;line-height:1;text-decoration:none;font-size:18px;border-radius:8px}
-    .link-icon:hover{background:#f3f4f6}
+    .link-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;line-height:1;text-decoration:none;font-size:18px;border-radius:8px;color:var(--text)}
+    .link-icon:hover{background:#243355}
     .link-icon:active{transform:translateY(1px)}
 
     .kind-chip{
@@ -65,10 +77,13 @@
     }
 
     @media (max-width:768px){
+      body{padding:10px}
+      .card{padding:14px;border-radius:16px}
+      .hero-title{font-size:18px}
       table{display:none}
       .mobile-list{display:block;margin-top:10px}
-      .item{border-bottom:1px solid var(--line);padding:12px 2px;display:flex;flex-direction:column;gap:6px}
-      .l1{font-size:16px;line-height:1.6;font-weight:700;display:flex;gap:6px;flex-wrap:wrap}
+      .item{border:1px solid var(--line);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;gap:8px;background:#101a32;margin-bottom:9px}
+      .l1{font-size:16px;line-height:1.5;font-weight:700;display:flex;gap:6px;flex-wrap:wrap}
       .l1 .sep{opacity:.6}
       .l2{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
       .dm-select-wrap{flex:7 1 0}
@@ -77,21 +92,26 @@
 
     .page{display:none}.page.active{display:block}
     .history-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-    .back{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
-    .back:hover{background:#f9fafb}
+    .back{appearance:none;border:1px solid var(--line);background:#132140;color:var(--text);border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
+    .back:hover{background:#17274b}
     .title{font-weight:700}
     .history-list{margin-top:8px}
     .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px;gap:8px}
     .history-left{display:flex;align-items:center;gap:8px;min-width:0}
-    .history-date{white-space:nowrap;color:#374151}
+    .history-date{white-space:nowrap;color:#b6c3df}
     .history-item a{color:var(--link);text-decoration:none}
     .history-item a:hover{text-decoration:underline}
-    .skeleton{height:16px;background:#eef6ff;border-radius:6px;margin:6px 0}
+    .skeleton{height:16px;background:#22365e;border-radius:6px;margin:6px 0}
   </style>
 </head>
 <body>
+  <div class="app-shell">
   <!-- 一覧ページ -->
   <div id="page-list" class="page active">
+    <div class="hero">
+      <h1 class="hero-title">歌唱曲・一発ネタ 検索</h1>
+      <p class="hero-sub">スマホでも見やすく、すばやく探せる新デザイン</p>
+    </div>
     <div class="card">
       <div class="topbar">
         <div class="tabs" role="tablist" aria-label="検索対象">
@@ -151,6 +171,7 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
+  </div>
 
   <script>
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
