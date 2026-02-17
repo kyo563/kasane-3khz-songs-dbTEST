@@ -456,7 +456,27 @@
       let list = state.archiveByKey.get(key);
       if (!list || list.length===0) list = state.archiveByTitle.get(normalize(title)) || [];
 
-      if (list.length===0){
+      const songs = state.cache.songs || [];
+      let latestFromSongs = null;
+      for (const row of songs) {
+        if (row._na !== normalize(artist) || row._nt !== normalize(title)) continue;
+        const url = row.dUrl || urlFromText(row.dText);
+        const date = extractDate8(row.dText);
+        const candidate = { date, url, kind: row.kind || '' };
+        if (!latestFromSongs || candidate.date > latestFromSongs.date) latestFromSongs = candidate;
+      }
+
+      const mergedList = [...list];
+      if (latestFromSongs && latestFromSongs.url) {
+        const exists = mergedList.some(item =>
+          item.date === latestFromSongs.date &&
+          item.url === latestFromSongs.url &&
+          (item.kind || '') === (latestFromSongs.kind || '')
+        );
+        if (!exists) mergedList.unshift(latestFromSongs);
+      }
+
+      if (mergedList.length===0){
         empty.style.display = 'block';
         return;
       }
@@ -467,9 +487,9 @@
       let i = 0;
       function drawChunk(){
         const frag = document.createDocumentFragment();
-        const end = Math.min(i+CHUNK, list.length);
+        const end = Math.min(i+CHUNK, mergedList.length);
         for(; i<end; i++){
-          const {date,url,kind} = list[i];
+          const {date,url,kind} = mergedList[i];
           const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
           const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
 
@@ -497,7 +517,7 @@
           frag.appendChild(row);
         }
         wrap.appendChild(frag);
-        if (i < list.length) requestAnimationFrame(drawChunk);
+        if (i < mergedList.length) requestAnimationFrame(drawChunk);
       }
       requestAnimationFrame(drawChunk);
     }
