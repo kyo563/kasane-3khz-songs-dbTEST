@@ -239,6 +239,7 @@
     const REQUEST_MAX_RETRY = 2;
     const REQUEST_TIMEOUT_MS = 4500;
     const REQUEST_RETRY_DELAY_MS = 500;
+    const FETCH_TIMEOUT_MS = 6000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     const requestState = {
@@ -397,6 +398,15 @@
       }).toString();
       return base.toString();
     }
+    function buildApiFetchUrl(tab, useDeploy){
+      const base = toSafeApiBase(useDeploy ? DEPLOY_URL : API_URL);
+      base.search = new URLSearchParams({
+        sheet: tab,
+        authuser: '0',
+        v: String(Date.now())
+      }).toString();
+      return base.toString();
+    }
 
     function jsonp(tab, attempt, useDeploy = false){
       const req = requestState[tab];
@@ -444,7 +454,7 @@
         if (req.id !== requestId) return;
         req.inflight = false;
         cleanup();
-        handleRequestFailure(tab, attempt, 'ネットワーク/ブロック');
+        requestData(tab, attempt, useDeploy, 'fetch');
       };
       document.head.appendChild(script);
 
@@ -452,10 +462,52 @@
         if (req.id !== requestId || !req.inflight) return;
         req.inflight = false;
         cleanup();
-        handleRequestFailure(tab, attempt, 'タイムアウト');
+        requestData(tab, attempt, useDeploy, 'fetch');
       }, REQUEST_TIMEOUT_MS);
     }
-    function requestData(tab, attempt = 0, useDeploy = false){
+    async function requestByFetch(tab, attempt, useDeploy = false){
+      const req = requestState[tab];
+      if (!req) return;
+
+      clearRequestTimer(tab);
+      req.id += 1;
+      req.inflight = true;
+      const requestId = req.id;
+
+      const controller = new AbortController();
+      req.timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+      try {
+        const res = await fetch(buildApiFetchUrl(tab, useDeploy), {
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store'
+        });
+        if (req.id !== requestId) return;
+        req.inflight = false;
+        clearRequestTimer(tab);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const payload = await res.json();
+        handlePayload(tab, payload);
+      } catch (err) {
+        if (req.id !== requestId) return;
+        req.inflight = false;
+        clearRequestTimer(tab);
+
+        const reason = err && err.name === 'AbortError'
+          ? 'タイムアウト'
+          : 'ネットワーク/ブロック';
+        handleRequestFailure(tab, attempt, reason);
+      }
+    }
+    function requestData(tab, attempt = 0, useDeploy = false, transport = 'jsonp'){
+      if (transport === 'fetch') {
+        requestByFetch(tab, attempt, useDeploy);
+        return;
+      }
       jsonp(tab, attempt, useDeploy);
     }
     function ensureArchiveFast(){
