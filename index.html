@@ -19,19 +19,26 @@
       line-height:1.6;
       margin:0;
       padding:14px;
-      padding-bottom:170px;
       overflow:hidden;
     }
     .app-shell{max-width:760px;margin:0 auto}
     .list-layout{
-      height:calc(100dvh - var(--dock-height, 210px));
+      height:100dvh;
       min-height:320px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      position:relative;
     }
     .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 24px rgba(29,77,60,.12)}
-    #filter-panel{position:relative;padding-bottom:42px;overflow:hidden;transition:padding .2s ease,max-height .2s ease}
+    #filter-panel{
+      position:fixed;
+      top:14px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(760px,calc(100vw - 28px));
+      z-index:50;
+      padding-bottom:42px;
+      overflow:hidden;
+      transition:padding .2s ease,max-height .2s ease;
+    }
     #filter-toggle{
       position:absolute;
       right:10px;
@@ -109,7 +116,14 @@
     .cache-refresh{position:fixed;right:14px;top:12px;z-index:45;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:5px 9px;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 14px rgba(29,77,60,.15)}
     .cache-refresh:disabled{opacity:.65;cursor:wait}
 
-    .result-card{display:flex;flex-direction:column;flex:1;min-height:0}
+    .result-card{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      height:100%;
+      position:relative;
+      z-index:1;
+    }
     .result-scroll{margin-top:8px;flex:1;min-height:0;overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}
 
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed}
@@ -137,8 +151,11 @@
 
     @media (max-width:768px){
       body{padding:10px}
-      body{padding-bottom:180px}
-      .list-layout{height:calc(100dvh - var(--dock-height, 220px))}
+      .list-layout{height:100dvh}
+      #filter-panel{
+        top:10px;
+        width:calc(100vw - 20px);
+      }
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
