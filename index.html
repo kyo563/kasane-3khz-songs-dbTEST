@@ -31,6 +31,22 @@
       gap:12px;
     }
     .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 24px rgba(29,77,60,.12)}
+    #filter-panel{position:relative;padding-bottom:42px;overflow:hidden;transition:padding .2s ease,max-height .2s ease}
+    #filter-toggle{
+      position:absolute;
+      right:10px;
+      bottom:10px;
+      appearance:none;
+      border:1px solid #91c0aa;
+      background:#eff9f2;
+      color:#285243;
+      border-radius:999px;
+      padding:5px 10px;
+      font-size:12px;
+      line-height:1.2;
+      cursor:pointer;
+    }
+    #filter-toggle:hover{background:#e2f4e9}
     .hero{margin-bottom:12px}
     .hero-title{margin:0;font-size:20px;line-height:1.35;letter-spacing:.02em}
     .hero-sub{margin:6px 0 0;color:var(--muted);font-size:13px}
@@ -162,31 +178,30 @@
       .input-console{padding:9px}
       .to-top{right:10px;bottom:126px}
 
-      #filter-panel{
-        position:static;
-        transition:padding .2s ease, margin-bottom .2s ease, max-height .2s ease;
-        overflow:hidden;
+      body.filters-collapsed #filter-panel{
+        padding:10px 12px 42px;
+        margin-bottom:4px;
+        max-height:100px;
       }
-      body.compact-filters #filter-panel{
-        padding:10px 12px;
+      body.filters-collapsed #filter-panel .topbar{
         margin-bottom:4px;
       }
-      body.compact-filters #filter-panel .topbar{
-        margin-bottom:4px;
-      }
-      body.compact-filters #status{
+      body.filters-collapsed #status{
         font-size:12px;
       }
-      body.compact-filters #filter-panel{
-        max-height:64px;
-      }
-      body.compact-filters .limit-wrap{
+      body.filters-collapsed .limit-wrap{
         display:none;
       }
-      body.compact-filters #stats-row,
-      body.compact-filters #quick-filters{
+      body.filters-collapsed #stats-row,
+      body.filters-collapsed #quick-filters{
         display:none;
       }
+    }
+
+    body.filters-collapsed #stats-row,
+    body.filters-collapsed #quick-filters,
+    body.filters-collapsed .limit-wrap{
+      display:none;
     }
 
     .page{display:none}.page.active{display:block}
@@ -234,6 +249,7 @@
         <div class="muted" id="status">読み込み中…</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
+        <button id="filter-toggle" type="button" aria-expanded="true" aria-controls="stats-row quick-filters">折り畳み ▲</button>
       </div>
 
       <div class="card result-card">
@@ -299,6 +315,7 @@
       current: 'songs',
       cache: { songs:null, gags:null },
       debounce: null,
+      filterPanelManuallyCollapsed: false,
       historyCache: new Map(),
       archiveByKey: null,
       archiveByTitle: null,
@@ -1067,7 +1084,7 @@
 
     function openHistory(artist, title){
       state.lastScroll = currentScrollTop();
-      document.body.classList.remove('compact-filters');
+      document.body.classList.remove('filters-collapsed');
       showPage('page-history');
       renderHistory(artist, title);
     }
@@ -1075,7 +1092,12 @@
     function updateCompactFilterMode(scrollY = currentScrollTop()){
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const onListPage = $('page-list').classList.contains('active');
-      document.body.classList.toggle('compact-filters', isMobile && onListPage && scrollY > 70);
+      const autoCollapse = isMobile && onListPage && scrollY > 70;
+      const collapsed = onListPage && (state.filterPanelManuallyCollapsed || autoCollapse);
+      document.body.classList.toggle('filters-collapsed', collapsed);
+      const btn = $('filter-toggle');
+      btn.textContent = collapsed ? '展開 ▼' : '折り畳み ▲';
+      btn.setAttribute('aria-expanded', String(!collapsed));
     }
 
     function appendItemActions(target, {artist, title, kind, dText, dUrl}){
@@ -1205,6 +1227,11 @@
       const scroller = getListScroller();
       if (scroller) scroller.scrollTop = state.lastScroll || 0;
       updateCompactFilterMode(state.lastScroll || 0);
+    });
+
+    $('filter-toggle').addEventListener('click', ()=>{
+      state.filterPanelManuallyCollapsed = !state.filterPanelManuallyCollapsed;
+      updateCompactFilterMode();
     });
 
     window.addEventListener('resize', ()=>{
