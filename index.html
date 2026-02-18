@@ -829,43 +829,47 @@
       return null;
     }
 
-    function handlePayload(tab, payload){
-      __jsonpHit = true;
-
-      let safePayload = payload;
-      if (typeof payload === 'string') {
-        try {
-          safePayload = JSON.parse(payload);
-        } catch {
-          throw new Error('不正なレスポンス（JSON解析失敗）');
-        }
+    function parsePayloadLoose(payload){
+      if (typeof payload !== 'string') return payload;
+      const text = payload.trim();
+      if (!text) return payload;
+      try {
+        return JSON.parse(text);
+      } catch {
+        return payload;
       }
+    }
 
-      let rowsPayload = resolvePayloadRows(safePayload);
-      if (!rowsPayload && tab === 'archive') {
-        rowsPayload = extractArchiveRowsFallback(safePayload);
-      }
+    function normalizeRowsForTab(tab, payload){
+      const parsed = parsePayloadLoose(payload);
+      const rowsPayload = resolvePayloadRows(parsed) || (tab === 'archive' ? extractArchiveRowsFallback(parsed) : null);
       if (!rowsPayload) {
-        const serverError = safePayload && typeof safePayload === 'object'
-          ? (safePayload.error || safePayload.message || (safePayload.result && safePayload.result.error))
+        const serverError = parsed && typeof parsed === 'object'
+          ? (parsed.error || parsed.message || (parsed.result && parsed.result.error))
           : '';
         throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
       }
 
-      const rawSheet = String(safePayload.sheet || safePayload.sheetName || safePayload.name || '').toLowerCase();
+      const rawSheet = String(parsed?.sheet || parsed?.sheetName || parsed?.name || '').toLowerCase();
       const shouldStrictMatch = tab === 'songs' || tab === 'gags';
       if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
         throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
       }
 
+      if (tab === 'archive') return normalizeArchiveRows(rowsPayload);
+      return normalizeListRows(rowsPayload).map(r => ({
+        ...r,
+        _na: normalize(r.artist),
+        _nt: normalize(r.title)
+      }));
+    }
+
+    function handlePayload(tab, payload){
+      __jsonpHit = true;
+      const rows = normalizeRowsForTab(tab, payload);
+
       if (tab === 'songs' || tab === 'gags') {
         markRequestSuccess(tab);
-        const rows = normalizeListRows(rowsPayload)
-          .map(r => ({
-            ...r,
-            _na: normalize(r.artist),
-            _nt: normalize(r.title)
-          }));
         state.cache[tab] = rows;
 
         if (state.cache[state.current]) {
@@ -879,7 +883,6 @@
 
       if (tab === 'archive') {
         markRequestSuccess(tab);
-        const rows = normalizeArchiveRows(rowsPayload);
         buildArchiveIndex(rows);
         saveArchiveToCache(rows);
         state.archiveMeta.phase = 'ready';
@@ -1096,15 +1099,7 @@
           cache: 'no-store'
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload = JSON.parse(await res.text());
-        const rowsPayload = resolvePayloadRows(payload) || extractArchiveRowsFallback(payload);
-        if (!rowsPayload) {
-          const serverError = payload && typeof payload === 'object'
-            ? (payload.error || payload.message || (payload.result && payload.result.error))
-            : '';
-          throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
-        }
-        return normalizeArchiveRows(rowsPayload);
+        return normalizeRowsForTab('archive', await res.text());
       };
 
       try {
@@ -1124,41 +1119,7 @@
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const text = await res.text();
-      let payload;
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        payload = text;
-      }
-      if (typeof payload === 'string') {
-        try {
-          payload = JSON.parse(payload);
-        } catch {
-          throw new Error('不正なレスポンス（JSON解析失敗）');
-        }
-      }
-
-      const rowsPayload = resolvePayloadRows(payload) || (tab === 'archive' ? extractArchiveRowsFallback(payload) : null);
-      if (!rowsPayload) {
-        const serverError = payload && typeof payload === 'object'
-          ? (payload.error || payload.message || (payload.result && payload.result.error))
-          : '';
-        throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
-      }
-
-      const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
-      const shouldStrictMatch = tab === 'songs' || tab === 'gags';
-      if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
-        throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
-      }
-
-      if (tab === 'archive') return normalizeArchiveRows(rowsPayload);
-      return normalizeListRows(rowsPayload).map(r => ({
-        ...r,
-        _na: normalize(r.artist),
-        _nt: normalize(r.title)
-      }));
+      return normalizeRowsForTab(tab, await res.text());
     }
 
     async function fetchSheetRowsWithFallback(tab, extraParams = {}){
@@ -1181,16 +1142,7 @@
       });
       if (!res.ok) throw new Error(`GitHub cache HTTP ${res.status}`);
 
-      const payload = await res.json();
-      const rowsPayload = resolvePayloadRows(payload) || (tab === 'archive' ? extractArchiveRowsFallback(payload) : null);
-      if (!rowsPayload) throw new Error('GitHub cacheレスポンスが不正です');
-
-      if (tab === 'archive') return normalizeArchiveRows(rowsPayload);
-      return normalizeListRows(rowsPayload).map(r => ({
-        ...r,
-        _na: normalize(r.artist),
-        _nt: normalize(r.title)
-      }));
+      return normalizeRowsForTab(tab, await res.text());
     }
 
     async function fetchAllRowsFromGithubCache(){
@@ -1247,6 +1199,10 @@
 
           try {
             const rows = await fetchAllRowsFromGithubCache();
+            const hasCacheData = [rows.songsRows, rows.gagsRows, rows.archiveRows]
+              .some(list => Array.isArray(list) && list.length > 0);
+            if (!hasCacheData) throw new Error('GitHub cache is empty');
+
             songsRows = rows.songsRows;
             gagsRows = rows.gagsRows;
             archiveRows = rows.archiveRows;
