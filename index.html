@@ -482,6 +482,9 @@
 
       if (attempt < REQUEST_MAX_RETRY) {
         const next = attempt + 1;
+        const retryTransport = (tab === 'archive' && state.archiveMeta.transport === 'fetch')
+          ? 'fetch'
+          : 'jsonp';
         if (tab === 'archive') {
           state.archiveMeta.phase = 'loading';
           state.archiveMeta.retry = next;
@@ -489,7 +492,7 @@
           renderHistoryProcess();
         }
         console.warn(`[${tab}] request failed: ${reason}. retry=${next}/${REQUEST_MAX_RETRY}`);
-        setTimeout(()=>requestData(tab, next), REQUEST_RETRY_DELAY_MS * next);
+        setTimeout(()=>requestData(tab, next, false, retryTransport), REQUEST_RETRY_DELAY_MS * next);
         return;
       }
 
@@ -862,7 +865,7 @@
     function ensureArchiveFast(){
       const ok = tryLoadArchiveFromCache();
       renderHistoryProcess();
-      if (!ok && !requestState.archive.inflight) requestData('archive');
+      if (!ok && !requestState.archive.inflight) requestData('archive', 0, false, 'fetch');
     }
 
     async function fetchArchiveRowsByQuery(query, limit = 500){
