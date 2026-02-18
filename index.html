@@ -475,6 +475,53 @@
       return null;
     }
 
+    function normalizeArchiveCandidate(item){
+      if (!item || typeof item !== 'object') return null;
+      return {
+        artist: item.artist ?? item.Artist ?? item.artistName ?? item.singer ?? item.アーティスト ?? item.アーティスト名 ?? item.歌手名 ?? '',
+        title : item.title  ?? item.Title  ?? item.song ?? item.songName ?? item.曲名 ?? item.楽曲名 ?? '',
+        kind  : item.kind   ?? item.Kind   ?? item.category ?? item.type ?? item.区分 ?? '',
+        dText : item.dText  ?? item.dtext  ?? item.DTEXT ?? item.text ?? item.source ?? item.memo ?? item.note ?? item.出典 ?? item.出典元情報 ?? '',
+        dUrl  : item.dUrl   ?? item.durl   ?? item.DURL  ?? item.url ?? item.directUrl ?? item.link ?? item.href ?? ''
+      };
+    }
+
+    function extractArchiveRowsFallback(payload){
+      if (Array.isArray(payload)) return payload;
+      if (!payload || typeof payload !== 'object') return null;
+
+      const direct = [
+        payload.rows,
+        payload.data,
+        payload.list,
+        payload.items,
+        payload.records,
+        payload.values,
+        payload.result,
+        payload.payload,
+        payload.response,
+        payload.archive,
+        payload.histories,
+        payload.history
+      ];
+      for (const candidate of direct) {
+        if (Array.isArray(candidate)) return candidate;
+      }
+
+      const normalizedSingle = normalizeArchiveCandidate(payload);
+      if (normalizedSingle && ((normalizedSingle.artist + normalizedSingle.title + normalizedSingle.dText + normalizedSingle.dUrl).trim() !== '')) {
+        return [payload];
+      }
+
+      for (const value of Object.values(payload)) {
+        if (Array.isArray(value) && value.length > 0) {
+          const first = value[0];
+          if (typeof first === 'object' || Array.isArray(first)) return value;
+        }
+      }
+      return null;
+    }
+
     function handlePayload(tab, payload){
       __jsonpHit = true;
 
@@ -487,7 +534,10 @@
         }
       }
 
-      const rowsPayload = resolvePayloadRows(safePayload);
+      let rowsPayload = resolvePayloadRows(safePayload);
+      if (!rowsPayload && tab === 'archive') {
+        rowsPayload = extractArchiveRowsFallback(safePayload);
+      }
       if (!rowsPayload) {
         const serverError = safePayload && typeof safePayload === 'object'
           ? (safePayload.error || safePayload.message || (safePayload.result && safePayload.result.error))
