@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "source": "gas-sync",
+  "generatedAt": "",
+  "startedAt": "",
+  "tabs": [
+    "songs",
+    "gags",
+    "archive"
+  ],
+  "counts": {
+    "songs": 0,
+    "gags": 0,
+    "archive": 0
+  }
+}

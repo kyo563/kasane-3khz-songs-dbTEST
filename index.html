@@ -327,6 +327,7 @@
   <script>
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     const API_URL = DEPLOY_URL;
+    const GITHUB_DATA_BASE = './public-data/';
     const HARD_LIMIT = 10000;
     const ARCHIVE_VERSION = 'v2.5';
     const state = {
@@ -949,6 +950,11 @@
       return base.toString();
     }
 
+    function buildGithubDataUrl(name){
+      const base = new URL(GITHUB_DATA_BASE, window.location.href);
+      return new URL(`${name}.json`, base).toString();
+    }
+
     function jsonp(tab, attempt, useDeploy = false){
       const req = requestState[tab];
       if (!req) return;
@@ -1167,6 +1173,35 @@
       }
     }
 
+    async function fetchRowsFromGithubCache(tab){
+      const res = await fetch(buildGithubDataUrl(tab), {
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error(`GitHub cache HTTP ${res.status}`);
+
+      const payload = await res.json();
+      const rowsPayload = resolvePayloadRows(payload) || (tab === 'archive' ? extractArchiveRowsFallback(payload) : null);
+      if (!rowsPayload) throw new Error('GitHub cacheレスポンスが不正です');
+
+      if (tab === 'archive') return normalizeArchiveRows(rowsPayload);
+      return normalizeListRows(rowsPayload).map(r => ({
+        ...r,
+        _na: normalize(r.artist),
+        _nt: normalize(r.title)
+      }));
+    }
+
+    async function fetchAllRowsFromGithubCache(){
+      const [songsRows, gagsRows, archiveRows] = await Promise.all([
+        fetchRowsFromGithubCache('songs'),
+        fetchRowsFromGithubCache('gags'),
+        fetchRowsFromGithubCache('archive')
+      ]);
+      return { songsRows, gagsRows, archiveRows };
+    }
+
     async function fetchInStages(tab, { onStage } = {}){
       const limits = [INITIAL_FETCH_LIMIT, SECOND_FETCH_LIMIT, null];
       let lastRows = [];
@@ -1203,19 +1238,38 @@
         renderHistoryProcess();
 
         try {
-          const [songsRows, gagsRows, archiveRows] = await Promise.all([
-            fetchSheetRowsWithFallback('songs', { limit: INITIAL_FETCH_LIMIT }),
-            fetchSheetRowsWithFallback('gags', { limit: INITIAL_FETCH_LIMIT }),
-            fetchSheetRowsWithFallback('archive', { limit: INITIAL_FETCH_LIMIT })
-          ]);
+          let songsRows;
+          let gagsRows;
+          let archiveRows;
+          let source = 'network';
+          let transport = 'fetch';
+          let useGithubCache = false;
+
+          try {
+            const rows = await fetchAllRowsFromGithubCache();
+            songsRows = rows.songsRows;
+            gagsRows = rows.gagsRows;
+            archiveRows = rows.archiveRows;
+            source = 'github-pages';
+            transport = 'github-cache';
+            useGithubCache = true;
+          } catch (cacheErr) {
+            console.warn('GitHub cache取得に失敗。GASへフォールバックします。', cacheErr);
+            [songsRows, gagsRows, archiveRows] = await Promise.all([
+              fetchSheetRowsWithFallback('songs', { limit: INITIAL_FETCH_LIMIT }),
+              fetchSheetRowsWithFallback('gags', { limit: INITIAL_FETCH_LIMIT }),
+              fetchSheetRowsWithFallback('archive', { limit: INITIAL_FETCH_LIMIT })
+            ]);
+          }
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
+          saveArchiveToCache(archiveRows);
 
           state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = 'network';
-          state.archiveMeta.transport = 'fetch';
+          state.archiveMeta.source = source;
+          state.archiveMeta.transport = transport;
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
@@ -1225,38 +1279,42 @@
             render();
           }
 
-          Promise.allSettled([
-            fetchInStages('songs', {
-              onStage: (rows) => {
-                state.cache.songs = rows;
-                if (state.current === 'songs') render();
-              }
-            }),
-            fetchInStages('gags', {
-              onStage: (rows) => {
-                state.cache.gags = rows;
-                if (state.current === 'gags') render();
-              }
-            }),
-            fetchInStages('archive', {
-              onStage: (rows, info) => {
-                buildArchiveIndex(rows);
-                state.archiveMeta.rows = rows.length;
-                state.archiveMeta.updatedAt = Date.now();
-                if (info.limit === null || rows.length < SECOND_FETCH_LIMIT) {
-                  saveArchiveToCache(rows);
+          if (!useGithubCache) {
+            Promise.allSettled([
+              fetchInStages('songs', {
+                onStage: (rows) => {
+                  state.cache.songs = rows;
+                  if (state.current === 'songs') render();
                 }
-                renderHistoryProcess();
-                if ($('page-history').classList.contains('active') && state.histKey) {
-                  renderHistory(state.histKey.artist, state.histKey.title);
+              }),
+              fetchInStages('gags', {
+                onStage: (rows) => {
+                  state.cache.gags = rows;
+                  if (state.current === 'gags') render();
                 }
+              }),
+              fetchInStages('archive', {
+                onStage: (rows, info) => {
+                  buildArchiveIndex(rows);
+                  state.archiveMeta.rows = rows.length;
+                  state.archiveMeta.updatedAt = Date.now();
+                  if (info.limit === null || rows.length < SECOND_FETCH_LIMIT) {
+                    saveArchiveToCache(rows);
+                  }
+                  renderHistoryProcess();
+                  if ($('page-history').classList.contains('active') && state.histKey) {
+                    renderHistory(state.histKey.artist, state.histKey.title);
+                  }
+                }
+              })
+            ]).then(()=> {
+              if (state.cache[state.current]) {
+                $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
               }
-            })
-          ]).then(()=> {
-            if (state.cache[state.current]) {
-              $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
-            }
-          });
+            });
+          } else if (state.cache[state.current]) {
+            $('status').textContent = `GitHubキャッシュ読込完了：${state.cache[state.current].length}件`;
+          }
 
           if ($('page-history').classList.contains('active') && state.histKey) {
             renderHistory(state.histKey.artist, state.histKey.title);
