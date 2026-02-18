@@ -19,3 +19,13 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
 
 - `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
 - `public-data` は静的配信用のキャッシュであり、取得失敗時は前回成功時のデータが残ります。
+
+## JSONP取得の厳密要件（ブラウザフォールバック時）
+
+`index.html` の JSONP フォールバックは、次の要件を満たす場合のみ実行されます。
+
+1. URL は `https://script.google.com/macros/s/{SCRIPT_ID}/exec` 形式のみ
+2. callback 名は英数字/`_`/`$` で構成し、先頭は英字/`_`/`$`、最大96文字
+3. クエリ `callback/sheet/authuser/v` を必須化し、`authuser=0` を固定
+4. `<script>` 読込は `onerror` + timeout 監視、callback の多重実行を禁止
+5. payload が `ok=false` または `error/err` を返した場合は失敗扱いで再試行
