@@ -157,6 +157,9 @@
     .back:hover{background:#e2f4e9}
     .title{font-weight:700}
     .history-list{margin-top:8px}
+    .history-process{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f4fbf7;font-size:13px;color:#33584b}
+    .history-process strong{font-size:12px;letter-spacing:.02em;color:#2a4f41}
+    .history-debug{margin-top:6px;line-height:1.5;word-break:break-word}
     .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px;gap:8px}
     .history-left{display:flex;align-items:center;gap:8px;min-width:0}
     .history-date{white-space:nowrap;color:#6a867b}
@@ -209,6 +212,10 @@
         <div class="title" id="hist-title">/</div>
       </div>
       <div class="muted" id="hist-sub">歌唱履歴を新しい順に表示します。</div>
+      <div id="hist-process" class="history-process" aria-live="polite">
+        <strong>履歴ページで実行中の処理</strong>
+        <div id="hist-debug" class="history-debug">未実行</div>
+      </div>
     </div>
     <div class="card" style="margin-top:12px;">
       <div id="hist-list" class="history-list"></div>
@@ -255,7 +262,17 @@
       archiveByTitle: null,
       lastScroll: 0,
       histKey: null,
-      kindFilter: ""
+      kindFilter: "",
+      archiveMeta: {
+        phase: 'idle',
+        source: 'unknown',
+        transport: '-',
+        useDeploy: false,
+        retry: 0,
+        lastError: '',
+        rows: 0,
+        updatedAt: 0
+      }
     };
 
     const $ = id => document.getElementById(id);
@@ -370,7 +387,16 @@
         const ver = localStorage.getItem('archiveVersion');
         const json = localStorage.getItem('archiveJson');
         if (ver === ARCHIVE_VERSION && json) {
-          buildArchiveIndex(JSON.parse(json));
+          const rows = JSON.parse(json);
+          buildArchiveIndex(rows);
+          state.archiveMeta.phase = 'ready';
+          state.archiveMeta.source = 'localStorage cache';
+          state.archiveMeta.transport = 'cache';
+          state.archiveMeta.useDeploy = false;
+          state.archiveMeta.retry = 0;
+          state.archiveMeta.lastError = '';
+          state.archiveMeta.rows = rows.length;
+          state.archiveMeta.updatedAt = Number(localStorage.getItem('archiveUpdatedAt') || Date.now());
           return true;
         }
       } catch {}
@@ -423,6 +449,29 @@
       wrap.innerHTML = '';
       empty.style.display = 'block';
       $('hist-sub').textContent = message;
+      state.archiveMeta.phase = 'error';
+      state.archiveMeta.lastError = message;
+      renderHistoryProcess();
+    }
+
+    function renderHistoryProcess(){
+      const meta = state.archiveMeta;
+      const updated = meta.updatedAt ? new Date(meta.updatedAt).toLocaleTimeString('ja-JP') : '未取得';
+      const mode = meta.useDeploy ? 'deploy URL' : '通常 URL';
+      let phaseLabel = '待機中';
+      if (meta.phase === 'loading') phaseLabel = '取得中';
+      else if (meta.phase === 'ready') phaseLabel = '表示準備完了';
+      else if (meta.phase === 'error') phaseLabel = 'エラー';
+
+      $('hist-debug').innerHTML = [
+        `状態: <b>${phaseLabel}</b>`,
+        `データ源: ${meta.source}`,
+        `取得手段: ${meta.transport} (${mode})`,
+        `再試行回数: ${meta.retry}`,
+        `履歴件数: ${meta.rows}`,
+        `最終更新: ${updated}`,
+        meta.lastError ? `エラー詳細: ${meta.lastError}` : 'エラー詳細: なし'
+      ].join('<br>');
     }
 
     function handleRequestFailure(tab, attempt, reason){
@@ -433,12 +482,20 @@
 
       if (attempt < REQUEST_MAX_RETRY) {
         const next = attempt + 1;
+        if (tab === 'archive') {
+          state.archiveMeta.phase = 'loading';
+          state.archiveMeta.retry = next;
+          state.archiveMeta.lastError = reason;
+          renderHistoryProcess();
+        }
         console.warn(`[${tab}] request failed: ${reason}. retry=${next}/${REQUEST_MAX_RETRY}`);
         setTimeout(()=>requestData(tab, next), REQUEST_RETRY_DELAY_MS * next);
         return;
       }
 
       if (tab === 'archive') {
+        state.archiveMeta.phase = 'error';
+        state.archiveMeta.lastError = reason;
         showHistoryLoadError(`履歴の取得に失敗しました: ${reason}`);
       }
       showRequestError(tab, reason);
@@ -619,6 +676,13 @@
         const rows = normalizeArchiveRows(rowsPayload);
         buildArchiveIndex(rows);
         saveArchiveToCache(rows);
+        state.archiveMeta.phase = 'ready';
+        state.archiveMeta.source = 'network';
+        state.archiveMeta.retry = 0;
+        state.archiveMeta.lastError = '';
+        state.archiveMeta.rows = rows.length;
+        state.archiveMeta.updatedAt = Date.now();
+        renderHistoryProcess();
         if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
         return;
       }
@@ -676,6 +740,14 @@
       clearRequestTimer(tab);
       req.id += 1;
       req.inflight = true;
+      if (tab === 'archive') {
+        state.archiveMeta.phase = 'loading';
+        state.archiveMeta.source = 'network';
+        state.archiveMeta.transport = 'jsonp';
+        state.archiveMeta.useDeploy = useDeploy;
+        state.archiveMeta.retry = attempt;
+        renderHistoryProcess();
+      }
       const requestId = req.id;
       const callbackName = `__jsonp_${tab}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       if (!JSONP_CALLBACK_RE.test(callbackName)) {
@@ -733,6 +805,14 @@
       clearRequestTimer(tab);
       req.id += 1;
       req.inflight = true;
+      if (tab === 'archive') {
+        state.archiveMeta.phase = 'loading';
+        state.archiveMeta.source = 'network';
+        state.archiveMeta.transport = 'fetch';
+        state.archiveMeta.useDeploy = useDeploy;
+        state.archiveMeta.retry = attempt;
+        renderHistoryProcess();
+      }
       const requestId = req.id;
 
       const controller = new AbortController();
@@ -771,6 +851,7 @@
       }
     }
     function requestData(tab, attempt = 0, useDeploy = false, transport = 'jsonp'){
+      if (requestState[tab]?.inflight && attempt === 0) return;
       if (transport === 'fetch') {
         requestByFetch(tab, attempt, useDeploy);
         return;
@@ -780,6 +861,7 @@
 
     function ensureArchiveFast(){
       const ok = tryLoadArchiveFromCache();
+      renderHistoryProcess();
       if (!ok && !requestState.archive.inflight) requestData('archive');
     }
 
@@ -825,9 +907,9 @@
     }
 
     function renderHistory(artist, title){
-      requestData('archive');
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
+      renderHistoryProcess();
 
       const wrap = $('hist-list');
       const empty = $('hist-empty');
@@ -835,7 +917,7 @@
       empty.style.display = 'none';
 
       for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
-      $('hist-sub').textContent = requestState.archive.inflight ? '履歴を読み込み中…' : '履歴データを準備しています…';
+      $('hist-sub').textContent = requestState.archive.inflight ? '履歴を読み込み中…（下の処理詳細を確認）' : '履歴データを準備しています…';
 
       if (!state.archiveByKey || !state.archiveByTitle) {
         ensureArchiveFast();
