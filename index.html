@@ -20,8 +20,16 @@
       margin:0;
       padding:14px;
       padding-bottom:170px;
+      overflow:hidden;
     }
     .app-shell{max-width:760px;margin:0 auto}
+    .list-layout{
+      height:calc(100dvh - var(--dock-height, 210px));
+      min-height:320px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
     .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 24px rgba(29,77,60,.12)}
     .hero{margin-bottom:12px}
     .hero-title{margin:0;font-size:20px;line-height:1.35;letter-spacing:.02em}
@@ -85,6 +93,9 @@
     .cache-refresh{position:fixed;right:14px;top:12px;z-index:45;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:5px 9px;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 14px rgba(29,77,60,.15)}
     .cache-refresh:disabled{opacity:.65;cursor:wait}
 
+    .result-card{display:flex;flex-direction:column;flex:1;min-height:0}
+    .result-scroll{margin-top:8px;flex:1;min-height:0;overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}
+
     table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed}
     th,td{border-bottom:1px solid var(--line);padding:10px 8px;font-size:15px;vertical-align:top}
     th{position:sticky;top:0;background:var(--thead);z-index:1;font-weight:700}
@@ -111,12 +122,13 @@
     @media (max-width:768px){
       body{padding:10px}
       body{padding-bottom:180px}
+      .list-layout{height:calc(100dvh - var(--dock-height, 220px))}
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
       .mobile-list{
         display:block;
-        margin-top:10px;
+        margin-top:0;
         max-height:none;
         overflow:visible;
         scroll-snap-type:y proximity;
@@ -152,17 +164,24 @@
 
       #filter-panel{
         position:static;
-        transition:padding .2s ease, margin-bottom .2s ease;
+        transition:padding .2s ease, margin-bottom .2s ease, max-height .2s ease;
+        overflow:hidden;
       }
       body.compact-filters #filter-panel{
         padding:10px 12px;
-        margin-bottom:8px;
+        margin-bottom:4px;
       }
       body.compact-filters #filter-panel .topbar{
         margin-bottom:4px;
       }
       body.compact-filters #status{
         font-size:12px;
+      }
+      body.compact-filters #filter-panel{
+        max-height:64px;
+      }
+      body.compact-filters .limit-wrap{
+        display:none;
       }
       body.compact-filters #stats-row,
       body.compact-filters #quick-filters{
@@ -195,31 +214,35 @@
   <div class="app-shell">
   <!-- 一覧ページ -->
   <div id="page-list" class="page active">
-    <div class="card" id="filter-panel">
-      <div class="topbar">
-        <div class="tabs" role="tablist" aria-label="検索対象">
-          <button id="tab-songs" class="tab" role="tab" aria-selected="true"  data-tab="songs">歌唱曲</button>
-          <button id="tab-gags"  class="tab" role="tab" aria-selected="false" data-tab="gags">一発ネタ</button>
+    <div class="list-layout" id="list-layout">
+      <div class="card" id="filter-panel">
+        <div class="topbar">
+          <div class="tabs" role="tablist" aria-label="検索対象">
+            <button id="tab-songs" class="tab" role="tab" aria-selected="true"  data-tab="songs">歌唱曲</button>
+            <button id="tab-gags"  class="tab" role="tab" aria-selected="false" data-tab="gags">一発ネタ</button>
+          </div>
+          <div class="limit-wrap">
+            <label for="limit" class="muted" style="white-space:nowrap;">表示</label>
+            <select id="limit" aria-label="表示">
+              <option value="10">10件</option>
+              <option value="50" selected>50件</option>
+              <option value="all">全て</option>
+            </select>
+          </div>
         </div>
-        <div class="limit-wrap">
-          <label for="limit" class="muted" style="white-space:nowrap;">表示</label>
-          <select id="limit" aria-label="表示">
-            <option value="10">10件</option>
-            <option value="50" selected>50件</option>
-            <option value="all">全て</option>
-          </select>
-        </div>
+
+        <div class="muted" id="status">読み込み中…</div>
+        <div class="stats-row" id="stats-row" aria-live="polite"></div>
+        <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
       </div>
 
-      <div class="muted" id="status">読み込み中…</div>
-      <div class="stats-row" id="stats-row" aria-live="polite"></div>
-      <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
-    </div>
-
-    <div class="card" style="margin-top:12px;">
-      <div class="muted" id="hint">検索結果がここに表示されます。</div>
-      <div id="table" style="display:none;"></div>
-      <div id="mblist" class="mobile-list" style="display:none;"></div>
+      <div class="card result-card">
+        <div class="muted" id="hint">検索結果がここに表示されます。</div>
+        <div id="results-scroll" class="result-scroll" aria-label="楽曲情報カード一覧">
+          <div id="table" style="display:none;"></div>
+          <div id="mblist" class="mobile-list" style="display:none;"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -318,7 +341,26 @@
       render();
       $('q').focus();
     });
+    function getListScroller(){
+      return $('results-scroll');
+    }
+    function currentScrollTop(){
+      if ($('page-list').classList.contains('active')) {
+        return getListScroller()?.scrollTop || 0;
+      }
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    }
+    function updateViewportMetrics(){
+      const dock = $('input-dock');
+      if (!dock) return;
+      const dockHeight = Math.ceil(dock.getBoundingClientRect().height) + 22;
+      document.documentElement.style.setProperty('--dock-height', `${dockHeight}px`);
+    }
     document.getElementById('to-top').addEventListener('click', ()=>{
+      if ($('page-list').classList.contains('active')) {
+        getListScroller()?.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     document.getElementById('cache-refresh').addEventListener('click', ()=>{
@@ -376,6 +418,7 @@
     function showPage(id){
       document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       $(id).classList.add('active');
+      updateViewportMetrics();
     }
 
     function toHistoryEntries(rows, artist, title){
@@ -1023,13 +1066,13 @@
     }
 
     function openHistory(artist, title){
-      state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
+      state.lastScroll = currentScrollTop();
       document.body.classList.remove('compact-filters');
       showPage('page-history');
       renderHistory(artist, title);
     }
 
-    function updateCompactFilterMode(scrollY = window.scrollY || document.documentElement.scrollTop || 0){
+    function updateCompactFilterMode(scrollY = currentScrollTop()){
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const onListPage = $('page-list').classList.contains('active');
       document.body.classList.toggle('compact-filters', isMobile && onListPage && scrollY > 70);
@@ -1158,20 +1201,30 @@
     }
 
     $('btn-back').addEventListener('click', ()=>{
-      showPage('page-list'); window.scrollTo({ top: state.lastScroll || 0 });
+      showPage('page-list');
+      const scroller = getListScroller();
+      if (scroller) scroller.scrollTop = state.lastScroll || 0;
       updateCompactFilterMode(state.lastScroll || 0);
     });
 
     window.addEventListener('resize', ()=>{
       clearTimeout(state.debounce);
       state.debounce=setTimeout(()=>{
+        updateViewportMetrics();
         render();
         updateCompactFilterMode();
       },150);
     });
     window.addEventListener('scroll', ()=>{
-      const y = window.scrollY || document.documentElement.scrollTop || 0;
-      $('to-top').classList.toggle('show', y > 280);
+      if (!$('page-list').classList.contains('active')) {
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
+        $('to-top').classList.toggle('show', y > 280);
+      }
+    });
+
+    getListScroller().addEventListener('scroll', ()=>{
+      const y = getListScroller().scrollTop || 0;
+      $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
       updateCompactFilterMode(y);
     });
 
@@ -1182,6 +1235,7 @@
       $('limit').addEventListener('change', render);
 
       showPage('page-list');
+      updateViewportMetrics();
       setActiveTab('songs');
       if (!state.cache['gags'])  requestData('gags');
       ensureArchiveFast();
