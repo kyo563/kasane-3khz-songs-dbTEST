@@ -142,7 +142,8 @@ function readSheet_(sheetName, startRow, includeSrc) {
 function putCacheIfSmall_(cache, key, value, ttlSeconds) {
   try {
     const serialized = JSON.stringify(value);
-    if (serialized.length > CFG.CACHE_MAX_BYTES) return false;
+    const byteLength = Utilities.newBlob(serialized).getBytes().length;
+    if (byteLength > CFG.CACHE_MAX_BYTES) return false;
     cache.put(key, serialized, ttlSeconds);
     return true;
   } catch (e) {
