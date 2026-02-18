@@ -149,6 +149,27 @@
       .input-dock{padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
       .input-console{padding:9px}
       .to-top{right:10px;bottom:126px}
+
+      #filter-panel{
+        position:sticky;
+        top:8px;
+        z-index:32;
+        transition:padding .2s ease, margin-bottom .2s ease;
+      }
+      body.compact-filters #filter-panel{
+        padding:10px 12px;
+        margin-bottom:8px;
+      }
+      body.compact-filters #filter-panel .topbar{
+        margin-bottom:4px;
+      }
+      body.compact-filters #status{
+        font-size:12px;
+      }
+      body.compact-filters #stats-row,
+      body.compact-filters #quick-filters{
+        display:none;
+      }
     }
 
     .page{display:none}.page.active{display:block}
@@ -176,7 +197,7 @@
   <div class="app-shell">
   <!-- 一覧ページ -->
   <div id="page-list" class="page active">
-    <div class="card">
+    <div class="card" id="filter-panel">
       <div class="topbar">
         <div class="tabs" role="tablist" aria-label="検索対象">
           <button id="tab-songs" class="tab" role="tab" aria-selected="true"  data-tab="songs">歌唱曲</button>
@@ -982,8 +1003,15 @@
 
     function openHistory(artist, title){
       state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
+      document.body.classList.remove('compact-filters');
       showPage('page-history');
       renderHistory(artist, title);
+    }
+
+    function updateCompactFilterMode(scrollY = window.scrollY || document.documentElement.scrollTop || 0){
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const onListPage = $('page-list').classList.contains('active');
+      document.body.classList.toggle('compact-filters', isMobile && onListPage && scrollY > 70);
     }
 
     function appendItemActions(target, {artist, title, kind, dText, dUrl}){
@@ -1110,12 +1138,20 @@
 
     $('btn-back').addEventListener('click', ()=>{
       showPage('page-list'); window.scrollTo({ top: state.lastScroll || 0 });
+      updateCompactFilterMode(state.lastScroll || 0);
     });
 
-    window.addEventListener('resize', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,150); });
+    window.addEventListener('resize', ()=>{
+      clearTimeout(state.debounce);
+      state.debounce=setTimeout(()=>{
+        render();
+        updateCompactFilterMode();
+      },150);
+    });
     window.addEventListener('scroll', ()=>{
       const y = window.scrollY || document.documentElement.scrollTop || 0;
       $('to-top').classList.toggle('show', y > 280);
+      updateCompactFilterMode(y);
     });
 
     (function init(){
@@ -1128,6 +1164,7 @@
       setActiveTab('songs');
       if (!state.cache['gags'])  requestData('gags');
       ensureArchiveFast();
+      updateCompactFilterMode();
 
     })();
   </script>
