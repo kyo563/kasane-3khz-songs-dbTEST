@@ -7,6 +7,67 @@ const TABS = ['songs', 'gags', 'archive'];
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
 
+function parseJsonLoose(input) {
+  if (typeof input !== 'string') return input;
+  const trimmed = input.trim();
+  if (!trimmed) return input;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return input;
+  }
+}
+
+function resolveRows(payload) {
+  const queue = [payload];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const cur = queue.shift();
+    if (!cur) continue;
+
+    if (typeof cur === 'string') {
+      const parsed = parseJsonLoose(cur);
+      if (parsed !== cur) queue.push(parsed);
+      continue;
+    }
+
+    if (typeof cur !== 'object') continue;
+    if (visited.has(cur)) continue;
+    visited.add(cur);
+
+    if (Array.isArray(cur)) {
+      if (cur.length === 0 || Array.isArray(cur[0]) || typeof cur[0] === 'object') return cur;
+      continue;
+    }
+
+    const direct = [
+      cur.rows,
+      cur.data,
+      cur.items,
+      cur.list,
+      cur.values,
+      cur.records,
+      cur.result,
+      cur.payload,
+      cur.response,
+      cur.result && cur.result.rows,
+      cur.payload && cur.payload.rows,
+      cur.response && cur.response.rows,
+    ];
+    for (const candidate of direct) {
+      if (Array.isArray(candidate)) return candidate;
+      if (candidate && typeof candidate === 'object') queue.push(candidate);
+    }
+
+    for (const value of Object.values(cur)) {
+      if (value && (typeof value === 'object' || typeof value === 'string')) queue.push(value);
+    }
+  }
+
+  return null;
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -38,15 +99,35 @@ async function fetchJsonWithRetry(tab) {
         throw new Error(`HTTP ${res.status}`);
       }
 
-      const payload = await res.json();
-      if (!payload || typeof payload !== 'object') {
-        throw new Error('レスポンスがJSONオブジェクトではありません');
-      }
-      if (!Array.isArray(payload.rows)) {
-        throw new Error('rows が配列ではありません');
+      const text = await res.text();
+      const payload = parseJsonLoose(text);
+      const rows = resolveRows(payload);
+      if (!rows) {
+        throw new Error('rows が配列として取得できませんでした');
       }
 
-      return payload;
+      const normalized = (rows || [])
+        .map((r) => {
+          if (Array.isArray(r)) {
+            return {
+              artist: r[0] ?? '',
+              title: r[1] ?? '',
+              kind: r[2] ?? '',
+              dText: r[3] ?? '',
+              dUrl: r[4] ?? '',
+            };
+          }
+          return r && typeof r === 'object' ? r : null;
+        })
+        .filter((r) => r && typeof r === 'object');
+
+      const parsedPayload = payload && typeof payload === 'object' ? payload : {};
+      return {
+        sheet: parsedPayload.sheet,
+        total: parsedPayload.total,
+        matched: parsedPayload.matched,
+        rows: normalized,
+      };
     } catch (error) {
       clearTimeout(timer);
       lastError = error;
