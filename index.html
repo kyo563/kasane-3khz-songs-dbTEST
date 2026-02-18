@@ -321,7 +321,7 @@
       archiveByTitle: null,
       lastScroll: 0,
       histKey: null,
-      kindFilter: "",
+      kindFilters: [],
       archiveMeta: {
         phase: 'idle',
         source: 'unknown',
@@ -354,7 +354,7 @@
     });
     document.getElementById('clear-search').addEventListener('click', ()=>{
       $('q').value = '';
-      state.kindFilter = '';
+      state.kindFilters = [];
       render();
       $('q').focus();
     });
@@ -389,7 +389,7 @@
       state.historyCache.clear();
       state.archiveByKey = null;
       state.archiveByTitle = null;
-      state.kindFilter = '';
+      state.kindFilters = [];
       state.archiveMeta.phase = 'idle';
       state.archiveMeta.source = 'unknown';
       state.archiveMeta.transport = '-';
@@ -1001,7 +1001,7 @@
 
     function setActiveTab(tab){
       state.current = tab;
-      state.kindFilter = "";
+      state.kindFilters = [];
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
       if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
@@ -1100,6 +1100,18 @@
       btn.setAttribute('aria-expanded', String(!collapsed));
     }
 
+    function normalizeKindFilters(allKinds){
+      if (!Array.isArray(state.kindFilters) || state.kindFilters.length === 0) {
+        state.kindFilters = [...allKinds];
+        return;
+      }
+      const selected = new Set(state.kindFilters);
+      state.kindFilters = allKinds.filter(kind => selected.has(kind));
+      if (state.kindFilters.length === 0 && allKinds.length > 0) {
+        state.kindFilters = [...allKinds];
+      }
+    }
+
     function appendItemActions(target, {artist, title, kind, dText, dUrl}){
       if ((kind||'').trim()!==''){
         const k=document.createElement('span'); k.className='kind-chip'; k.textContent=kind;
@@ -1133,35 +1145,44 @@
       }
 
       const q = normalize($('q').value||'');
-      const kindFilter = state.kindFilter;
       const rawLimit = $('limit').value;
       const limitParsed = (rawLimit === 'all') ? Number.POSITIVE_INFINITY : parseInt(rawLimit,10) || 10;
       const effectiveLimit = Math.min(limitParsed, HARD_LIMIT);
 
-      let filtered = state.cache[state.current] || [];
+      const allRows = state.cache[state.current] || [];
+      const kinds = [...new Set(allRows.map(r => (r.kind || '').trim()).filter(Boolean))].slice(0, 10);
+      normalizeKindFilters(kinds);
+      const selectedKinds = new Set(state.kindFilters);
+      const filterByKinds = kinds.length > 0 && state.kindFilters.length < kinds.length;
+
+      let filtered = allRows;
       if(q){ filtered = filtered.filter(r => r._na.includes(q) || r._nt.includes(q)); }
-      if (kindFilter) filtered = filtered.filter(r => (r.kind || '').trim() === kindFilter);
+      if (filterByKinds) filtered = filtered.filter(r => selectedKinds.has((r.kind || '').trim()));
       const rows = filtered.slice(0, effectiveLimit);
 
-      const allRows = state.cache[state.current] || [];
       const uniqueArtists = new Set(allRows.map(r => r._na).filter(Boolean)).size;
       const stats = [
         `${state.current === 'songs' ? '歌唱曲' : '一発ネタ'}: ${allRows.length}件`,
-        `アーティスト数: ${uniqueArtists}人`,
-        kindFilter ? `絞り込み: ${kindFilter}` : '絞り込み: なし'
+        `アーティスト数: ${uniqueArtists}人`
       ];
       $('stats-row').innerHTML = stats.map(text => `<span class="pill">${text}</span>`).join('');
 
-      const kinds = [...new Set(allRows.map(r => (r.kind || '').trim()).filter(Boolean))].slice(0, 10);
-      const filterButtons = ['すべて', ...kinds].map(kind => {
-        const active = (kind === 'すべて' && !kindFilter) || kindFilter === kind;
-        const value = kind === 'すべて' ? '' : kind;
-        return `<button type="button" class="filter-chip${active ? ' active' : ''}" data-kind="${value}">${kind}</button>`;
+      const filterButtons = kinds.map(kind => {
+        const active = selectedKinds.has(kind);
+        return `<button type="button" class="filter-chip${active ? ' active' : ''}" data-kind="${kind}">${kind}</button>`;
       }).join('');
       $('quick-filters').innerHTML = filterButtons;
       $('quick-filters').querySelectorAll('.filter-chip').forEach(btn=>{
         btn.addEventListener('click', ()=>{
-          state.kindFilter = btn.dataset.kind || '';
+          const kind = btn.dataset.kind || '';
+          if (!kind) return;
+          const next = new Set(state.kindFilters);
+          if (next.has(kind)) next.delete(kind);
+          else next.add(kind);
+          state.kindFilters = kinds.filter(name => next.has(name));
+          if (state.kindFilters.length === 0) {
+            state.kindFilters = [...kinds];
+          }
           render();
         });
       });
