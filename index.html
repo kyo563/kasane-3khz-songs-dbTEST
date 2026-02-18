@@ -70,6 +70,10 @@
     .btn-subtle{background:#f2faf5;color:#285243;border-color:#9cc8b6}
 
     .muted{color:var(--muted);font-size:13px}
+    .server-response{margin-top:6px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#eef8f1;font-size:12px;color:#33584b}
+    .server-response.loading{background:#eef6ff;border-color:#9fc3df;color:#234f70}
+    .server-response.ok{background:#e9faed;border-color:#9fceaa;color:#22543b}
+    .server-response.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
@@ -266,6 +270,7 @@
         </div>
 
         <div class="muted" id="status">読み込み中…</div>
+        <div class="server-response" id="server-response" aria-live="polite">サーバー応答: 未確認</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
       </div>
@@ -353,6 +358,12 @@
         rows: 0,
         updatedAt: 0
       },
+      serverResponse: {
+        inflight: 0,
+        lastOkAt: 0,
+        lastLabel: '-',
+        lastError: ''
+      },
       snapTimer: null,
       snapLock: false,
       activeSnapIndex: -1
@@ -384,6 +395,47 @@
     });
     function getListScroller(){
       return $('results-scroll');
+    }
+    function formatTime(ts){
+      if (!ts) return '未確認';
+      return new Date(ts).toLocaleTimeString('ja-JP');
+    }
+    function renderServerResponse(){
+      const el = $('server-response');
+      if (!el) return;
+      const probe = state.serverResponse;
+      el.className = 'server-response';
+      if (probe.inflight > 0) {
+        el.classList.add('loading');
+        el.textContent = `サーバー応答: 通信中…（${probe.inflight}件）`;
+        return;
+      }
+      if (probe.lastError) {
+        el.classList.add('error');
+        el.textContent = `サーバー応答: 失敗（${probe.lastLabel} / ${probe.lastError}）`;
+        return;
+      }
+      if (probe.lastOkAt) {
+        el.classList.add('ok');
+        el.textContent = `サーバー応答: ${formatTime(probe.lastOkAt)} に確認（${probe.lastLabel}）`;
+        return;
+      }
+      el.textContent = 'サーバー応答: 未確認';
+    }
+    function beginServerRequest(){
+      state.serverResponse.inflight += 1;
+      renderServerResponse();
+    }
+    function endServerRequest(ok, label, message = ''){
+      state.serverResponse.inflight = Math.max(0, state.serverResponse.inflight - 1);
+      state.serverResponse.lastLabel = label || '-';
+      if (ok) {
+        state.serverResponse.lastOkAt = Date.now();
+        state.serverResponse.lastError = '';
+      } else {
+        state.serverResponse.lastError = message || '不明なエラー';
+      }
+      renderServerResponse();
     }
     function currentScrollTop(){
       if ($('page-list').classList.contains('active')) {
@@ -963,6 +1015,7 @@
       if (!req) return;
 
       clearRequestTimer(tab);
+      beginServerRequest();
       req.id += 1;
       req.inflight = true;
       if (tab === 'archive') {
@@ -994,8 +1047,10 @@
         cleanup();
         try {
           handlePayload(tab, payload);
+          endServerRequest(true, `${tab}/jsonp`);
         } catch (err) {
           const reason = err instanceof Error ? err.message : String(err);
+          endServerRequest(false, `${tab}/jsonp`, reason);
           if (!useDeploy && reason.startsWith('取得元不一致')) {
             console.warn(`[${tab}] ${reason}. deploy URLへフォールバックします。`);
             requestData(tab, attempt, true);
@@ -1012,6 +1067,7 @@
         if (req.id !== requestId) return;
         req.inflight = false;
         cleanup();
+        endServerRequest(false, `${tab}/jsonp`, 'script読込失敗');
         requestData(tab, attempt, useDeploy, 'fetch');
       };
       document.head.appendChild(script);
@@ -1020,6 +1076,7 @@
         if (req.id !== requestId || !req.inflight) return;
         req.inflight = false;
         cleanup();
+        endServerRequest(false, `${tab}/jsonp`, 'タイムアウト');
         requestData(tab, attempt, useDeploy, 'fetch');
       }, REQUEST_TIMEOUT_MS);
     }
@@ -1041,6 +1098,7 @@
       const requestId = req.id;
 
       const controller = new AbortController();
+      beginServerRequest();
       req.timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
       try {
@@ -1064,6 +1122,7 @@
           payload = text;
         }
         handlePayload(tab, payload);
+        endServerRequest(true, `${tab}/fetch`);
       } catch (err) {
         if (req.id !== requestId) return;
         req.inflight = false;
@@ -1072,6 +1131,7 @@
         const reason = err && err.name === 'AbortError'
           ? 'タイムアウト'
           : 'ネットワーク/ブロック';
+        endServerRequest(false, `${tab}/fetch`, reason);
         handleRequestFailure(tab, attempt, reason);
       }
     }
@@ -1093,13 +1153,22 @@
     async function fetchArchiveRowsByQuery(query, limit = 500){
       const opts = { q: query, limit };
       const run = async (useDeploy = false) => {
-        const res = await fetch(buildApiFetchUrl('archive', useDeploy, opts), {
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return normalizeRowsForTab('archive', await res.text());
+        beginServerRequest();
+        try {
+          const res = await fetch(buildApiFetchUrl('archive', useDeploy, opts), {
+            mode: 'cors',
+            credentials: 'omit',
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const rows = normalizeRowsForTab('archive', await res.text());
+          endServerRequest(true, 'archive/fetch(query)');
+          return rows;
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : String(err);
+          endServerRequest(false, 'archive/fetch(query)', reason);
+          throw err;
+        }
       };
 
       try {
@@ -1112,14 +1181,22 @@
     }
 
     async function fetchSheetRows(tab, useDeploy = false, extraParams = {}){
-      const res = await fetch(buildApiFetchUrl(tab, useDeploy, extraParams), {
-        mode: 'cors',
-        credentials: 'omit',
-        cache: 'no-store'
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      return normalizeRowsForTab(tab, await res.text());
+      beginServerRequest();
+      try {
+        const res = await fetch(buildApiFetchUrl(tab, useDeploy, extraParams), {
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = normalizeRowsForTab(tab, await res.text());
+        endServerRequest(true, `${tab}/fetch(stage)`);
+        return rows;
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        endServerRequest(false, `${tab}/fetch(stage)`, reason);
+        throw err;
+      }
     }
 
     async function fetchSheetRowsWithFallback(tab, extraParams = {}){
@@ -1135,14 +1212,22 @@
     }
 
     async function fetchRowsFromGithubCache(tab){
-      const res = await fetch(buildGithubDataUrl(tab), {
-        mode: 'cors',
-        credentials: 'omit',
-        cache: 'no-store'
-      });
-      if (!res.ok) throw new Error(`GitHub cache HTTP ${res.status}`);
-
-      return normalizeRowsForTab(tab, await res.text());
+      beginServerRequest();
+      try {
+        const res = await fetch(buildGithubDataUrl(tab), {
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`GitHub cache HTTP ${res.status}`);
+        const rows = normalizeRowsForTab(tab, await res.text());
+        endServerRequest(true, `${tab}/github-cache`);
+        return rows;
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        endServerRequest(false, `${tab}/github-cache`, reason);
+        throw err;
+      }
     }
 
     async function fetchAllRowsFromGithubCache(){
