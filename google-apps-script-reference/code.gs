@@ -16,7 +16,8 @@ const CFG = {
   },
   COLS: 4,           // A:D (A:アーティスト, B:曲名, C:区分, D:出典)
   MAX_RETURN: 5000,  // サーバ側の最大返却件数
-  CACHE_SECONDS: 60  // キャッシュ不要なら 0
+  CACHE_SECONDS: 60, // キャッシュ不要なら 0
+  CACHE_MAX_BYTES: 95 * 1024 // CacheService の value 上限（約100KB）未満に抑える
 };
 
 /***** エントリーポイント（本番ラッパ） *****/
@@ -87,7 +88,13 @@ function readSheet_(sheetName, startRow, includeSrc) {
   if (CFG.CACHE_SECONDS > 0) {
     const cache = CacheService.getScriptCache();
     const hit = cache.get(cacheKey);
-    if (hit) return JSON.parse(hit);
+    if (hit) {
+      try {
+        return JSON.parse(hit);
+      } catch (e) {
+        // 壊れたキャッシュは無視して再計算する
+      }
+    }
   }
 
   const ss = SpreadsheetApp.openById(CFG.SHEET_ID);
@@ -127,9 +134,20 @@ function readSheet_(sheetName, startRow, includeSrc) {
 
   if (CFG.CACHE_SECONDS > 0) {
     const cache = CacheService.getScriptCache();
-    cache.put(cacheKey, JSON.stringify({ rows: uniq }), CFG.CACHE_SECONDS);
+    putCacheIfSmall_(cache, cacheKey, { rows: uniq }, CFG.CACHE_SECONDS);
   }
   return { rows: uniq };
+}
+
+function putCacheIfSmall_(cache, key, value, ttlSeconds) {
+  try {
+    const serialized = JSON.stringify(value);
+    if (serialized.length > CFG.CACHE_MAX_BYTES) return false;
+    cache.put(key, serialized, ttlSeconds);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /***** ユーティリティ：配列のユニーク化 *****/
