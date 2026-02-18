@@ -220,14 +220,11 @@
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     const API_URL = DEPLOY_URL;
     const HARD_LIMIT = 10000;
-    const ARCHIVE_VERSION = 'v2.5';
-
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
       debounce: null,
-      archiveByKey: null,
-      archiveByTitle: null,
+      historyCache: new Map(),
       lastScroll: 0,
       histKey: null,
       kindFilter: ""
@@ -266,13 +263,8 @@
 
       state.cache.songs = null;
       state.cache.gags = null;
-      state.archiveByKey = null;
-      state.archiveByTitle = null;
+      state.historyCache.clear();
       state.kindFilter = '';
-
-      localStorage.removeItem('archiveVersion');
-      localStorage.removeItem('archiveJson');
-      localStorage.removeItem('archiveUpdatedAt');
 
       $('q').value = '';
       $('status').textContent = 'キャッシュを破棄して再取得中…';
@@ -286,7 +278,6 @@
 
       requestData('songs', 0, true, 'fetch');
       requestData('gags', 0, true, 'fetch');
-      requestData('archive', 0, true, 'fetch');
 
       showToast('キャッシュを破棄して更新しました');
       setTimeout(()=>{ btn.disabled = false; }, 1000);
@@ -300,44 +291,23 @@
       $(id).classList.add('active');
     }
 
-    function buildArchiveIndex(rows){
-      const byKey = new Map();
-      const byTitle = new Map();
-      for(const r of rows){
-        const a = normalize(r.artist), t = normalize(r.title);
+    function toHistoryEntries(rows, artist, title){
+      const na = normalize(artist);
+      const nt = normalize(title);
+      const unique = new Set();
+      const out = [];
+      for(const r of rows || []){
+        if (normalize(r.artist) !== na || normalize(r.title) !== nt) continue;
         const url = r.dUrl || urlFromText(r.dText);
-        if(!url) continue;
         const date = extractDate8(r.dText);
         const kind = (r.kind || '').toString();
-        const key = `${a}|${t}`, tkey = t;
-        (byKey.get(key)  || byKey.set(key,[]).get(key)).push({date,url,kind});
-        (byTitle.get(tkey)|| byTitle.set(tkey,[]).get(tkey)).push({date,url,kind});
+        const key = `${date}|${url}|${kind}`;
+        if (unique.has(key)) continue;
+        unique.add(key);
+        out.push({ date, url, kind });
       }
-      const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
-      for(const arr of byKey.values()) sortDesc(arr);
-      for(const arr of byTitle.values()) sortDesc(arr);
-      state.archiveByKey = byKey;
-      state.archiveByTitle = byTitle;
-    }
-
-    function tryLoadArchiveFromCache(){
-      try{
-        const ver = localStorage.getItem('archiveVersion');
-        const json = localStorage.getItem('archiveJson');
-        if(ver===ARCHIVE_VERSION && json){
-          const rows = JSON.parse(json);
-          buildArchiveIndex(rows);
-          return true;
-        }
-      }catch{}
-      return false;
-    }
-    function saveArchiveToCache(rows){
-      try{
-        localStorage.setItem('archiveVersion', ARCHIVE_VERSION);
-        localStorage.setItem('archiveJson', JSON.stringify(rows));
-        localStorage.setItem('archiveUpdatedAt', String(Date.now()));
-      }catch{}
+      out.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
+      return out;
     }
 
     let __jsonpHit = false;
@@ -366,19 +336,6 @@
       clearRequestTimer(tab);
     }
     function showRequestError(tab, reason){
-      if (tab === 'archive') {
-        if (state.histKey) {
-          $('hist-sub').textContent = state.archiveByKey
-            ? `履歴の更新に失敗しました（キャッシュ表示中）: ${reason}`
-            : `履歴の取得に失敗しました: ${reason}`;
-          if (!state.archiveByKey) {
-            $('hist-list').innerHTML = '';
-            $('hist-empty').style.display = 'block';
-          }
-        }
-        return;
-      }
-
       if (state.current === tab || !state.cache[state.current]) {
         $('status').textContent = `データ取得（${tab}）に失敗しました: ${reason}`;
       }
@@ -551,15 +508,6 @@
         throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
       }
 
-      if (tab === 'archive') {
-        markRequestSuccess('archive');
-        const rows = normalizeArchiveRows(rowsPayload);
-        buildArchiveIndex(rows);
-        saveArchiveToCache(rows);
-        if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
-        return;
-      }
-
       if (tab === 'songs' || tab === 'gags') {
         markRequestSuccess(tab);
         const rows = normalizeListRows(rowsPayload)
@@ -597,23 +545,31 @@
       return u;
     }
 
-    function buildApiRequestUrl(tab, callbackName, useDeploy){
+    function buildApiRequestUrl(tab, callbackName, useDeploy, extraParams = {}){
       const base = toSafeApiBase(useDeploy ? DEPLOY_URL : API_URL);
-      base.search = new URLSearchParams({
+      const params = new URLSearchParams({
         callback: callbackName,
         sheet: tab,
         authuser: '0',
         v: String(Date.now())
-      }).toString();
+      });
+      Object.entries(extraParams || {}).forEach(([k,v]) => {
+        if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
+      });
+      base.search = params.toString();
       return base.toString();
     }
-    function buildApiFetchUrl(tab, useDeploy){
+    function buildApiFetchUrl(tab, useDeploy, extraParams = {}){
       const base = toSafeApiBase(useDeploy ? DEPLOY_URL : API_URL);
-      base.search = new URLSearchParams({
+      const params = new URLSearchParams({
         sheet: tab,
         authuser: '0',
         v: String(Date.now())
-      }).toString();
+      });
+      Object.entries(extraParams || {}).forEach(([k,v]) => {
+        if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
+      });
+      base.search = params.toString();
       return base.toString();
     }
 
@@ -725,10 +681,33 @@
       }
       jsonp(tab, attempt, useDeploy);
     }
-    function ensureArchiveFast(){
-      const hasCache = tryLoadArchiveFromCache();
-      if (!requestState.archive.inflight) requestData('archive');
-      if (state.histKey && hasCache) renderHistory(state.histKey.artist, state.histKey.title);
+    async function fetchArchiveRowsByQuery(query, limit = 500){
+      const opts = { q: query, limit };
+      const run = async (useDeploy = false) => {
+        const res = await fetch(buildApiFetchUrl('archive', useDeploy, opts), {
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = JSON.parse(await res.text());
+        const rowsPayload = resolvePayloadRows(payload) || extractArchiveRowsFallback(payload);
+        if (!rowsPayload) {
+          const serverError = payload && typeof payload === 'object'
+            ? (payload.error || payload.message || (payload.result && payload.result.error))
+            : '';
+          throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
+        }
+        return normalizeArchiveRows(rowsPayload);
+      };
+
+      try {
+        return await run(false);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.startsWith('取得元不一致')) return run(true);
+        throw err;
+      }
     }
 
     function setActiveTab(tab){
@@ -743,7 +722,7 @@
       }
     }
 
-    function renderHistory(artist, title){
+    async function renderHistory(artist, title){
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
 
@@ -752,39 +731,30 @@
       wrap.innerHTML = '';
       empty.style.display = 'none';
 
-      if (!state.archiveByKey || !state.archiveByTitle) {
-        ensureArchiveFast();
-        for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
-        $('hist-sub').textContent = '履歴を読み込み中…';
-        return;
-      }
+      for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
+      $('hist-sub').textContent = '履歴を読み込み中…';
 
       const key = `${normalize(artist)}|${normalize(title)}`;
-      let list = state.archiveByKey.get(key);
-      if (!list || list.length===0) list = state.archiveByTitle.get(normalize(title)) || [];
-
-      const songs = state.cache.songs || [];
-      let latestFromSongs = null;
-      for (const row of songs) {
-        if (row._na !== normalize(artist) || row._nt !== normalize(title)) continue;
-        const url = row.dUrl || urlFromText(row.dText);
-        const date = extractDate8(row.dText);
-        const candidate = { date, url, kind: row.kind || '' };
-        if (!latestFromSongs || candidate.date > latestFromSongs.date) latestFromSongs = candidate;
+      let mergedList = state.historyCache.get(key);
+      if (!mergedList) {
+        try {
+          const rows = await fetchArchiveRowsByQuery(`${artist} ${title}`.trim(), 500);
+          mergedList = toHistoryEntries(rows, artist, title);
+          state.historyCache.set(key, mergedList);
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : String(err);
+          wrap.innerHTML = '';
+          empty.style.display = 'block';
+          $('hist-sub').textContent = `履歴の取得に失敗しました: ${reason}`;
+          return;
+        }
       }
 
-      const mergedList = [...list];
-      if (latestFromSongs && latestFromSongs.url) {
-        const exists = mergedList.some(item =>
-          item.date === latestFromSongs.date &&
-          item.url === latestFromSongs.url &&
-          (item.kind || '') === (latestFromSongs.kind || '')
-        );
-        if (!exists) mergedList.unshift(latestFromSongs);
-      }
+      wrap.innerHTML = '';
 
       if (mergedList.length===0){
         empty.style.display = 'block';
+        $('hist-sub').textContent = '該当データがありません。';
         return;
       }
 
@@ -803,12 +773,10 @@
           const row = document.createElement('div'); row.className='history-item';
 
           const left = document.createElement('div'); left.className='history-left';
-          // 先に日付
           const dt = document.createElement('span');
           dt.className = 'history-date';
           dt.textContent = dateLabel;
           left.appendChild(dt);
-          // 次に C列（区分）※空なら出さない
           if ((kind || '').trim() !== '') {
             const k = document.createElement('span');
             k.className = 'kind-chip';
@@ -829,11 +797,9 @@
       requestAnimationFrame(drawChunk);
     }
 
-
     function openHistory(artist, title){
       state.lastScroll = window.scrollY || document.documentElement.scrollTop || 0;
       showPage('page-history');
-      if (!state.archiveByKey) ensureArchiveFast();
       renderHistory(artist, title);
     }
 
@@ -979,7 +945,6 @@
       setActiveTab('songs');
       if (!state.cache['gags'])  requestData('gags');
 
-      ensureArchiveFast();
     })();
   </script>
 </body>
