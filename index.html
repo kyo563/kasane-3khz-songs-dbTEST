@@ -245,11 +245,14 @@
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     const API_URL = DEPLOY_URL;
     const HARD_LIMIT = 10000;
+    const ARCHIVE_VERSION = 'v2.5';
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
       debounce: null,
       historyCache: new Map(),
+      archiveByKey: null,
+      archiveByTitle: null,
       lastScroll: 0,
       histKey: null,
       kindFilter: ""
@@ -333,6 +336,53 @@
       }
       out.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
       return out;
+    }
+
+    function buildArchiveIndex(rows){
+      const byKey = new Map();
+      const byTitle = new Map();
+      for (const r of rows || []) {
+        const artist = normalize(r.artist);
+        const title = normalize(r.title);
+        const url = r.dUrl || urlFromText(r.dText);
+        if (!url) continue;
+        const date = extractDate8(r.dText);
+        const kind = (r.kind || '').toString();
+        const key = `${artist}|${title}`;
+
+        if (!byKey.has(key)) byKey.set(key, []);
+        byKey.get(key).push({ date, url, kind });
+
+        if (!byTitle.has(title)) byTitle.set(title, []);
+        byTitle.get(title).push({ date, url, kind });
+      }
+
+      const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url > y.url ? 1 : -1));
+      for (const arr of byKey.values()) sortDesc(arr);
+      for (const arr of byTitle.values()) sortDesc(arr);
+
+      state.archiveByKey = byKey;
+      state.archiveByTitle = byTitle;
+    }
+
+    function tryLoadArchiveFromCache(){
+      try {
+        const ver = localStorage.getItem('archiveVersion');
+        const json = localStorage.getItem('archiveJson');
+        if (ver === ARCHIVE_VERSION && json) {
+          buildArchiveIndex(JSON.parse(json));
+          return true;
+        }
+      } catch {}
+      return false;
+    }
+
+    function saveArchiveToCache(rows){
+      try {
+        localStorage.setItem('archiveVersion', ARCHIVE_VERSION);
+        localStorage.setItem('archiveJson', JSON.stringify(rows));
+        localStorage.setItem('archiveUpdatedAt', String(Date.now()));
+      } catch {}
     }
 
     let __jsonpHit = false;
@@ -552,6 +602,15 @@
         return;
       }
 
+      if (tab === 'archive') {
+        markRequestSuccess(tab);
+        const rows = normalizeArchiveRows(rowsPayload);
+        buildArchiveIndex(rows);
+        saveArchiveToCache(rows);
+        if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
+        return;
+      }
+
       throw new Error('不明なタブ種別');
     }
 
@@ -706,6 +765,12 @@
       }
       jsonp(tab, attempt, useDeploy);
     }
+
+    function ensureArchiveFast(){
+      const ok = tryLoadArchiveFromCache();
+      if (!ok && !requestState.archive.inflight) requestData('archive');
+    }
+
     async function fetchArchiveRowsByQuery(query, limit = 500){
       const opts = { q: query, limit };
       const run = async (useDeploy = false) => {
@@ -747,7 +812,8 @@
       }
     }
 
-    async function renderHistory(artist, title){
+    function renderHistory(artist, title){
+      requestData('archive');
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
 
@@ -759,20 +825,15 @@
       for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
       $('hist-sub').textContent = '履歴を読み込み中…';
 
+      if (!state.archiveByKey || !state.archiveByTitle) {
+        ensureArchiveFast();
+        return;
+      }
+
       const key = `${normalize(artist)}|${normalize(title)}`;
-      let mergedList = state.historyCache.get(key);
-      if (!mergedList) {
-        try {
-          const rows = await fetchArchiveRowsByQuery(`${artist} ${title}`.trim(), 500);
-          mergedList = toHistoryEntries(rows, artist, title);
-          state.historyCache.set(key, mergedList);
-        } catch (err) {
-          const reason = err instanceof Error ? err.message : String(err);
-          wrap.innerHTML = '';
-          empty.style.display = 'block';
-          $('hist-sub').textContent = `履歴の取得に失敗しました: ${reason}`;
-          return;
-        }
+      let mergedList = state.archiveByKey.get(key);
+      if (!mergedList || mergedList.length === 0) {
+        mergedList = state.archiveByTitle.get(normalize(title)) || [];
       }
 
       wrap.innerHTML = '';
@@ -969,6 +1030,7 @@
       showPage('page-list');
       setActiveTab('songs');
       if (!state.cache['gags'])  requestData('gags');
+      ensureArchiveFast();
 
     })();
   </script>
