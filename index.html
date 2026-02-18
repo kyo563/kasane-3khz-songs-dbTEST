@@ -159,12 +159,15 @@
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
+      .result-scroll{
+        scroll-snap-type:y mandatory;
+        scroll-behavior:smooth;
+      }
       .mobile-list{
         display:block;
         margin-top:0;
         max-height:none;
         overflow:visible;
-        scroll-snap-type:y proximity;
         -webkit-overflow-scrolling:touch;
         padding-right:2px;
       }
@@ -178,6 +181,7 @@
         background:#f8fffb;
         margin-bottom:9px;
         scroll-snap-align:start;
+        scroll-snap-stop:always;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       }
       .item:active,
@@ -349,7 +353,10 @@
         lastError: '',
         rows: 0,
         updatedAt: 0
-      }
+      },
+      snapTimer: null,
+      snapLock: false,
+      activeSnapIndex: -1
     };
 
     const $ = id => document.getElementById(id);
@@ -390,6 +397,42 @@
       if (!dock) return;
       const dockHeight = Math.ceil(dock.getBoundingClientRect().height) + 22;
       document.documentElement.style.setProperty('--dock-height', `${dockHeight}px`);
+    }
+    function runSnapHaptic(){
+      if (!window.matchMedia('(max-width: 768px)').matches) return;
+      if (typeof navigator.vibrate !== 'function') return;
+      navigator.vibrate(14);
+    }
+    function snapToNearestCard(){
+      if (state.snapLock) return;
+      if (!$('page-list').classList.contains('active')) return;
+      if (!window.matchMedia('(max-width: 768px)').matches) return;
+      const scroller = getListScroller();
+      if (!scroller) return;
+      const cards = Array.from($('mblist').querySelectorAll('.item'));
+      if (cards.length === 0) return;
+
+      const top = scroller.scrollTop;
+      let nearest = 0;
+      let distance = Number.POSITIVE_INFINITY;
+      cards.forEach((card, idx)=>{
+        const d = Math.abs(card.offsetTop - top);
+        if (d < distance) {
+          distance = d;
+          nearest = idx;
+        }
+      });
+
+      const target = cards[nearest].offsetTop;
+      state.snapLock = true;
+      scroller.scrollTo({ top: target, behavior: 'smooth' });
+      window.setTimeout(()=>{
+        state.snapLock = false;
+        if (state.activeSnapIndex !== nearest) {
+          state.activeSnapIndex = nearest;
+          runSnapHaptic();
+        }
+      }, 180);
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
@@ -1334,12 +1377,14 @@
         hint.textContent = q ? '該当なし' : '検索結果がここに表示されます。';
         tableWrap.style.display = 'none';
         listWrap.style.display  = 'none';
+        state.activeSnapIndex = -1;
         return;
       }
       hint.textContent = '';
 
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       if (!isMobile) {
+        state.activeSnapIndex = -1;
         const table=document.createElement('table');
         const thead=document.createElement('thead');
         const trh=document.createElement('tr');
@@ -1378,6 +1423,7 @@
           item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
+        state.activeSnapIndex = 0;
       }
     }
 
@@ -1412,6 +1458,8 @@
       const y = getListScroller().scrollTop || 0;
       $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
       updateCompactFilterMode(y);
+      if (state.snapTimer) clearTimeout(state.snapTimer);
+      state.snapTimer = setTimeout(snapToNearestCard, 110);
     });
 
     (function init(){
