@@ -611,9 +611,10 @@
 
     let __jsonpHit = false;
     const REQUEST_MAX_RETRY = 2;
-    const REQUEST_TIMEOUT_MS = 4500;
+    const REQUEST_TIMEOUT_MS = 8000;
     const REQUEST_RETRY_DELAY_MS = 500;
-    const FETCH_TIMEOUT_MS = 6000;
+    const FETCH_TIMEOUT_MS = 10000;
+    const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     const LIST_FETCH_LIMIT = 500;
@@ -894,11 +895,20 @@
       throw new Error('不明なタブ種別');
     }
 
+    function isListDataReady(){
+      return Boolean(state.cache.songs || state.cache.gags);
+    }
+    function isListRequestInflight(){
+      return Boolean(requestState.songs?.inflight || requestState.gags?.inflight);
+    }
+
     setTimeout(()=>{
-      if(!__jsonpHit && $('page-list').classList.contains('active')){
-        $('status').textContent = 'データ取得に失敗しました（JSONP未着／API_URLとデプロイ設定を確認）';
-      }
-    }, 4000);
+      if (__jsonpHit) return;
+      if (!$('page-list').classList.contains('active')) return;
+      if (isListDataReady()) return;
+      if (isListRequestInflight()) return;
+      $('status').textContent = 'データ取得に失敗しました（JSONP未着／API_URLとデプロイ設定を確認）';
+    }, INITIAL_ERROR_NOTICE_DELAY_MS);
 
     function toSafeApiBase(rawUrl){
       const src = String(rawUrl || '').replace(/\/macros\/u\/\d+\//,'/macros/');
