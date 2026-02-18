@@ -314,6 +314,7 @@
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
+      preloadPromise: null,
       debounce: null,
       filterPanelManuallyCollapsed: false,
       historyCache: new Map(),
@@ -380,7 +381,7 @@
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    document.getElementById('cache-refresh').addEventListener('click', ()=>{
+    document.getElementById('cache-refresh').addEventListener('click', async ()=>{
       const btn = $('cache-refresh');
       btn.disabled = true;
 
@@ -421,12 +422,15 @@
       }
       renderHistoryProcess();
 
-      requestData('songs', 0, true, 'fetch');
-      requestData('gags', 0, true, 'fetch');
-      requestData('archive', 0, true, 'fetch');
-
-      showToast('キャッシュを破棄して更新しました');
-      setTimeout(()=>{ btn.disabled = false; }, 1000);
+      try {
+        await warmCaches({ forceReload: true });
+        showToast('キャッシュを破棄して更新しました');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        showToast(`更新に失敗: ${msg}`);
+      } finally {
+        btn.disabled = false;
+      }
     });
 
     const urlFromText = s => { if(!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; };
@@ -999,12 +1003,129 @@
       }
     }
 
+    async function fetchSheetRows(tab, useDeploy = false){
+      const res = await fetch(buildApiFetchUrl(tab, useDeploy), {
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const text = await res.text();
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = text;
+      }
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          throw new Error('不正なレスポンス（JSON解析失敗）');
+        }
+      }
+
+      const rowsPayload = resolvePayloadRows(payload) || (tab === 'archive' ? extractArchiveRowsFallback(payload) : null);
+      if (!rowsPayload) {
+        const serverError = payload && typeof payload === 'object'
+          ? (payload.error || payload.message || (payload.result && payload.result.error))
+          : '';
+        throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
+      }
+
+      const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
+      const shouldStrictMatch = tab === 'songs' || tab === 'gags';
+      if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
+        throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
+      }
+
+      if (tab === 'archive') return normalizeArchiveRows(rowsPayload);
+      return normalizeListRows(rowsPayload).map(r => ({
+        ...r,
+        _na: normalize(r.artist),
+        _nt: normalize(r.title)
+      }));
+    }
+
+    async function fetchSheetRowsWithFallback(tab){
+      try {
+        return await fetchSheetRows(tab, false);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.startsWith('取得元不一致')) {
+          return fetchSheetRows(tab, true);
+        }
+        return fetchSheetRows(tab, true);
+      }
+    }
+
+    async function warmCaches({ forceReload = false } = {}){
+      if (state.preloadPromise) return state.preloadPromise;
+      if (!forceReload && state.cache.songs && state.cache.gags && state.archiveByKey && state.archiveByTitle) {
+        return;
+      }
+
+      state.preloadPromise = (async () => {
+        $('status').textContent = 'songs / gags / archive を取得中…';
+        state.archiveMeta.phase = 'loading';
+        state.archiveMeta.source = 'network';
+        state.archiveMeta.transport = 'fetch';
+        state.archiveMeta.useDeploy = false;
+        state.archiveMeta.retry = 0;
+        state.archiveMeta.lastError = '';
+        renderHistoryProcess();
+
+        try {
+          const [songsRows, gagsRows, archiveRows] = await Promise.all([
+            fetchSheetRowsWithFallback('songs'),
+            fetchSheetRowsWithFallback('gags'),
+            fetchSheetRowsWithFallback('archive')
+          ]);
+
+          state.cache.songs = songsRows;
+          state.cache.gags = gagsRows;
+          buildArchiveIndex(archiveRows);
+          saveArchiveToCache(archiveRows);
+
+          state.archiveMeta.phase = 'ready';
+          state.archiveMeta.source = 'network';
+          state.archiveMeta.transport = 'fetch';
+          state.archiveMeta.rows = archiveRows.length;
+          state.archiveMeta.updatedAt = Date.now();
+          renderHistoryProcess();
+
+          if (state.cache[state.current]) {
+            $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
+            render();
+          }
+
+          if ($('page-history').classList.contains('active') && state.histKey) {
+            renderHistory(state.histKey.artist, state.histKey.title);
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          state.archiveMeta.phase = 'error';
+          state.archiveMeta.lastError = msg;
+          renderHistoryProcess();
+          $('status').textContent = `データ取得に失敗しました: ${msg}`;
+          throw err;
+        } finally {
+          state.preloadPromise = null;
+        }
+      })();
+
+      return state.preloadPromise;
+    }
+
     function setActiveTab(tab){
       state.current = tab;
       state.kindFilters = [];
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
       $('status').textContent='読み込み中…';
-      if (!state.cache[tab] && !requestState[tab].inflight) requestData(tab);
+      if (!state.cache[tab]) {
+        warmCaches().catch(()=>{});
+      }
       if (state.cache[tab]) {
         $('status').textContent = `表示中：${state.cache[tab].length}件`;
         render();
@@ -1025,7 +1146,7 @@
       $('hist-sub').textContent = requestState.archive.inflight ? '履歴を読み込み中…（下の処理詳細を確認）' : '履歴データを準備しています…';
 
       if (!state.archiveByKey || !state.archiveByTitle) {
-        ensureArchiveFast();
+        warmCaches().catch(()=>{});
         return;
       }
 
@@ -1285,8 +1406,7 @@
       showPage('page-list');
       updateViewportMetrics();
       setActiveTab('songs');
-      if (!state.cache['gags'])  requestData('gags');
-      ensureArchiveFast();
+      warmCaches().catch(()=>{});
       updateCompactFilterMode();
 
     })();
