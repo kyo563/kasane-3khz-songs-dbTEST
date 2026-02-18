@@ -401,12 +401,22 @@
     }
 
     function normalizeBaseRow(r){
+      if (Array.isArray(r)) {
+        return {
+          artist: r[0] ?? '',
+          title : r[1] ?? '',
+          kind  : r[2] ?? '',
+          dText : r[3] ?? '',
+          dUrl  : r[4] ?? ''
+        };
+      }
+      const row = r && typeof r === 'object' ? r : {};
       return {
-        artist: r.artist ?? r.Artist ?? r.アーティスト ?? '',
-        title : r.title  ?? r.Title  ?? r.曲名       ?? '',
-        kind  : r.kind   ?? r.Kind   ?? r.区分       ?? '',
-        dText : r.dText  ?? r.dtext  ?? r.DTEXT      ?? r.text ?? '',
-        dUrl  : r.dUrl   ?? r.durl   ?? r.DURL       ?? r.url  ?? ''
+        artist: row.artist ?? row.Artist ?? row.artistName ?? row.singer ?? row.アーティスト ?? row.アーティスト名 ?? row.歌手名 ?? '',
+        title : row.title  ?? row.Title  ?? row.song ?? row.songName ?? row.曲名 ?? row.楽曲名 ?? '',
+        kind  : row.kind   ?? row.Kind   ?? row.category ?? row.type ?? row.区分 ?? '',
+        dText : row.dText  ?? row.dtext  ?? row.DTEXT ?? row.text ?? row.source ?? row['出典元情報(直リンク)'] ?? row.出典元情報 ?? row.出典 ?? '',
+        dUrl  : row.dUrl   ?? row.durl   ?? row.DURL  ?? row.url ?? row.directUrl ?? row.link ?? ''
       };
     }
     function normalizeListRows(payloadRows){
@@ -425,21 +435,67 @@
     }
 
     function resolvePayloadRows(payload){
-      if (Array.isArray(payload?.rows)) return payload.rows;
-      if (Array.isArray(payload?.data)) return payload.data;
-      if (Array.isArray(payload?.result?.rows)) return payload.result.rows;
-      if (Array.isArray(payload)) return payload;
+      const visited = new Set();
+      const queue = [payload];
+
+      while (queue.length) {
+        const cur = queue.shift();
+        if (!cur || visited.has(cur)) continue;
+        if (typeof cur === 'object') visited.add(cur);
+
+        if (Array.isArray(cur)) {
+          if (cur.length === 0 || Array.isArray(cur[0]) || typeof cur[0] === 'object') return cur;
+          continue;
+        }
+
+        if (typeof cur !== 'object') continue;
+
+        const directCandidates = [
+          cur.rows,
+          cur.data,
+          cur.list,
+          cur.items,
+          cur.records,
+          cur.values,
+          cur.result && cur.result.rows,
+          cur.result && cur.result.data,
+          cur.payload && cur.payload.rows,
+          cur.payload && cur.payload.data,
+          cur.response && cur.response.rows,
+          cur.response && cur.response.data
+        ];
+        for (const candidate of directCandidates) {
+          if (Array.isArray(candidate)) return candidate;
+        }
+
+        for (const v of Object.values(cur)) {
+          if (v && typeof v === 'object') queue.push(v);
+        }
+      }
       return null;
     }
 
     function handlePayload(tab, payload){
       __jsonpHit = true;
-      const rowsPayload = resolvePayloadRows(payload);
-      if (!rowsPayload) {
-        throw new Error('不正なレスポンス');
+
+      let safePayload = payload;
+      if (typeof payload === 'string') {
+        try {
+          safePayload = JSON.parse(payload);
+        } catch {
+          throw new Error('不正なレスポンス（JSON解析失敗）');
+        }
       }
 
-      const rawSheet = String(payload.sheet || payload.sheetName || payload.name || '').toLowerCase();
+      const rowsPayload = resolvePayloadRows(safePayload);
+      if (!rowsPayload) {
+        const serverError = safePayload && typeof safePayload === 'object'
+          ? (safePayload.error || safePayload.message || (safePayload.result && safePayload.result.error))
+          : '';
+        throw new Error(serverError ? `不正なレスポンス: ${serverError}` : '不正なレスポンス');
+      }
+
+      const rawSheet = String(safePayload.sheet || safePayload.sheetName || safePayload.name || '').toLowerCase();
       const shouldStrictMatch = tab === 'songs' || tab === 'gags';
       if (shouldStrictMatch && rawSheet && rawSheet !== tab) {
         throw new Error(`取得元不一致: request=${tab}, response=${rawSheet}`);
@@ -593,7 +649,13 @@
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const payload = await res.json();
+        const text = await res.text();
+        let payload;
+        try {
+          payload = JSON.parse(text);
+        } catch {
+          payload = text;
+        }
         handlePayload(tab, payload);
       } catch (err) {
         if (req.id !== requestId) return;
