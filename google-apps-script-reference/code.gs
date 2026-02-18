@@ -16,6 +16,11 @@ const CFG = {
   },
   COLS: 4,           // A:D (A:アーティスト, B:曲名, C:区分, D:出典)
   MAX_RETURN: 5000,  // サーバ側の最大返却件数
+  SHEET_MAX_RETURN: {
+    songs: 5000,
+    gags: 5000,
+    archive: 500,
+  },
   CACHE_SECONDS: 60, // キャッシュ不要なら 0
   CACHE_MAX_BYTES: 95 * 1024 // CacheService の value 上限（約100KB）未満に抑える
 };
@@ -45,9 +50,10 @@ function main_(e) {
   // サーバ側フィルタ（任意）
   const q = normalize_(p.q || '');
   const limitParam = Number(p.limit || 0);
+  const sheetMaxReturn = CFG.SHEET_MAX_RETURN[tabKey] || CFG.MAX_RETURN;
   const limit = (Number.isFinite(limitParam) && limitParam > 0)
-    ? Math.min(limitParam, CFG.MAX_RETURN)
-    : CFG.MAX_RETURN;
+    ? Math.min(limitParam, sheetMaxReturn)
+    : sheetMaxReturn;
 
   let filtered = rows;
   if (q) {
