@@ -416,6 +416,15 @@
       }
     }
 
+    function showHistoryLoadError(message){
+      if (!$('page-history').classList.contains('active')) return;
+      const wrap = $('hist-list');
+      const empty = $('hist-empty');
+      wrap.innerHTML = '';
+      empty.style.display = 'block';
+      $('hist-sub').textContent = message;
+    }
+
     function handleRequestFailure(tab, attempt, reason){
       const req = requestState[tab];
       if (!req) return;
@@ -429,6 +438,9 @@
         return;
       }
 
+      if (tab === 'archive') {
+        showHistoryLoadError(`履歴の取得に失敗しました: ${reason}`);
+      }
       showRequestError(tab, reason);
     }
 
@@ -823,7 +835,7 @@
       empty.style.display = 'none';
 
       for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
-      $('hist-sub').textContent = '履歴を読み込み中…';
+      $('hist-sub').textContent = requestState.archive.inflight ? '履歴を読み込み中…' : '履歴データを準備しています…';
 
       if (!state.archiveByKey || !state.archiveByTitle) {
         ensureArchiveFast();
