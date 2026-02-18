@@ -673,6 +673,7 @@
     const LIST_FETCH_LIMIT = 500;
     const INITIAL_FETCH_LIMIT = 200;
     const SECOND_FETCH_LIMIT = 500;
+    const ARCHIVE_SAFE_FETCH_LIMIT = 200;
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
       gags: { id:0, timer:null, inflight:false },
@@ -1150,7 +1151,7 @@
       if (!ok && !requestState.archive.inflight) requestData('archive', 0, false, 'fetch');
     }
 
-    async function fetchArchiveRowsByQuery(query, limit = 500){
+    async function fetchArchiveRowsByQuery(query, limit = ARCHIVE_SAFE_FETCH_LIMIT){
       const opts = { q: query, limit };
       const run = async (useDeploy = false) => {
         beginServerRequest();
@@ -1240,7 +1241,9 @@
     }
 
     async function fetchInStages(tab, { onStage } = {}){
-      const limits = [INITIAL_FETCH_LIMIT, SECOND_FETCH_LIMIT, null];
+      const limits = tab === 'archive'
+        ? [INITIAL_FETCH_LIMIT, ARCHIVE_SAFE_FETCH_LIMIT]
+        : [INITIAL_FETCH_LIMIT, SECOND_FETCH_LIMIT, null];
       let lastRows = [];
       for (let i = 0; i < limits.length; i++) {
         const limit = limits[i];
@@ -1406,7 +1409,7 @@
         const query = (title || artist || '').trim();
         if (!query) return;
 
-        const limits = [INITIAL_FETCH_LIMIT, SECOND_FETCH_LIMIT, null];
+        const limits = [INITIAL_FETCH_LIMIT, ARCHIVE_SAFE_FETCH_LIMIT];
         for (let i = 0; i < limits.length; i++) {
           const limit = limits[i];
           try {
