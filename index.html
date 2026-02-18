@@ -593,6 +593,7 @@
     const FETCH_TIMEOUT_MS = 6000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
+    const LIST_FETCH_LIMIT = 500;
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
       gags: { id:0, timer:null, inflight:false },
@@ -891,6 +892,7 @@
         authuser: '0',
         v: String(Date.now())
       });
+      if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -904,6 +906,7 @@
         authuser: '0',
         v: String(Date.now())
       });
+      if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
