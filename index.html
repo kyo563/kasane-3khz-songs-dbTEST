@@ -330,7 +330,23 @@
       state.cache.songs = null;
       state.cache.gags = null;
       state.historyCache.clear();
+      state.archiveByKey = null;
+      state.archiveByTitle = null;
       state.kindFilter = '';
+      state.archiveMeta.phase = 'idle';
+      state.archiveMeta.source = 'unknown';
+      state.archiveMeta.transport = '-';
+      state.archiveMeta.useDeploy = false;
+      state.archiveMeta.retry = 0;
+      state.archiveMeta.lastError = '';
+      state.archiveMeta.rows = 0;
+      state.archiveMeta.updatedAt = 0;
+
+      try {
+        localStorage.removeItem('archiveVersion');
+        localStorage.removeItem('archiveJson');
+        localStorage.removeItem('archiveUpdatedAt');
+      } catch {}
 
       $('q').value = '';
       $('status').textContent = 'キャッシュを破棄して再取得中…';
@@ -341,9 +357,16 @@
       $('mblist').innerHTML = '';
       $('table').style.display = 'none';
       $('mblist').style.display = 'none';
+      if ($('page-history').classList.contains('active')) {
+        $('hist-list').innerHTML = '';
+        $('hist-empty').style.display = 'none';
+        $('hist-sub').textContent = '履歴データを再取得しています…';
+      }
+      renderHistoryProcess();
 
       requestData('songs', 0, true, 'fetch');
       requestData('gags', 0, true, 'fetch');
+      requestData('archive', 0, true, 'fetch');
 
       showToast('キャッシュを破棄して更新しました');
       setTimeout(()=>{ btn.disabled = false; }, 1000);
