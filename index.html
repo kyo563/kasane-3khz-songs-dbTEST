@@ -1108,6 +1108,31 @@
       const filename = tab === 'meta' ? 'meta.json' : `${tab}.json`;
       return new URL(filename, base).toString();
     }
+    async function fetchStaticMeta(){
+      const res = await fetchWithTimeout(buildStaticDataUrl('meta'), 7000);
+      if (!res.ok) throw new Error(`static meta: HTTP ${res.status}`);
+      const payload = await res.json();
+      if (payload?.ok === false) throw new Error('static meta: ok=false');
+      return payload && typeof payload === 'object' ? payload : {};
+    }
+    function validateStaticRowsWithMeta(tab, rows, meta){
+      if (!meta || typeof meta !== 'object') return { ok: true, reason: '' };
+
+      const tabs = Array.isArray(meta.tabs) ? meta.tabs.map(v => String(v).toLowerCase()) : null;
+      if (tabs && tabs.length > 0 && !tabs.includes(tab)) {
+        return { ok: false, reason: `meta.tabs に ${tab} がありません` };
+      }
+
+      const expected = meta?.counts?.[tab];
+      if (Number.isFinite(Number(expected))) {
+        const expectedCount = Number(expected);
+        if (rows.length !== expectedCount) {
+          return { ok: false, reason: `件数不一致 static=${rows.length}, meta=${expectedCount}` };
+        }
+      }
+
+      return { ok: true, reason: '' };
+    }
     async function fetchStaticSnapshot(tab){
       const res = await fetchWithTimeout(buildStaticDataUrl(tab), 7000);
       if (!res.ok) throw new Error(`static ${tab}: HTTP ${res.status}`);
@@ -1436,19 +1461,35 @@
         renderHistoryProcess();
 
         try {
-          const [songsStatic, gagsStatic, archiveStatic] = await Promise.allSettled([
+          const [metaStatic, songsStatic, gagsStatic, archiveStatic] = await Promise.allSettled([
+            fetchStaticMeta(),
             fetchStaticSnapshot('songs'),
             fetchStaticSnapshot('gags'),
             fetchStaticSnapshot('archive')
           ]);
 
-          const songsRows = songsStatic.status === 'fulfilled'
+          const staticMeta = metaStatic.status === 'fulfilled' ? metaStatic.value : null;
+          const songsStaticCheck = songsStatic.status === 'fulfilled'
+            ? validateStaticRowsWithMeta('songs', songsStatic.value, staticMeta)
+            : { ok: false, reason: songsStatic.reason instanceof Error ? songsStatic.reason.message : 'static songs 取得失敗' };
+          const gagsStaticCheck = gagsStatic.status === 'fulfilled'
+            ? validateStaticRowsWithMeta('gags', gagsStatic.value, staticMeta)
+            : { ok: false, reason: gagsStatic.reason instanceof Error ? gagsStatic.reason.message : 'static gags 取得失敗' };
+          const archiveStaticCheck = archiveStatic.status === 'fulfilled'
+            ? validateStaticRowsWithMeta('archive', archiveStatic.value, staticMeta)
+            : { ok: false, reason: archiveStatic.reason instanceof Error ? archiveStatic.reason.message : 'static archive 取得失敗' };
+
+          if (!songsStaticCheck.ok) console.warn(`[static] songs を不採用: ${songsStaticCheck.reason}`);
+          if (!gagsStaticCheck.ok) console.warn(`[static] gags を不採用: ${gagsStaticCheck.reason}`);
+          if (!archiveStaticCheck.ok) console.warn(`[static] archive を不採用: ${archiveStaticCheck.reason}`);
+
+          const songsRows = songsStaticCheck.ok
             ? songsStatic.value
             : await fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT });
-          const gagsRows = gagsStatic.status === 'fulfilled'
+          const gagsRows = gagsStaticCheck.ok
             ? gagsStatic.value
             : await fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT });
-          const archiveRows = archiveStatic.status === 'fulfilled'
+          const archiveRows = archiveStaticCheck.ok
             ? archiveStatic.value
             : await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
 
@@ -1456,7 +1497,7 @@
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
 
-          const usedStatic = songsStatic.status === 'fulfilled' && gagsStatic.status === 'fulfilled' && archiveStatic.status === 'fulfilled';
+          const usedStatic = songsStaticCheck.ok && gagsStaticCheck.ok && archiveStaticCheck.ok;
 
           state.archiveMeta.phase = 'ready';
           state.archiveMeta.source = usedStatic ? 'static' : 'mixed';
