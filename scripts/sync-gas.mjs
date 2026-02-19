@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, writeFile } from 'node:fs/promises';
 
-const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
+const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbw7AIt8edC5Q24Gvvf6o5T7gCbWgWZq53pPbpNsONKsExOHZpxdQronK68ZMj61y1bU/exec';
 const OUT_DIR = process.env.OUT_DIR || 'public-data';
 const CORE_TABS = ['songs', 'gags'];
 const ARCHIVE_TAB = 'archive';
