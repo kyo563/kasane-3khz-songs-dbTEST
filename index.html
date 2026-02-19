@@ -74,6 +74,15 @@
     .server-response.loading{background:#eef6ff;border-color:#9fc3df;color:#234f70}
     .server-response.ok{background:#e9faed;border-color:#9fceaa;color:#22543b}
     .server-response.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
+    .server-monitor{margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#f4fbf7}
+    .server-monitor-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+    .server-monitor-title{font-size:12px;color:#33584b;font-weight:700}
+    .server-monitor-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;font-size:12px;color:#33584b}
+    .server-monitor-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);background:#eff9f2}
+    .server-monitor-pill.ok{background:#e9faed;border-color:#9fceaa;color:#22543b}
+    .server-monitor-pill.warn{background:#fff8e8;border-color:#e6c987;color:#7c5b22}
+    .server-monitor-pill.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
+    #server-monitor-refresh{padding:4px 9px;border-radius:999px;font-size:12px}
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
@@ -271,6 +280,20 @@
 
         <div class="muted" id="status">読み込み中…</div>
         <div class="server-response" id="server-response" aria-live="polite">サーバー応答: 未確認</div>
+        <div class="server-monitor" id="server-monitor" aria-live="polite">
+          <div class="server-monitor-head">
+            <span class="server-monitor-title">稼働モニター</span>
+            <button id="server-monitor-refresh" class="btn btn-subtle" type="button">今すぐ確認</button>
+          </div>
+          <div class="server-monitor-body">
+            <div>状態: <span id="monitor-status" class="server-monitor-pill">未確認</span></div>
+            <div>最終確認: <span id="monitor-last-check">未確認</span></div>
+            <div>静的データ: <span id="monitor-static">未確認</span></div>
+            <div>API: <span id="monitor-api">未確認</span></div>
+            <div>連続失敗: <span id="monitor-fail-count">0</span></div>
+            <div>詳細: <span id="monitor-detail">-</span></div>
+          </div>
+        </div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
       </div>
@@ -375,6 +398,15 @@
         lastLabel: '-',
         lastError: ''
       },
+      serverMonitor: {
+        status: 'unknown',
+        lastCheckAt: 0,
+        staticOk: false,
+        apiOk: false,
+        failCount: 0,
+        detail: '未確認'
+      },
+      monitorTimer: null,
       snapTimer: null,
       snapLock: false,
       activeSnapIndex: -1
@@ -447,6 +479,78 @@
         state.serverResponse.lastError = message || '不明なエラー';
       }
       renderServerResponse();
+    }
+
+    function monitorPillClass(status){
+      if (status === 'ok') return 'server-monitor-pill ok';
+      if (status === 'warn') return 'server-monitor-pill warn';
+      if (status === 'error') return 'server-monitor-pill error';
+      return 'server-monitor-pill';
+    }
+    function renderServerMonitor(){
+      const mon = state.serverMonitor;
+      const statusEl = $('monitor-status');
+      if (!statusEl) return;
+      statusEl.className = monitorPillClass(
+        mon.status === 'ok' ? 'ok' : mon.status === 'checking' ? 'warn' : mon.status === 'error' ? 'error' : 'warn'
+      );
+      statusEl.textContent = mon.status === 'ok' ? '稼働中' : mon.status === 'checking' ? '確認中' : mon.status === 'error' ? '要確認' : '未確認';
+      $('monitor-last-check').textContent = formatTime(mon.lastCheckAt);
+      $('monitor-static').textContent = mon.staticOk ? 'OK' : (mon.lastCheckAt ? 'NG' : '未確認');
+      $('monitor-api').textContent = mon.apiOk ? 'OK' : (mon.lastCheckAt ? 'NG' : '未確認');
+      $('monitor-fail-count').textContent = String(mon.failCount || 0);
+      $('monitor-detail').textContent = mon.detail || '-';
+    }
+    async function fetchWithTimeout(url, timeoutMs = 7000){
+      const controller = new AbortController();
+      const timer = setTimeout(()=>controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { cache: 'no-store', signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    async function probeServerHealth({ manual = false } = {}){
+      const mon = state.serverMonitor;
+      mon.status = 'checking';
+      mon.detail = manual ? '手動チェック中…' : '定期チェック中…';
+      renderServerMonitor();
+
+      let staticOk = false;
+      let apiOk = false;
+      let detail = '正常';
+
+      try {
+        const staticRes = await fetchWithTimeout(`${GITHUB_DATA_BASE}meta.json?_=${Date.now()}`, 5000);
+        staticOk = staticRes.ok;
+        if (!staticOk) detail = `静的データ ${staticRes.status}`;
+      } catch (err) {
+        detail = `静的データ失敗: ${err?.name === 'AbortError' ? 'timeout' : 'network'}`;
+      }
+
+      try {
+        const apiRes = await fetchWithTimeout(buildApiFetchUrl('songs', false, { limit: 1, _health: Date.now() }), 7000);
+        apiOk = apiRes.ok;
+        if (!apiOk) detail = `API ${apiRes.status}`;
+      } catch (err) {
+        const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
+        detail = detail === '正常' ? `API失敗: ${reason}` : `${detail} / API失敗: ${reason}`;
+      }
+
+      mon.lastCheckAt = Date.now();
+      mon.staticOk = staticOk;
+      mon.apiOk = apiOk;
+
+      if (staticOk && apiOk) {
+        mon.status = 'ok';
+        mon.failCount = 0;
+        mon.detail = '正常（静的データ/APIとも応答）';
+      } else {
+        mon.status = 'error';
+        mon.failCount += 1;
+        mon.detail = detail;
+      }
+      renderServerMonitor();
     }
     function currentScrollTop(){
       if ($('page-list').classList.contains('active')) {
@@ -1730,11 +1834,19 @@
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,200); });
       $('limit').addEventListener('change', render);
+      $('server-monitor-refresh').addEventListener('click', ()=>{
+        probeServerHealth({ manual: true }).catch(()=>{});
+      });
 
       showPage('page-list');
       updateViewportMetrics();
       setActiveTab('songs');
       warmCaches().catch(()=>{});
+      renderServerMonitor();
+      probeServerHealth().catch(()=>{});
+      state.monitorTimer = setInterval(()=>{
+        probeServerHealth().catch(()=>{});
+      }, 30000);
       updateCompactFilterMode();
 
     })();
