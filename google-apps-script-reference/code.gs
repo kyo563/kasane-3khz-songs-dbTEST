@@ -1,80 +1,85 @@
-doget
+/**
+ * kasane-3khz-songs-db 用 Google Apps Script
+ *
+ * 期待仕様:
+ * - GET /exec?sheet=songs|gags|archive[&q=...&limit=...&offset=...&debug=1]
+ * - 返却: { ok, sheet, total, matched, offset, limit, rows }
+ * - rows: [{ artist, title, kind, dText, dUrl, (debug時のみ)dSrc }]
+ * - callback 指定時は JSONP を返す
+ */
 
-/***** 設定 *****/
 const CFG = {
   SHEET_ID: '1_eZ-WFkWIpx_g_oxQWbc3_uMCqdjybsQNkvckWbQFUw',
   SHEETS: {
-    songs:   '歌った曲リスト',
-    gags:    '企画/一発ネタシリーズ',
+    songs: '歌った曲リスト',
+    gags: '企画/一発ネタシリーズ',
     archive: 'アーカイブ',
   },
-  // シート別の開始行（1始まり）。アーカイブは A2 から。
   START_ROWS: {
-    songs:   4,
-    gags:    4,
+    songs: 4,
+    gags: 4,
     archive: 2,
   },
-  COLS: 4,           // A:D (A:アーティスト, B:曲名, C:区分, D:出典)
-  MAX_RETURN: 5000,  // サーバ側の最大返却件数
+  COLS: 4,
+  MAX_RETURN: 5000,
   SHEET_MAX_RETURN: {
     songs: 5000,
     gags: 5000,
     archive: 500,
   },
-  CACHE_SECONDS: 60, // キャッシュ不要なら 0
+  CACHE_SECONDS: 60,
   SHEET_CACHE_SECONDS: {
     songs: 60,
     gags: 60,
     archive: 0,
   },
-  CACHE_MAX_BYTES: 95 * 1024 // CacheService の value 上限（約100KB）未満に抑える
+  CACHE_MAX_BYTES: 95 * 1024,
 };
 
-/***** エントリーポイント（本番ラッパ） *****/
 function doGet(e) {
   try {
     const payload = main_(e);
     return out_(payload, e);
   } catch (err) {
-    return out_({ ok:false, error:String(err) }, e);
+    return out_({ ok: false, error: String(err) }, e);
   }
 }
 
-/***** 本処理 *****/
 function main_(e) {
   const p = (e && e.parameter) || {};
   const tabKey = String(p.sheet || 'songs').trim().toLowerCase();
   const sheetName = CFG.SHEETS[tabKey];
   if (!sheetName) throw new Error('unknown sheet: ' + tabKey);
 
-  // 読み込み（行開始はシート別）
   const startRow = CFG.START_ROWS[tabKey] || 4;
   const includeSrc = String(p.debug || '') === '1';
-  const { rows } = readSheet_(sheetName, startRow, includeSrc, tabKey);
+  const result = readSheet_(sheetName, startRow, includeSrc, tabKey);
+  const rows = result.rows || [];
 
-  // サーバ側フィルタ（任意）
   const q = normalize_(p.q || '');
   const limitParam = Number(p.limit || 0);
   const offsetParam = Number(p.offset || 0);
   const sheetMaxReturn = CFG.SHEET_MAX_RETURN[tabKey] || CFG.MAX_RETURN;
-  const limit = (Number.isFinite(limitParam) && limitParam > 0)
-    ? Math.min(limitParam, sheetMaxReturn)
+
+  const limit = Number.isFinite(limitParam) && limitParam > 0
+    ? Math.min(Math.floor(limitParam), sheetMaxReturn)
     : sheetMaxReturn;
-  const offset = (Number.isFinite(offsetParam) && offsetParam > 0)
+  const offset = Number.isFinite(offsetParam) && offsetParam > 0
     ? Math.floor(offsetParam)
     : 0;
 
   let filtered = rows;
   if (q) {
-    filtered = rows.filter(r =>
+    filtered = rows.filter((r) =>
       normalize_(r.artist).includes(q) || normalize_(r.title).includes(q)
     );
   }
 
-  // 最終的にも一応ユニーク化（artist|title|dUrl）
-  const uniq = uniqueByKey_(filtered, r => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl||''}`);
+  const uniq = uniqueByKey_(
+    filtered,
+    (r) => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl || ''}`
+  );
 
-  const out = uniq.slice(offset, offset + limit);
   return {
     ok: true,
     sheet: tabKey,
@@ -82,35 +87,37 @@ function main_(e) {
     matched: uniq.length,
     offset,
     limit,
-    rows: out // {artist,title,kind,dText,dUrl,(debug時のみ dSrc)}
+    rows: uniq.slice(offset, offset + limit),
   };
 }
 
-/***** JSON / JSONP 自動切替 *****/
 function out_(payload, e) {
   const cb = e && e.parameter && e.parameter.callback;
   if (cb) {
-    const ok = /^[A-Za-z_$][0-9A-Za-z_$]*(?:\.[A-Za-z_$][0-9A-Za-z_$]*)*$/.test(cb);
-    const body = ok ? `${cb}(${JSON.stringify(payload)})` : '/* invalid callback */';
-    return ContentService.createTextOutput(body)
+    const isValid = /^[A-Za-z_$][0-9A-Za-z_$]*(?:\.[A-Za-z_$][0-9A-Za-z_$]*)*$/.test(cb);
+    const body = isValid ? `${cb}(${JSON.stringify(payload)})` : '/* invalid callback */';
+    return ContentService
+      .createTextOutput(body)
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-  return ContentService.createTextOutput(JSON.stringify(payload))
+
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/***** シート読取（A:B:C:D）— D はリンク抽出対応 + サーバ側ユニーク化 *****/
 function readSheet_(sheetName, startRow, includeSrc, tabKey) {
   const cacheKey = `rows:${sheetName}:${startRow}:${includeSrc ? 'withSrc' : 'noSrc'}`;
-  const cacheSeconds = CFG.SHEET_CACHE_SECONDS[tabKey] ?? CFG.CACHE_SECONDS;
+  const cacheSeconds = CFG.SHEET_CACHE_SECONDS[tabKey] || CFG.CACHE_SECONDS;
+
   if (cacheSeconds > 0) {
     const cache = CacheService.getScriptCache();
     const hit = cache.get(cacheKey);
     if (hit) {
       try {
         return JSON.parse(hit);
-      } catch (e) {
-        // 壊れたキャッシュは無視して再計算する
+      } catch (err) {
+        // 壊れたキャッシュは読み捨て
       }
     }
   }
@@ -123,38 +130,43 @@ function readSheet_(sheetName, startRow, includeSrc, tabKey) {
   if (last < startRow) return { rows: [] };
 
   const numRows = last - startRow + 1;
-  const rng = sh.getRange(startRow, 1, numRows, CFG.COLS);
+  const range = sh.getRange(startRow, 1, numRows, CFG.COLS);
+  const values = range.getDisplayValues();
+  const formulas = range.getFormulas();
+  const rich = range.getRichTextValues();
 
-  const values   = rng.getDisplayValues();   // 表示文字
-  const formulas = rng.getFormulas();        // =HYPERLINK() など
-  const rich     = rng.getRichTextValues();  // リッチテキスト
-
-  const rows = [];
-  for (let i = 0; i < numRows; i++) {
+  const parsed = [];
+  for (let i = 0; i < numRows; i += 1) {
     const artist = values[i][0] || '';
-    const title  = values[i][1] || '';
-    const kind   = values[i][2] || '';
-    const dText  = values[i][3] || ''; // 表示名（D）
+    const title = values[i][1] || '';
+    const kind = values[i][2] || '';
+    const dText = values[i][3] || '';
 
-    // A/B が完全空欄はスキップ
     if ((artist + title).trim() === '') continue;
 
-    // DのURL：RichText → HYPERLINK関数 → 生URL の順（診断時はソースも返す）
-    const { url: dUrl, src: dSrc } = getUrlWithSource_(rich[i][3], formulas[i][3], dText);
-
-    const row = { artist, title, kind, dText, dUrl };
-    if (includeSrc) row.dSrc = dSrc; // 'rich'|'formula'|'text'|'none'
-    rows.push(row);
+    const link = getUrlWithSource_(rich[i][3], formulas[i][3], dText);
+    const row = {
+      artist,
+      title,
+      kind,
+      dText,
+      dUrl: link.url,
+    };
+    if (includeSrc) row.dSrc = link.src;
+    parsed.push(row);
   }
 
-  // サーバ側でもユニーク化（artist|title|dUrl）
-  const uniq = uniqueByKey_(rows, r => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl||''}`);
+  const uniq = uniqueByKey_(
+    parsed,
+    (r) => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl || ''}`
+  );
 
+  const output = { rows: uniq };
   if (cacheSeconds > 0) {
-    const cache = CacheService.getScriptCache();
-    putCacheIfSmall_(cache, cacheKey, { rows: uniq }, cacheSeconds);
+    putCacheIfSmall_(CacheService.getScriptCache(), cacheKey, output, cacheSeconds);
   }
-  return { rows: uniq };
+
+  return output;
 }
 
 function putCacheIfSmall_(cache, key, value, ttlSeconds) {
@@ -164,124 +176,150 @@ function putCacheIfSmall_(cache, key, value, ttlSeconds) {
     if (byteLength > CFG.CACHE_MAX_BYTES) return false;
     cache.put(key, serialized, ttlSeconds);
     return true;
-  } catch (e) {
+  } catch (err) {
     return false;
   }
 }
 
-/***** ユーティリティ：配列のユニーク化 *****/
 function uniqueByKey_(arr, keyFn) {
   const seen = new Set();
   const out = [];
-  for (const x of arr) {
-    const k = keyFn(x);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(x);
+
+  for (const item of arr) {
+    const key = keyFn(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
   }
+
   return out;
 }
 
-/***** URL と取得元ソースを同時に判断 *****/
 function getUrlWithSource_(rtv, formula, dText) {
-  // 1) リッチテキスト（セル全体リンク or 部分 runs のリンク）
-  const u1 = pickUrlFromRich_(rtv);
-  if (u1) return { url: u1, src: 'rich' };
+  const fromRich = pickUrlFromRich_(rtv);
+  if (fromRich) return { url: fromRich, src: 'rich' };
 
-  // 2) 数式（=HYPERLINK(...), aタグなど）
-  const u2 = pickUrlFromFormula_(formula);
-  if (u2) return { url: u2, src: 'formula' };
+  const fromFormula = pickUrlFromFormula_(formula);
+  if (fromFormula) return { url: fromFormula, src: 'formula' };
 
-  // 3) プレーンテキスト中のURL
-  const u3 = pickUrlFromText_(dText);
-  if (u3) return { url: u3, src: 'text' };
+  const fromText = pickUrlFromText_(dText);
+  if (fromText) return { url: fromText, src: 'text' };
 
   return { url: '', src: 'none' };
 }
 
-/***** 診断：全シート・単一シート（必要なら残す） *****/
-function probeAll_() {
-  const report = {};
-  Object.keys(CFG.SHEETS).forEach(key => {
-    report[key] = probeOne_(key);
-  });
-  return report;
-}
-function probeOne_(tabKey) {
-  const sheetName = CFG.SHEETS[tabKey];
-  if (!sheetName) return { error: 'unknown sheet: ' + tabKey };
-
-  const startRow = CFG.START_ROWS[tabKey] || 4;
-  const { rows } = readSheet_(sheetName, startRow, true);
-  const total = rows.length;
-
-  let withUrl = 0, rich = 0, formula = 0, text = 0, none = 0;
-  const noUrlSamples = [];
-  const urlSamples = [];
-
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    const has = !!r.dUrl;
-    if (has) {
-      withUrl++;
-      if (urlSamples.length < 5) urlSamples.push({ idx: i + startRow, artist: r.artist, title: r.title, dText: r.dText, dUrl: r.dUrl, dSrc: r.dSrc });
-    } else {
-      if (noUrlSamples.length < 5) noUrlSamples.push({ idx: i + startRow, artist: r.artist, title: r.title, dText: r.dText, dSrc: r.dSrc });
-    }
-    if (r.dSrc === 'rich') rich++;
-    else if (r.dSrc === 'formula') formula++;
-    else if (r.dSrc === 'text') text++;
-    else none++;
-  }
-
-  return {
-    sheetName, startRow, total,
-    withUrl, withoutUrl: total - withUrl,
-    rate: total ? +(withUrl / total * 100).toFixed(2) : 0,
-    breakdown: { rich, formula, text, none },
-    samples: { withUrl: urlSamples, withoutUrl: noUrlSamples }
-  };
-}
-
-/***** URL 抽出ヘルパ *****/
 function pickUrlFromRich_(rtv) {
   if (!rtv) return '';
+
   try {
-    const u = rtv.getLinkUrl && rtv.getLinkUrl();
-    if (u) return String(u).trim();
-  } catch (e) {}
+    const direct = rtv.getLinkUrl && rtv.getLinkUrl();
+    if (direct) return String(direct).trim();
+  } catch (err) {
+    // noop
+  }
+
   try {
     const runs = rtv.getRuns ? rtv.getRuns() : [];
-    for (let i = 0; i < runs.length; i++) {
+    for (let i = 0; i < runs.length; i += 1) {
       const style = runs[i].getTextStyle && runs[i].getTextStyle();
-      const u = style && style.getLinkUrl && style.getLinkUrl();
-      if (u) return String(u).trim();
+      const link = style && style.getLinkUrl && style.getLinkUrl();
+      if (link) return String(link).trim();
     }
-  } catch (e) {}
+  } catch (err) {
+    // noop
+  }
+
   return '';
 }
-function pickUrlFromFormula_(f) {
-  if (!f) return '';
-  let m = f.match(/HYPERLINK\(\s*"([^"]+)"/i);
+
+function pickUrlFromFormula_(formula) {
+  if (!formula) return '';
+
+  let m = formula.match(/HYPERLINK\(\s*"([^"]+)"/i);
   if (m) return m[1].trim();
-  m = f.match(/HYPERLINK\(\s*'([^']+)'/i);
+
+  m = formula.match(/HYPERLINK\(\s*'([^']+)'/i);
   if (m) return m[1].trim();
-  m = f.match(/href="([^"]+)"/i);
+
+  m = formula.match(/href="([^"]+)"/i);
   if (m) return m[1].trim();
-  m = f.match(/HYPERLINK\(&quot;([^&]+)&quot;/i);
+
+  m = formula.match(/HYPERLINK\(&quot;([^&]+)&quot;/i);
   if (m) return m[1].trim();
+
   return '';
 }
-function pickUrlFromText_(s) {
-  if (!s) return '';
-  const m = String(s).match(/https?:\/\/\S+/i);
+
+function pickUrlFromText_(text) {
+  if (!text) return '';
+  const m = String(text).match(/https?:\/\/\S+/i);
   return m ? m[0].trim() : '';
 }
 
-/***** 文字正規化 *****/
-function normalize_(s) {
-  if (s == null) return '';
-  s = String(s).replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+function normalize_(text) {
+  if (text == null) return '';
+
+  let s = String(text);
+  s = s.replace(/[！-～]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
   s = s.replace(/\u3000/g, ' ');
   return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * 任意の簡易診断
+ */
+function probeOne_(tabKey) {
+  const key = String(tabKey || '').toLowerCase();
+  const sheetName = CFG.SHEETS[key];
+  if (!sheetName) return { error: 'unknown sheet: ' + tabKey };
+
+  const startRow = CFG.START_ROWS[key] || 4;
+  const rows = readSheet_(sheetName, startRow, true, key).rows || [];
+
+  const summary = {
+    sheetName,
+    startRow,
+    total: rows.length,
+    withUrl: 0,
+    withoutUrl: 0,
+    breakdown: { rich: 0, formula: 0, text: 0, none: 0 },
+    samples: { withUrl: [], withoutUrl: [] },
+  };
+
+  for (let i = 0; i < rows.length; i += 1) {
+    const r = rows[i];
+    const hasUrl = !!r.dUrl;
+
+    if (hasUrl) {
+      summary.withUrl += 1;
+      if (summary.samples.withUrl.length < 5) {
+        summary.samples.withUrl.push({ idx: i + startRow, artist: r.artist, title: r.title, dText: r.dText, dUrl: r.dUrl, dSrc: r.dSrc });
+      }
+    } else {
+      summary.withoutUrl += 1;
+      if (summary.samples.withoutUrl.length < 5) {
+        summary.samples.withoutUrl.push({ idx: i + startRow, artist: r.artist, title: r.title, dText: r.dText, dSrc: r.dSrc });
+      }
+    }
+
+    if (r.dSrc === 'rich' || r.dSrc === 'formula' || r.dSrc === 'text') {
+      summary.breakdown[r.dSrc] += 1;
+    } else {
+      summary.breakdown.none += 1;
+    }
+  }
+
+  summary.rate = summary.total > 0
+    ? Number(((summary.withUrl / summary.total) * 100).toFixed(2))
+    : 0;
+
+  return summary;
+}
+
+function probeAll_() {
+  const report = {};
+  Object.keys(CFG.SHEETS).forEach((key) => {
+    report[key] = probeOne_(key);
+  });
+  return report;
 }
