@@ -1,16 +1,14 @@
 {
   "ok": true,
   "source": "gas-sync",
-  "generatedAt": "2026-02-19T08:25:30.088Z",
-  "startedAt": "2026-02-19T08:25:17.668Z",
+  "generatedAt": "2026-02-19T08:33:07.249Z",
+  "startedAt": "2026-02-19T08:32:54.944Z",
   "tabs": [
     "songs",
-    "gags",
-    "archive"
+    "gags"
   ],
   "counts": {
     "songs": 429,
-    "gags": 42,
-    "archive": null
+    "gags": 42
   }
 }
