@@ -7,7 +7,7 @@ const CORE_TABS = ['songs', 'gags'];
 const ARCHIVE_TAB = 'archive';
 const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
 const DEFAULT_LIMITS = {
-  songs: 200,
+  songs: 500,
   gags: 100,
   archive: 10,
 };
