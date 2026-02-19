@@ -3,7 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 
 const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
 const OUT_DIR = process.env.OUT_DIR || 'public-data';
-const TABS = ['songs', 'gags', 'archive'];
+const CORE_TABS = ['songs', 'gags'];
+const ARCHIVE_TAB = 'archive';
 const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
 const DEFAULT_LIMITS = {
   songs: 200,
@@ -285,7 +286,7 @@ async function main() {
   const startedAt = new Date().toISOString();
 
   const outputs = {};
-  for (const tab of TABS.filter((t) => t !== 'archive')) {
+  for (const tab of CORE_TABS) {
     const payload = await fetchJsonWithRetry(tab);
     outputs[tab] = {
       ok: true,
@@ -304,14 +305,14 @@ async function main() {
       const archive = await fetchArchivePaged();
       const archivePayload = {
         ok: true,
-        sheet: 'archive',
+        sheet: ARCHIVE_TAB,
         fetchedAt: new Date().toISOString(),
         rows: archive.rows,
         total: archive.total ?? archive.rows.length,
         matched: archive.matched ?? archive.rows.length,
       };
       outputs.archive = archivePayload;
-      await writeFile(`${OUT_DIR}/archive.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
+      await writeFile(`${OUT_DIR}/${ARCHIVE_TAB}.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
     } catch (e) {
       if (isArgumentTooLargeError(e)) {
         console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
@@ -323,13 +324,17 @@ async function main() {
     console.warn('[archive] ENABLE_ARCHIVE_SYNC=true になるまで archive の取得をスキップします（隔離中）');
   }
 
+  const outputTabs = ENABLE_ARCHIVE_SYNC
+    ? [...CORE_TABS, ARCHIVE_TAB]
+    : [...CORE_TABS];
+
   const meta = {
     ok: true,
     source: 'gas-sync',
     generatedAt: new Date().toISOString(),
     startedAt,
-    tabs: TABS,
-    counts: Object.fromEntries(TABS.map((tab) => [tab, outputs[tab]?.rows?.length ?? null])),
+    tabs: outputTabs,
+    counts: Object.fromEntries(outputTabs.map((tab) => [tab, outputs[tab]?.rows?.length ?? null])),
   };
   await writeFile(`${OUT_DIR}/meta.json`, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
 
