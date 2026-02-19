@@ -9,7 +9,6 @@ const DEFAULT_LIMITS = {
   gags: 100,
   archive: 10,
 };
-const ARCHIVE_MAX_PAGES = Number(process.env.ARCHIVE_MAX_PAGES || 200);
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
 
@@ -78,12 +77,21 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildUrl(tab, offset = 0) {
+function isArgumentTooLargeError(err) {
+  const msg = String(err?.message ?? err);
+  return (
+    msg.includes('Argument too large')
+    || msg.includes('引数が大きすぎます')
+    || msg.includes('Exception: Argument too large')
+  );
+}
+
+function buildUrl(tab, { offset = 0, limit } = {}) {
   const url = new URL(GAS_URL);
   url.searchParams.set('sheet', tab);
-  const limit = DEFAULT_LIMITS[tab];
-  if (Number.isFinite(limit) && limit > 0) {
-    url.searchParams.set('limit', String(limit));
+  const resolvedLimit = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMITS[tab];
+  if (Number.isFinite(resolvedLimit) && resolvedLimit > 0) {
+    url.searchParams.set('limit', String(resolvedLimit));
   }
   if (Number.isFinite(offset) && offset > 0) {
     url.searchParams.set('offset', String(Math.floor(offset)));
@@ -93,7 +101,7 @@ function buildUrl(tab, offset = 0) {
   return url.toString();
 }
 
-async function fetchJsonWithRetry(tab, { offset = 0 } = {}) {
+async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRY; attempt += 1) {
@@ -101,7 +109,7 @@ async function fetchJsonWithRetry(tab, { offset = 0 } = {}) {
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const res = await fetch(buildUrl(tab, offset), {
+      const res = await fetch(buildUrl(tab, { offset, limit }), {
         method: 'GET',
         signal: controller.signal,
         headers: { Accept: 'application/json' },
@@ -161,15 +169,6 @@ async function fetchJsonWithRetry(tab, { offset = 0 } = {}) {
   throw new Error(`[${tab}] 取得失敗: ${String(lastError)}`);
 }
 
-function archiveRowKey(row) {
-  return [
-    row.artist ?? '',
-    row.title ?? '',
-    row.kind ?? '',
-    row.dText ?? '',
-    row.dUrl ?? '',
-  ].map((v) => String(v).trim().toLowerCase()).join('|');
-}
 
 async function verifyArchiveHealthCheck() {
   const payload = await fetchJsonWithRetry('archive', { offset: 0 });
@@ -182,43 +181,24 @@ async function verifyArchiveHealthCheck() {
   return payload;
 }
 
-async function fetchArchivePaged() {
-  const pageLimit = Math.max(1, Math.floor(DEFAULT_LIMITS.archive || 10));
-  const merged = [];
-  const seen = new Set();
-  let previousFirstKey = '';
+async function fetchArchiveWithBackoff(buildUrlFn) {
+  const limits = (process.env.ARCHIVE_LIMITS ?? '120,80,50,30,20,10')
+    .split(',')
+    .map((s) => parseInt(s.trim(), 10))
+    .filter((n) => Number.isFinite(n) && n > 0);
 
-  for (let page = 0; page < ARCHIVE_MAX_PAGES; page += 1) {
-    const offset = page * pageLimit;
-    const payload = await fetchJsonWithRetry('archive', { offset });
-    const rows = Array.isArray(payload.rows) ? payload.rows : [];
-    console.log(`[archive] page=${page + 1} offset=${offset} rows=${rows.length}`);
-    if (rows.length === 0) break;
-
-    const currentFirstKey = archiveRowKey(rows[0]);
-    if (page > 0 && currentFirstKey && currentFirstKey === previousFirstKey) {
-      break;
+  let lastErr;
+  for (const limit of limits) {
+    try {
+      buildUrlFn({ sheet: 'archive', limit });
+      return await fetchJsonWithRetry('archive', { limit });
+    } catch (e) {
+      lastErr = e;
+      if (!isArgumentTooLargeError(e)) throw e;
+      console.warn(`[archive] limit=${limit} で失敗（Argument too large）→ 縮小して再試行します`);
     }
-    previousFirstKey = currentFirstKey;
-
-    let added = 0;
-    for (const row of rows) {
-      const key = archiveRowKey(row);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(row);
-      added += 1;
-    }
-
-    if (added === 0 || rows.length < pageLimit) break;
   }
-
-  return {
-    sheet: 'archive',
-    total: merged.length,
-    matched: merged.length,
-    rows: merged,
-  };
+  throw lastErr;
 }
 
 async function main() {
@@ -226,10 +206,8 @@ async function main() {
   const startedAt = new Date().toISOString();
 
   const outputs = {};
-  for (const tab of TABS) {
-    const payload = tab === 'archive'
-      ? (await verifyArchiveHealthCheck(), await fetchArchivePaged())
-      : await fetchJsonWithRetry(tab);
+  for (const tab of TABS.filter((t) => t !== 'archive')) {
+    const payload = await fetchJsonWithRetry(tab);
     outputs[tab] = {
       ok: true,
       sheet: tab,
@@ -238,13 +216,34 @@ async function main() {
       total: payload.total ?? payload.rows.length,
       matched: payload.matched ?? payload.rows.length,
     };
+    await writeFile(`${OUT_DIR}/${tab}.json`, `${JSON.stringify(outputs[tab], null, 2)}\n`, 'utf8');
   }
 
-  await Promise.all(
-    Object.entries(outputs).map(([tab, payload]) =>
-      writeFile(`${OUT_DIR}/${tab}.json`, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
-    )
-  );
+  try {
+    await verifyArchiveHealthCheck();
+    const archive = await fetchArchiveWithBackoff(({ sheet, limit }) => {
+      const url = new URL(GAS_URL);
+      url.searchParams.set('sheet', sheet);
+      url.searchParams.set('limit', String(limit));
+      return url.toString();
+    });
+    const archivePayload = {
+      ok: true,
+      sheet: 'archive',
+      fetchedAt: new Date().toISOString(),
+      rows: archive.rows,
+      total: archive.total ?? archive.rows.length,
+      matched: archive.matched ?? archive.rows.length,
+    };
+    outputs.archive = archivePayload;
+    await writeFile(`${OUT_DIR}/archive.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
+  } catch (e) {
+    if (isArgumentTooLargeError(e)) {
+      console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
+    } else {
+      throw e;
+    }
+  }
 
   const meta = {
     ok: true,
@@ -252,7 +251,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     startedAt,
     tabs: TABS,
-    counts: Object.fromEntries(TABS.map((tab) => [tab, outputs[tab].rows.length])),
+    counts: Object.fromEntries(TABS.map((tab) => [tab, outputs[tab]?.rows?.length ?? null])),
   };
   await writeFile(`${OUT_DIR}/meta.json`, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
 
