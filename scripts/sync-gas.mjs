@@ -78,12 +78,19 @@ function sleep(ms) {
 }
 
 function isArgumentTooLargeError(err) {
-  const msg = String(err?.message ?? err);
-  return (
-    msg.includes('Argument too large')
-    || msg.includes('引数が大きすぎます')
-    || msg.includes('Exception: Argument too large')
-  );
+  let cur = err;
+  while (cur) {
+    if (cur?.code === 'ARG_TOO_LARGE') return true;
+    const msg = String(cur?.message ?? cur).toLowerCase();
+    if (
+      msg.includes('argument too large')
+      || msg.includes('引数が大きすぎます')
+    ) {
+      return true;
+    }
+    cur = cur?.cause;
+  }
+  return false;
 }
 
 function buildUrl(tab, { offset = 0, limit } = {}) {
@@ -166,7 +173,11 @@ async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
     }
   }
 
-  throw new Error(`[${tab}] 取得失敗: ${String(lastError)}`);
+  const wrapped = new Error(`[${tab}] 取得失敗: ${String(lastError)}`, { cause: lastError });
+  if (isArgumentTooLargeError(lastError)) {
+    wrapped.code = 'ARG_TOO_LARGE';
+  }
+  throw wrapped;
 }
 
 
