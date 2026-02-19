@@ -18,20 +18,20 @@ const CFG = {
   START_ROWS: {
     songs: 4,
     gags: 4,
-    archive: 2,
+    archive: 4,
   },
   COLS: 4,
   MAX_RETURN: 5000,
   SHEET_MAX_RETURN: {
     songs: 5000,
     gags: 5000,
-    archive: 500,
+    archive: 5000,
   },
   CACHE_SECONDS: 60,
   SHEET_CACHE_SECONDS: {
     songs: 60,
     gags: 60,
-    archive: 0,
+    archive: 60,
   },
   CACHE_MAX_BYTES: 95 * 1024,
 };
