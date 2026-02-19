@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
 const OUT_DIR = process.env.OUT_DIR || 'public-data';
 const TABS = ['songs', 'gags', 'archive'];
+const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
 const DEFAULT_LIMITS = {
   songs: 200,
   gags: 100,
@@ -297,25 +298,29 @@ async function main() {
     await writeFile(`${OUT_DIR}/${tab}.json`, `${JSON.stringify(outputs[tab], null, 2)}\n`, 'utf8');
   }
 
-  try {
-    await verifyArchiveHealthCheck();
-    const archive = await fetchArchivePaged();
-    const archivePayload = {
-      ok: true,
-      sheet: 'archive',
-      fetchedAt: new Date().toISOString(),
-      rows: archive.rows,
-      total: archive.total ?? archive.rows.length,
-      matched: archive.matched ?? archive.rows.length,
-    };
-    outputs.archive = archivePayload;
-    await writeFile(`${OUT_DIR}/archive.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
-  } catch (e) {
-    if (isArgumentTooLargeError(e)) {
-      console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
-    } else {
-      throw e;
+  if (ENABLE_ARCHIVE_SYNC) {
+    try {
+      await verifyArchiveHealthCheck();
+      const archive = await fetchArchivePaged();
+      const archivePayload = {
+        ok: true,
+        sheet: 'archive',
+        fetchedAt: new Date().toISOString(),
+        rows: archive.rows,
+        total: archive.total ?? archive.rows.length,
+        matched: archive.matched ?? archive.rows.length,
+      };
+      outputs.archive = archivePayload;
+      await writeFile(`${OUT_DIR}/archive.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
+    } catch (e) {
+      if (isArgumentTooLargeError(e)) {
+        console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
+      } else {
+        throw e;
+      }
     }
+  } else {
+    console.warn('[archive] ENABLE_ARCHIVE_SYNC=true になるまで archive の取得をスキップします（隔離中）');
   }
 
   const meta = {

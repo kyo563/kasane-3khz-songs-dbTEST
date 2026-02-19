@@ -18,6 +18,7 @@ jobs:
       R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       GAS_URL: ${{ secrets.GAS_URL }}
+      ENABLE_ARCHIVE_SYNC: "false"
 
     steps:
       - name: Checkout
