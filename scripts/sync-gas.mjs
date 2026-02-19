@@ -6,6 +6,7 @@ const OUT_DIR = process.env.OUT_DIR || 'public-data';
 const CORE_TABS = ['songs', 'gags'];
 const ARCHIVE_TAB = 'archive';
 const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
+const ARCHIVE_STRICT_SYNC = process.env.ARCHIVE_STRICT_SYNC === 'true';
 const DEFAULT_LIMITS = {
   songs: 500,
   gags: 100,
@@ -308,7 +309,11 @@ async function main() {
       await writeFile(`${OUT_DIR}/${ARCHIVE_TAB}.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
     } catch (e) {
       if (isArgumentTooLargeError(e)) {
-        console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
+        const strictMsg = '[archive] 全limitで失敗（Argument too large）。ARCHIVE_LIMITS / ARCHIVE_PAGE_LIMIT を見直してください';
+        if (ARCHIVE_STRICT_SYNC) {
+          throw new Error(strictMsg, { cause: e });
+        }
+        console.warn(`${strictMsg}。前回の public-data/archive.json を維持して続行します`);
       } else {
         throw e;
       }
@@ -317,7 +322,7 @@ async function main() {
     console.warn('[archive] ENABLE_ARCHIVE_SYNC=true になるまで archive の取得をスキップします（隔離中）');
   }
 
-  const outputTabs = ENABLE_ARCHIVE_SYNC
+  const outputTabs = ENABLE_ARCHIVE_SYNC && outputs.archive
     ? [...CORE_TABS, ARCHIVE_TAB]
     : [...CORE_TABS];
 
