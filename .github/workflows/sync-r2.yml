@@ -1,0 +1,50 @@
+name: Sync GAS snapshot to Cloudflare R2
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_EC2_METADATA_DISABLED: "true"
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      GAS_URL: ${{ secrets.GAS_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 依存があるリポジトリなら npm ci を有効化してください（package-lock.json がある場合）
+      # - name: Install deps
+      #   run: npm ci
+
+      - name: Build public-data from GAS
+        run: node scripts/sync-gas.mjs
+
+      - name: Install awscli
+        run: |
+          if ! command -v aws >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y awscli
+          fi
+
+      - name: Upload public-data to R2
+        run: |
+          aws s3 sync public-data "s3://$R2_BUCKET/public-data" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --region auto \
+            --delete
