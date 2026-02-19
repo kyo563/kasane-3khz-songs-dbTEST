@@ -4,6 +4,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
 const OUT_DIR = process.env.OUT_DIR || 'public-data';
 const TABS = ['songs', 'gags', 'archive'];
+const DEFAULT_LIMITS = {
+  songs: 500,
+  gags: 500,
+  archive: 120,
+};
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
 
@@ -75,6 +80,10 @@ function sleep(ms) {
 function buildUrl(tab) {
   const url = new URL(GAS_URL);
   url.searchParams.set('sheet', tab);
+  const limit = DEFAULT_LIMITS[tab];
+  if (Number.isFinite(limit) && limit > 0) {
+    url.searchParams.set('limit', String(limit));
+  }
   url.searchParams.set('authuser', '0');
   url.searchParams.set('v', String(Date.now()));
   return url.toString();
