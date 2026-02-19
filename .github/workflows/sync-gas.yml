@@ -24,9 +24,9 @@ jobs:
         env:
           GAS_URL: ${{ secrets.GAS_URL }}
           ENABLE_ARCHIVE_SYNC: "true"
-          ARCHIVE_LIMITS: "50,30,20,10"
-          ARCHIVE_PAGE_LIMIT: "10"
-          ARCHIVE_MAX_PAGES: "500"
+          ARCHIVE_LIMITS: "20,10,5,3,1"
+          ARCHIVE_PAGE_LIMIT: "5"
+          ARCHIVE_MAX_PAGES: "4000"
           ARCHIVE_TOTAL_CAP: "20000"
         run: node scripts/sync-gas.mjs
 

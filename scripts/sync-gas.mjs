@@ -9,7 +9,7 @@ const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
 const DEFAULT_LIMITS = {
   songs: 500,
   gags: 100,
-  archive: 10,
+  archive: 5,
 };
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
@@ -195,7 +195,7 @@ async function verifyArchiveHealthCheck() {
 }
 
 async function fetchArchiveWithBackoff({ offset = 0 } = {}) {
-  const limits = (process.env.ARCHIVE_LIMITS ?? '120,80,50,30,20,10')
+  const limits = (process.env.ARCHIVE_LIMITS ?? '20,10,5,3,1')
     .split(',')
     .map((s) => parseInt(s.trim(), 10))
     .filter((n) => Number.isFinite(n) && n > 0);
@@ -224,9 +224,9 @@ function archiveRowKey(row) {
 }
 
 async function fetchArchivePaged() {
-  const pageLimit = Number(process.env.ARCHIVE_PAGE_LIMIT || 10);
-  const maxPages = Number(process.env.ARCHIVE_MAX_PAGES || 200);
-  const totalCap = Number(process.env.ARCHIVE_TOTAL_CAP || 5000);
+  const pageLimit = Number(process.env.ARCHIVE_PAGE_LIMIT || 5);
+  const maxPages = Number(process.env.ARCHIVE_MAX_PAGES || 4000);
+  const totalCap = Number(process.env.ARCHIVE_TOTAL_CAP || 20000);
 
   let offset = 0;
   let total = null;
