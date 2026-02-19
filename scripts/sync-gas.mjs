@@ -101,6 +101,15 @@ async function fetchJsonWithRetry(tab) {
 
       const text = await res.text();
       const payload = parseJsonLoose(text);
+      const parsedPayload = payload && typeof payload === 'object' ? payload : {};
+      if (parsedPayload.ok === false) {
+        throw new Error(parsedPayload.error || 'GAS が ok=false を返しました');
+      }
+      const rawSheet = String(parsedPayload.sheet || '').toLowerCase();
+      if ((tab === 'songs' || tab === 'gags') && rawSheet && rawSheet !== tab) {
+        throw new Error(`sheet mismatch: request=${tab}, response=${rawSheet}`);
+      }
+
       const rows = resolveRows(payload);
       if (!rows) {
         throw new Error('rows が配列として取得できませんでした');
@@ -121,7 +130,6 @@ async function fetchJsonWithRetry(tab) {
         })
         .filter((r) => r && typeof r === 'object');
 
-      const parsedPayload = payload && typeof payload === 'object' ? payload : {};
       return {
         sheet: parsedPayload.sheet,
         total: parsedPayload.total,
