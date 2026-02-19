@@ -194,7 +194,7 @@ async function verifyArchiveHealthCheck() {
   return payload;
 }
 
-async function fetchArchiveWithBackoff(buildUrlFn) {
+async function fetchArchiveWithBackoff({ offset = 0 } = {}) {
   const limits = (process.env.ARCHIVE_LIMITS ?? '120,80,50,30,20,10')
     .split(',')
     .map((s) => parseInt(s.trim(), 10))
@@ -203,12 +203,11 @@ async function fetchArchiveWithBackoff(buildUrlFn) {
   let lastErr;
   for (const limit of limits) {
     try {
-      buildUrlFn({ sheet: 'archive', limit });
-      return await fetchJsonWithRetry('archive', { limit });
+      return await fetchJsonWithRetry('archive', { limit, offset });
     } catch (e) {
       lastErr = e;
       if (!isArgumentTooLargeError(e)) throw e;
-      console.warn(`[archive] limit=${limit} で失敗（Argument too large）→ 縮小して再試行します`);
+      console.warn(`[archive] limit=${limit}, offset=${offset} で失敗（Argument too large）→ 縮小して再試行します`);
     }
   }
   throw lastErr;
@@ -236,13 +235,7 @@ async function fetchArchivePaged() {
   const seen = new Set();
 
   for (let page = 0; page < maxPages; page += 1) {
-    const payload = await fetchArchiveWithBackoff(({ sheet, limit }) => {
-      const url = new URL(GAS_URL);
-      url.searchParams.set('sheet', sheet);
-      url.searchParams.set('limit', String(limit));
-      url.searchParams.set('offset', String(offset));
-      return url.toString();
-    });
+    const payload = await fetchArchiveWithBackoff({ offset });
 
     if (total == null && Number.isFinite(Number(payload.total))) total = Number(payload.total);
     if (matched == null && Number.isFinite(Number(payload.matched))) matched = Number(payload.matched);

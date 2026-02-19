@@ -5,9 +5,9 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
 
 ## 構成
 
-1. `scripts/sync-gas.mjs` が GAS API から `songs/gags` を取得（`archive` は隔離中のためデフォルト除外）
+1. `scripts/sync-gas.mjs` が GAS API から `songs/gags/archive` を取得（`archive` は小さな `limit` と `offset` ページングで安全に同期）
 2. `public-data/*.json` にスナップショットを保存
-3. GitHub Actions (`.github/workflows/sync-gas.yml`) が 15分ごとに同期
+3. GitHub Actions (`.github/workflows/sync-gas.yml`) が 15分ごとに同期（`archive` も含む）
 4. `index.html` は `public-data/*.json` を優先取得し、失敗時に従来のGAS取得へフォールバック
 
 ## セットアップ
@@ -19,8 +19,8 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
 
 - `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
 - `public-data` は静的配信用のキャッシュであり、取得失敗時は前回成功時のデータが残ります。
-- `archive` は GAS 側のレスポンスサイズ超過（`Exception: 引数が大きすぎます: value`）対策として**デフォルトでは同期対象から除外**しています（`ENABLE_ARCHIVE_SYNC=true` のときだけ取得）。
-- `scripts/sync-gas.mjs` で `archive` を有効化した場合は、`limit=1` の最小ヘルスチェック後、`limit=10` + `offset` ページングで全件を結合します。
+- `archive` は `limit` 縮小リトライ（`ARCHIVE_LIMITS`）と `offset` ページング（`ARCHIVE_PAGE_LIMIT`）で安全に同期します。
+- 取得件数の暴走を防ぐため `ARCHIVE_TOTAL_CAP`（既定: 20000）で上限を設けています。
 
 
 ## トラブルシュート: `archive/fetch(stage)` が `引数が大きすぎます: value` で失敗する理由
