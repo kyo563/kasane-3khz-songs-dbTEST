@@ -1,7 +1,7 @@
 {
   "ok": true,
   "sheet": "songs",
-  "fetchedAt": "2026-02-19T06:57:58.117Z",
+  "fetchedAt": "2026-02-19T07:36:40.549Z",
   "rows": [
     {
       "artist": "Oasis",
@@ -1402,6 +1402,1609 @@
       "kind": "歌枠",
       "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
       "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=6580s"
+    },
+    {
+      "artist": "Junky",
+      "title": "メランコリック",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=6240s"
+    },
+    {
+      "artist": "Miwa",
+      "title": "ヒカリへ",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=2425s"
+    },
+    {
+      "artist": "supercell",
+      "title": "ワールドイズマイン",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=3830s"
+    },
+    {
+      "artist": "Yui",
+      "title": "CHE.R.RY",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=1920s"
+    },
+    {
+      "artist": "すりぃ",
+      "title": "ラヴィ",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=5433s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "ギブス",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=4233s"
+    },
+    {
+      "artist": "電ポルP",
+      "title": "独りんぼエンヴィー",
+      "kind": "歌枠",
+      "dText": "20251219 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=j0UtOEI-3e4&t=1448s"
+    },
+    {
+      "artist": "aiko",
+      "title": "花火",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=4838s"
+    },
+    {
+      "artist": "Giga×KIRA",
+      "title": "GETCHA!",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=4396s"
+    },
+    {
+      "artist": "milet",
+      "title": "inside you",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=5943s"
+    },
+    {
+      "artist": "ヨルシカ",
+      "title": "八月、某、月明かり",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=3813s"
+    },
+    {
+      "artist": "水曜日のカンパネラ",
+      "title": "エジソン",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=1052s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "小学館",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=735s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "闇に降る雨",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=2080s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "虚言症",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=2383s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "同じ夜",
+      "kind": "歌枠",
+      "dText": "20251218 【#歌枠 昼の部】歌練習🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Lm7BJxovoI8&t=2856s"
+    },
+    {
+      "artist": "Ado",
+      "title": "逆光",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=3886s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "シンデレラ",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=7406s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "モニタリング",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=7113s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "妄想感傷代償連盟",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=10322s"
+    },
+    {
+      "artist": "Giga",
+      "title": "Beyond the way",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=9410s"
+    },
+    {
+      "artist": "Tommy february6",
+      "title": "Bloomin'!",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=2644s"
+    },
+    {
+      "artist": "かいりきベア",
+      "title": "バグ",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=10050s"
+    },
+    {
+      "artist": "サツキ",
+      "title": "メズマライザー",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=2991s"
+    },
+    {
+      "artist": "バルーン (須田景凪)",
+      "title": "シャルル",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=9006s"
+    },
+    {
+      "artist": "ヨルシカ",
+      "title": "ヒッチコック",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=1171s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "群青日和",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=4868s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "電波通信",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=5477s"
+    },
+    {
+      "artist": "八王子P×Giga",
+      "title": "Gimme×Gimmie",
+      "kind": "歌枠",
+      "dText": "20251215 【#歌枠 昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=dwp1GLq8X50&t=9705s"
+    },
+    {
+      "artist": "BoA",
+      "title": "メリクリ",
+      "kind": "ショート",
+      "dText": "20251214 メリクリ/BoA #歌ってみた #メリクリ #クリスマス #karaoke #新人vtuberを発掘せよ",
+      "dUrl": "https://www.youtube.com/shorts/34VWtKtnqtQ"
+    },
+    {
+      "artist": "柊マグネタイト",
+      "title": "テトリス",
+      "kind": "歌ってみた",
+      "dText": "20251213 【歌ってみた】テトリス/柊マグネタイト covered by 花彩音_3kHz",
+      "dUrl": "https://www.youtube.com/watch?v=oJK6Dpvk29c"
+    },
+    {
+      "artist": "Tommy february6",
+      "title": "Bloomin’!",
+      "kind": "ショート",
+      "dText": "20251212 Bloomin’!/Tommyfebruary6 #歌ってみた #tommyfebruary6 #illit #iroha #revival #y2k",
+      "dUrl": "https://www.youtube.com/shorts/rtv6cl6suLI"
+    },
+    {
+      "artist": "HY",
+      "title": "Song for…",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=2880s"
+    },
+    {
+      "artist": "RADWIMPS",
+      "title": "オーダーメイド",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=3436s"
+    },
+    {
+      "artist": "とあ",
+      "title": "ツギハギスタッカート",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=4331s"
+    },
+    {
+      "artist": "ピノキオピー",
+      "title": "ノンブレス・オブリージュ",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=3968s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "おこのみで",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=1865s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "修羅場",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=1450s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "心",
+      "kind": "歌枠",
+      "dText": "20251212 【歌枠・昼の部】お昼のゆるーい歌枠🌟歌枠リレーに向けて午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=KUGHyqEjqvY&t=1105s"
+    },
+    {
+      "artist": "μ's",
+      "title": "Snow halation",
+      "kind": "ショート",
+      "dText": "20251210 Snow halation/μ's #歌ってみた #snowhalation #ラブライブ #クリスマス #アニソン",
+      "dUrl": "https://www.youtube.com/shorts/lX4VdPWqAGA"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "ハオ",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=2057s"
+    },
+    {
+      "artist": "Neru",
+      "title": "ロストワンの号哭",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=1250s"
+    },
+    {
+      "artist": "Tommy heavenly6",
+      "title": "Pray",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=7141s"
+    },
+    {
+      "artist": "いきものがかり",
+      "title": "気まぐれロマンティック",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=534s"
+    },
+    {
+      "artist": "ポリスピカデリー",
+      "title": "Beat Eater",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=13286s"
+    },
+    {
+      "artist": "一青窈",
+      "title": "ハナミズキ",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=12103s"
+    },
+    {
+      "artist": "倖田來未",
+      "title": "you",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=8440s"
+    },
+    {
+      "artist": "倖田來未",
+      "title": "キューティーハニー",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=8913s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "リモートコントローラー",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=10940s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "主演の女",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=10474s"
+    },
+    {
+      "artist": "美空ひばり",
+      "title": "愛燦燦",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=12521s"
+    },
+    {
+      "artist": "浜崎あゆみ",
+      "title": "Ｍ",
+      "kind": "歌枠",
+      "dText": "20251210 【歌枠・昼の部】4時間歌枠🌟明日でデビュー4ヶ月ありがとう！午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=LabFMXqb2AE&t=9203s"
+    },
+    {
+      "artist": "Every Little Thing",
+      "title": "Time goes by",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=6270s"
+    },
+    {
+      "artist": "HY",
+      "title": "初雪",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=1067s"
+    },
+    {
+      "artist": "Tommy february6",
+      "title": "EVERYDAY AT THE BUS STOP",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=9378s"
+    },
+    {
+      "artist": "YOASOBI",
+      "title": "UNDEAD",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=2328s"
+    },
+    {
+      "artist": "ポリスピカデリー",
+      "title": "Boi",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=9127s"
+    },
+    {
+      "artist": "宇多田ヒカル",
+      "title": "Beautiful World",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=3172s"
+    },
+    {
+      "artist": "宇多田ヒカル",
+      "title": "Can You Keep A Secret?",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=3630s"
+    },
+    {
+      "artist": "宇多田ヒカル",
+      "title": "Movin'on without you",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=3994s"
+    },
+    {
+      "artist": "乃紫",
+      "title": "全方向美少女",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=1997s"
+    },
+    {
+      "artist": "浜崎あゆみ",
+      "title": "Voyage",
+      "kind": "歌枠",
+      "dText": "20251206 【#歌枠 #朝活】おはよう歌枠🌟元気になれる歌を歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DoWEJ7pYDWE&t=10920s"
+    },
+    {
+      "artist": "木村わいP",
+      "title": "高音域テスト",
+      "kind": "ショート",
+      "dText": "20251205 高音域テスト/木村わいP #音域テスト #高音厨 #新人Vtuber #歌い手 #ボカロ",
+      "dUrl": "https://www.youtube.com/shorts/Xm2QO6iuGiQ"
+    },
+    {
+      "artist": "HUNTR/X",
+      "title": "Golden",
+      "kind": "ショート",
+      "dText": "20251203 Golden・huntr/x #歌ってみた #golden #huntrix #kpop #netflix",
+      "dUrl": "https://www.youtube.com/shorts/nyyO9Tm5wZM"
+    },
+    {
+      "artist": "Giga",
+      "title": "G4L",
+      "kind": "歌枠",
+      "dText": "20251203 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=APjKwFwQJ0I&t=2440s"
+    },
+    {
+      "artist": "MISAMO",
+      "title": "NEW LOOK",
+      "kind": "歌枠",
+      "dText": "20251203 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=APjKwFwQJ0I&t=1984s"
+    },
+    {
+      "artist": "絢香",
+      "title": "三日月",
+      "kind": "歌枠",
+      "dText": "20251203 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=APjKwFwQJ0I&t=4519s"
+    },
+    {
+      "artist": "斎藤ネコx椎名林檎",
+      "title": "浴室",
+      "kind": "歌枠",
+      "dText": "20251203 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=APjKwFwQJ0I&t=4196s"
+    },
+    {
+      "artist": "浜崎あゆみ",
+      "title": "End roll",
+      "kind": "歌枠",
+      "dText": "20251201 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=L4sZszyY5d0&t=720s"
+    },
+    {
+      "artist": "浜崎あゆみ",
+      "title": "evolution",
+      "kind": "歌枠",
+      "dText": "20251201 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=L4sZszyY5d0&t=1137s"
+    },
+    {
+      "artist": "矢井田瞳",
+      "title": "Buzzstyle",
+      "kind": "歌枠",
+      "dText": "20251201 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=L4sZszyY5d0&t=5462s"
+    },
+    {
+      "artist": "矢井田瞳",
+      "title": "Life's Like A Love Song",
+      "kind": "歌枠",
+      "dText": "20251201 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=L4sZszyY5d0&t=5078s"
+    },
+    {
+      "artist": "矢井田瞳",
+      "title": "Over The Distance",
+      "kind": "歌枠",
+      "dText": "20251201 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=L4sZszyY5d0&t=4715s"
+    },
+    {
+      "artist": "Ado",
+      "title": "踊",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=3807s"
+    },
+    {
+      "artist": "EasyPop",
+      "title": "ハッピーシンセサイザ",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=769s"
+    },
+    {
+      "artist": "HANA",
+      "title": "ROSE",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=4862s"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "イミテイション・ゴールド",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=1926s"
+    },
+    {
+      "artist": "松任谷由実",
+      "title": "真夏の夜の夢",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=1332s"
+    },
+    {
+      "artist": "浜崎あゆみ",
+      "title": "SEASONS",
+      "kind": "歌枠",
+      "dText": "20251126 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=vWXOXMNjwnM&t=2381s"
+    },
+    {
+      "artist": "松本梨香",
+      "title": "めざせポケモンマスター",
+      "kind": "ショート",
+      "dText": "20251125 めざせポケモンマスター/松本梨香 #歌ってみた #ものまね #ポケモン #ピカチュウ #歌枠",
+      "dUrl": "https://www.youtube.com/shorts/Aj4WWJdTfZA"
+    },
+    {
+      "artist": "HANA",
+      "title": "My Body",
+      "kind": "ショート",
+      "dText": "20251124 MyBody/HANA #歌ってみた #hana #mybody #mahina #ノノガ",
+      "dUrl": "https://www.youtube.com/shorts/6DPfj1z_HQU"
+    },
+    {
+      "artist": "milet",
+      "title": "Anytime Anywhere",
+      "kind": "歌枠",
+      "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=6828s"
+    },
+    {
+      "artist": "RADWIMPS",
+      "title": "おしゃかさま",
+      "kind": "歌枠",
+      "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=6423s"
+    },
+    {
+      "artist": "柊キライ",
+      "title": "ラブカ？",
+      "kind": "ショート",
+      "dText": "20251121 ラブカ？/柊キライ #歌ってみた #ラブカ #柊キライ #vtuber #生歌",
+      "dUrl": "https://www.youtube.com/shorts/k_EUZZstP-U"
+    },
+    {
+      "artist": "Avril Lavigne",
+      "title": "When You’re Gone",
+      "kind": "歌枠",
+      "dText": "20251121 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=lGWgegAZsIk&t=5436s"
+    },
+    {
+      "artist": "Kanaria",
+      "title": "MIRA",
+      "kind": "歌枠",
+      "dText": "20251121 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=lGWgegAZsIk&t=597s"
+    },
+    {
+      "artist": "Kanaria",
+      "title": "レクイエム",
+      "kind": "歌枠",
+      "dText": "20251121 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=lGWgegAZsIk&t=4418s"
+    },
+    {
+      "artist": "May'n / 中島 愛",
+      "title": "ライオン",
+      "kind": "ショート",
+      "dText": "20251119 【残業確定】【陽性になったら休める】ライオン #歌ってみた #マクロスf #中島愛 #mayn #コロナ",
+      "dUrl": "https://www.youtube.com/shorts/RFihw9FBEKw"
+    },
+    {
+      "artist": "Tommy heavenly6",
+      "title": "Hey my friend",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=5249s"
+    },
+    {
+      "artist": "みきとP",
+      "title": "いーあるふぁんくらぶ",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=3795s"
+    },
+    {
+      "artist": "宇多田ヒカル",
+      "title": "For You",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=2758s"
+    },
+    {
+      "artist": "宇多田ヒカル",
+      "title": "In My Room",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=687s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "チャイナアドバイス",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=3518s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "ミス・パラレルワールド",
+      "kind": "歌枠",
+      "dText": "20251117 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jbyUbgDXk1M&t=3174s"
+    },
+    {
+      "artist": "ClariS",
+      "title": "irony",
+      "kind": "ショート",
+      "dText": "20251117 【リクエストありがとう】irony/ClariS #歌ってみた #claris #karaoke #新人vtuber #shorts",
+      "dUrl": "https://www.youtube.com/shorts/McWSsyIRhnI"
+    },
+    {
+      "artist": "星街すいせい",
+      "title": "ムーンライト",
+      "kind": "ショート",
+      "dText": "20251116 【アカペラ生歌】ムーンライト/星街すいせい #歌ってみた #星街すいせい #アカペラ #生歌",
+      "dUrl": "https://www.youtube.com/shorts/ibz0qdeT1jw"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "アニマル",
+      "kind": "ショート",
+      "dText": "20251111 アニマル/DECO*27 #歌ってみた #アニマル #deco27 #猫vtuber",
+      "dUrl": "https://www.youtube.com/shorts/TvLxc9SSwb0"
+    },
+    {
+      "artist": "Ado",
+      "title": "MAGIC",
+      "kind": "歌枠",
+      "dText": "20251109 【朝活・歌枠】目覚めの歌🌄グッドモーニング歌枠【#新人vtuber #歌枠 】",
+      "dUrl": "https://www.youtube.com/watch?v=VgyiaEvqFCM&t=5152s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "愛妻家の朝食",
+      "kind": "歌枠",
+      "dText": "20251109 【朝活・歌枠】目覚めの歌🌄グッドモーニング歌枠【#新人vtuber #歌枠 】",
+      "dUrl": "https://www.youtube.com/watch?v=VgyiaEvqFCM&t=458s"
+    },
+    {
+      "artist": "矢井田瞳",
+      "title": "I'm here saying nothing",
+      "kind": "歌枠",
+      "dText": "20251109 【朝活・歌枠】目覚めの歌🌄グッドモーニング歌枠【#新人vtuber #歌枠 】",
+      "dUrl": "https://www.youtube.com/watch?v=VgyiaEvqFCM&t=2795s"
+    },
+    {
+      "artist": "mona(CV：夏川椎菜)",
+      "title": "ファンサ",
+      "kind": "ショート",
+      "dText": "20251106 ファンサ／mona(CV：夏川椎菜) #歌ってみた #ファンサ #honeyworks #夏川椎菜 #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/SkA1K53D3WI"
+    },
+    {
+      "artist": "Avril Lavigne",
+      "title": "Complicated",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=5000s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "散歩道",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=3432s"
+    },
+    {
+      "artist": "井上あずみ",
+      "title": "君をのせて",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=2566s"
+    },
+    {
+      "artist": "中島みゆき",
+      "title": "糸",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=1360s"
+    },
+    {
+      "artist": "乃紫",
+      "title": "初恋キラー",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=442s"
+    },
+    {
+      "artist": "優里",
+      "title": "ドライフラワー",
+      "kind": "歌枠",
+      "dText": "20251106 【#歌枠】楽しく歌います🌟声がいい新人Vtuber⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GNHVBk1Vw-s&t=5713s"
+    },
+    {
+      "artist": "Superfly",
+      "title": "How Do I Survive?",
+      "kind": "歌枠",
+      "dText": "20251103 【歌枠・耐久】登録者500人耐久🌟歌ガチ勢の生歌聴いてください⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=tFaJJYkXIjE&t=2538s"
+    },
+    {
+      "artist": "Superfly",
+      "title": "愛をこめて花束を(piano ver.)",
+      "kind": "歌枠",
+      "dText": "20251103 【歌枠・耐久】登録者500人耐久🌟歌ガチ勢の生歌聴いてください⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=tFaJJYkXIjE&t=7492s"
+    },
+    {
+      "artist": "Superfly",
+      "title": "恋する瞳は美しい",
+      "kind": "歌枠",
+      "dText": "20251103 【歌枠・耐久】登録者500人耐久🌟歌ガチ勢の生歌聴いてください⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=tFaJJYkXIjE&t=2112s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "母国情緒",
+      "kind": "歌枠",
+      "dText": "20251103 【歌枠・耐久】登録者500人耐久🌟歌ガチ勢の生歌聴いてください⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=tFaJJYkXIjE&t=481s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "ゴーストルール",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=3016s"
+    },
+    {
+      "artist": "HALCALI",
+      "title": "おつかれSUMMER",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=2376s"
+    },
+    {
+      "artist": "YUKI",
+      "title": "メランコリニスタ",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=2043s"
+    },
+    {
+      "artist": "あたらよ",
+      "title": "10月無口な君を忘れる",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=394s"
+    },
+    {
+      "artist": "なきそfeat.ロス",
+      "title": "げのげ",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=4699s"
+    },
+    {
+      "artist": "杏里",
+      "title": "CAT'S EYE",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=5416s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "メロウ",
+      "kind": "歌枠",
+      "dText": "20251029 【縦型】お昼の歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=ge1juO_XRG4&t=1569s"
+    },
+    {
+      "artist": "aiko",
+      "title": "愛の病",
+      "kind": "歌枠",
+      "dText": "20251027 【歌枠・昼の部】ハロウィン歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Ntt_iAnqpdQ&t=1681s"
+    },
+    {
+      "artist": "HoneyWorks/藤田ことね(飯田ヒカル)",
+      "title": "世界一可愛い私",
+      "kind": "歌枠",
+      "dText": "20251027 【歌枠・昼の部】ハロウィン歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Ntt_iAnqpdQ&t=2176s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "サカナ",
+      "kind": "歌枠",
+      "dText": "20251027 【歌枠・昼の部】ハロウィン歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Ntt_iAnqpdQ&t=2915s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "月に負け犬",
+      "kind": "歌枠",
+      "dText": "20251027 【歌枠・昼の部】ハロウィン歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Ntt_iAnqpdQ&t=4373s"
+    },
+    {
+      "artist": "GO!GO!7188",
+      "title": "浮舟",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=6069s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "くじら12号",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=6629s"
+    },
+    {
+      "artist": "Superfly",
+      "title": "Hi-Five",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=3856s"
+    },
+    {
+      "artist": "YOASOBI",
+      "title": "アイドル",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=2259s"
+    },
+    {
+      "artist": "松田聖子",
+      "title": "瑠璃色の地球",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=740s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "LOVEずっきゅん",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=1930s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "林檎の唄",
+      "kind": "歌枠",
+      "dText": "20251026 【縦型】縦型初配信・歌枠🌟元気が出る歌を歌います！花彩音_3kHz【#新人vtuber #shorts 】",
+      "dUrl": "https://www.youtube.com/watch?v=7ODhAjDQ_mU&t=8437s"
+    },
+    {
+      "artist": "9Lana",
+      "title": "GAME",
+      "kind": "歌枠",
+      "dText": "20251023 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZdtlFfboxRY&t=3754s"
+    },
+    {
+      "artist": "biz×ZERA",
+      "title": "Loveit?",
+      "kind": "歌枠",
+      "dText": "20251023 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZdtlFfboxRY&t=4096s"
+    },
+    {
+      "artist": "すりぃ",
+      "title": "ジャンキーナイトタウンオーケストラ",
+      "kind": "歌枠",
+      "dText": "20251023 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZdtlFfboxRY&t=1500s"
+    },
+    {
+      "artist": "なとり",
+      "title": "Overdose",
+      "kind": "歌枠",
+      "dText": "20251023 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZdtlFfboxRY&t=2481s"
+    },
+    {
+      "artist": "Brad Kane and Lea Salonga",
+      "title": "A Whole New World",
+      "kind": "ショート",
+      "dText": "20251020 A Whole New World #歌ってみた #アカペラ #aladdin #disneysongs #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/aagJGxtEJd0"
+    },
+    {
+      "artist": "¿?shimon",
+      "title": "偽物人間40号",
+      "kind": "歌枠",
+      "dText": "20251020 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=JvfiHHdQ3ck&t=2468s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "KYOTO",
+      "kind": "歌枠",
+      "dText": "20251020 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=JvfiHHdQ3ck&t=718s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "ドキドキ",
+      "kind": "歌枠",
+      "dText": "20251020 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=JvfiHHdQ3ck&t=1472s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "スマトラ警備隊",
+      "kind": "歌枠",
+      "dText": "20251020 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=JvfiHHdQ3ck&t=482s"
+    },
+    {
+      "artist": "東京事変",
+      "title": "金魚の箱",
+      "kind": "歌枠",
+      "dText": "20251020 【歌枠・昼の部】ゆるゆる歌枠🌟午後からのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=JvfiHHdQ3ck&t=4366s"
+    },
+    {
+      "artist": "¿?shimon",
+      "title": "ずっと、ずっと、ずっと｡",
+      "kind": "ショート",
+      "dText": "20251019 ずっと、ずっと、ずっと｡/¿?shimon #歌ってみた #shimon #いゔどっと #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/3lwfStFK7Hg"
+    },
+    {
+      "artist": "¿?shimon",
+      "title": "ルシファー",
+      "kind": "歌枠",
+      "dText": "20251016 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=2RPprhw7Xus&t=1423s"
+    },
+    {
+      "artist": "れをる",
+      "title": "ディア",
+      "kind": "歌枠",
+      "dText": "20251016 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=2RPprhw7Xus&t=3279s"
+    },
+    {
+      "artist": "酒井法子",
+      "title": "碧いうさぎ",
+      "kind": "歌枠",
+      "dText": "20251016 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=2RPprhw7Xus&t=232s"
+    },
+    {
+      "artist": "理芽",
+      "title": "食虫植物",
+      "kind": "歌枠",
+      "dText": "20251016 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=2RPprhw7Xus&t=573s"
+    },
+    {
+      "artist": "Mao",
+      "title": "夢をかなえてドラえもん",
+      "kind": "歌枠",
+      "dText": "20251013 【歌枠】初見歓迎・楽しく歌うよー！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Vfh57r3n6CA&t=421s"
+    },
+    {
+      "artist": "ONE OK ROCK",
+      "title": "Wherever you are",
+      "kind": "歌枠",
+      "dText": "20251013 【歌枠】初見歓迎・楽しく歌うよー！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Vfh57r3n6CA&t=2165s"
+    },
+    {
+      "artist": "YUKI",
+      "title": "ハローグッバイ",
+      "kind": "歌枠",
+      "dText": "20251013 【歌枠】初見歓迎・楽しく歌うよー！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Vfh57r3n6CA&t=5746s"
+    },
+    {
+      "artist": "友成空",
+      "title": "鬼ノ宴",
+      "kind": "歌枠",
+      "dText": "20251013 【歌枠】初見歓迎・楽しく歌うよー！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=Vfh57r3n6CA&t=4061s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "マシュマロ",
+      "kind": "歌ってみた",
+      "dText": "20251013 【歌ってみた】マシュマロ/DECO*27 covered by 花彩音_3kHz",
+      "dUrl": "https://www.youtube.com/watch?v=tTb_AP1NpNU"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "バーモント・キッス",
+      "kind": "歌枠",
+      "dText": "20251009 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=rk32iVqVzJw&t=694s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "BATHROOM",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=7563s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "Over Drive",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=417s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "RADIO",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=1297s"
+    },
+    {
+      "artist": "ピノキオピー",
+      "title": "神っぽいな",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=1935s"
+    },
+    {
+      "artist": "松任谷由実",
+      "title": "ルージュの伝言",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=6926s"
+    },
+    {
+      "artist": "米良美一",
+      "title": "もののけ姫",
+      "kind": "歌枠",
+      "dText": "20251006 【歌枠】JUDY AND MARYが好き！可愛く歌いたい！⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=GhixRAwY_YI&t=4992s"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "秋桜",
+      "kind": "歌枠",
+      "dText": "20251002 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=mq9GyEV__v0&t=5999s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "ペペロンチーノ・キャンディ",
+      "kind": "歌枠",
+      "dText": "20251002 【歌枠・昼の部】ゆるゆる歌枠🌟仕事にいきたくない⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=mq9GyEV__v0&t=1994s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "motto",
+      "kind": "歌枠",
+      "dText": "20251001 【歌枠】風邪なのでのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jXzLOBjpCR0&t=748s"
+    },
+    {
+      "artist": "Kanaria",
+      "title": "EYE",
+      "kind": "歌枠",
+      "dText": "20251001 【歌枠】風邪なのでのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jXzLOBjpCR0&t=3684s"
+    },
+    {
+      "artist": "Kanaria",
+      "title": "KING",
+      "kind": "歌枠",
+      "dText": "20251001 【歌枠】風邪なのでのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jXzLOBjpCR0&t=4139s"
+    },
+    {
+      "artist": "ヨルシカ",
+      "title": "言って",
+      "kind": "歌枠",
+      "dText": "20251001 【歌枠】風邪なのでのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=jXzLOBjpCR0&t=426s"
+    },
+    {
+      "artist": "Ariana Grande",
+      "title": "Problem",
+      "kind": "ショート",
+      "dText": "20250930 【アカペラ】Problem/ArianaGrande #cover #歌ってみた #arianagrande #アカペラ",
+      "dUrl": "https://www.youtube.com/shorts/ACXeXfkp82o"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "ゾンビ",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=6394s"
+    },
+    {
+      "artist": "Kai",
+      "title": "さよならプリンセス",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=2277s"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "パールカラーにゆれて",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=6910s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "テレ東",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=1547s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "マイハートハードピンチ",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=1103s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "学級崩壊",
+      "kind": "歌枠",
+      "dText": "20250928 【歌枠・耐久】高評価60🌟初見歓迎のんびり歌います♪花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=UDWvFZJeP60&t=545s"
+    },
+    {
+      "artist": "JUDY AND MARY",
+      "title": "LOVER SOUL",
+      "kind": "歌枠",
+      "dText": "20250926 【歌枠・昼の部】ゆるゆる歌枠🌟どうしてイベント前日夜勤なんだ⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=0rKgirIv-eQ&t=1933s"
+    },
+    {
+      "artist": "YUKI",
+      "title": "JOY",
+      "kind": "歌枠",
+      "dText": "20250926 【歌枠・昼の部】ゆるゆる歌枠🌟どうしてイベント前日夜勤なんだ⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=0rKgirIv-eQ&t=2452s"
+    },
+    {
+      "artist": "結束バンド",
+      "title": "星座になれたら",
+      "kind": "歌枠",
+      "dText": "20250926 【歌枠・昼の部】ゆるゆる歌枠🌟どうしてイベント前日夜勤なんだ⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=0rKgirIv-eQ&t=455s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "ヴァンパイア",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=3135s"
+    },
+    {
+      "artist": "かいりきベア",
+      "title": "ダーリンダンス",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=2548s"
+    },
+    {
+      "artist": "可不と香椎モイミ",
+      "title": "キャットラビング",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=2897s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "シンデレラ",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=1017s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "地獄先生",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=489s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "やっつけ仕事",
+      "kind": "歌枠",
+      "dText": "20250924 【歌枠・昼の部】初見歓迎🌟⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=X5B1S8cvrxI&t=5597s"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "プレイバックpart2",
+      "kind": "歌枠",
+      "dText": "20250922 【歌枠】ロックな曲多め🎸⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=f8c9_q2autc&t=3527s"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "ロックンロール・ウィドウ",
+      "kind": "歌枠",
+      "dText": "20250922 【歌枠】ロックな曲多め🎸⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=f8c9_q2autc&t=3052s"
+    },
+    {
+      "artist": "Yukopi",
+      "title": "強風オールバック",
+      "kind": "歌ってみた",
+      "dText": "20250921 【歌ってみた】ハムボで 強風オールバック/ゆこぴ coverd by 花彩音_3kHz【新人Vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=C2w6mI6IJRo"
+    },
+    {
+      "artist": "ランカ・リー (中島愛)",
+      "title": "星間飛行",
+      "kind": "歌枠",
+      "dText": "20250919 【歌枠・昼の部】かわいい❤︎ラブソング多め⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ajlIdrvp10k&t=2282s"
+    },
+    {
+      "artist": "千石撫子(花澤香菜)",
+      "title": "恋愛サーキュレーション",
+      "kind": "歌枠",
+      "dText": "20250919 【歌枠・昼の部】かわいい❤︎ラブソング多め⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ajlIdrvp10k&t=2720s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "品川ナンバー",
+      "kind": "歌枠",
+      "dText": "20250919 【歌枠・昼の部】かわいい❤︎ラブソング多め⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ajlIdrvp10k&t=1084s"
+    },
+    {
+      "artist": "Da-iCE",
+      "title": "スターマイン",
+      "kind": "ショート",
+      "dText": "20250917 【生歌】スターマイン/Da-iCE リクエストありがとうございます✨ #歌ってみた #karaoke",
+      "dUrl": "https://www.youtube.com/shorts/xxCZpOvbR38"
+    },
+    {
+      "artist": "ピノキオピー",
+      "title": "愛されなくても君がいる",
+      "kind": "歌枠",
+      "dText": "20250917 【歌枠・昼の部】初見歓迎🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=263Du68Sxt0&t=4641s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "正しい街",
+      "kind": "歌枠",
+      "dText": "20250917 【歌枠・昼の部】初見歓迎🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=263Du68Sxt0&t=2252s"
+    },
+    {
+      "artist": "ずっと真夜中でいいのに。feat.Mori Calliope",
+      "title": "綺羅キラー",
+      "kind": "ショート",
+      "dText": "20250915 【生歌】綺羅キラー(feat.Mori Calliope)/ずっと真夜中でいいのに。 ラップ練習中",
+      "dUrl": "https://www.youtube.com/shorts/fKEqXGjnFoE"
+    },
+    {
+      "artist": "96猫",
+      "title": "シャルル",
+      "kind": "歌枠",
+      "dText": "20250913 【歌枠・昼の部】かっこいいボカロ曲多め🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=AaJMaY91L3A&t=4878s"
+    },
+    {
+      "artist": "シカ部",
+      "title": "シカ色デイズ",
+      "kind": "歌枠",
+      "dText": "20250913 【歌枠・昼の部】かっこいいボカロ曲多め🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=AaJMaY91L3A&t=1198s"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "おはようオーパーツ",
+      "kind": "歌枠",
+      "dText": "20250913 【歌枠・昼の部】かっこいいボカロ曲多め🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=AaJMaY91L3A&t=380s"
+    },
+    {
+      "artist": "ClariS",
+      "title": "secret base 〜君がくれたもの〜",
+      "kind": "歌枠",
+      "dText": "20250912 【歌枠・昼の部】初見歓迎🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=4-qOC5-r22s&t=274s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "シドと白昼夢",
+      "kind": "歌枠",
+      "dText": "20250912 【歌枠・昼の部】初見歓迎🌟お昼にのんびり歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=4-qOC5-r22s&t=3679s"
+    },
+    {
+      "artist": "DECO*27",
+      "title": "モニタリング (Best Friend Remix)",
+      "kind": "ショート",
+      "dText": "20250912 【カズー吹いてみた】 モニタリングremix/DECO*27 #kazoo #instrument #deco27 #初音ミク",
+      "dUrl": "https://www.youtube.com/shorts/ZoUi_w0ezdY"
+    },
+    {
+      "artist": "相対性理論",
+      "title": "元素紀行",
+      "kind": "歌枠",
+      "dText": "20250910 【歌枠・昼の部】初見歓迎🌟もうすぐデビュー1か月⚛️🌐歌うまになりたい！ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=v1zIpKYOMT0&t=2954s"
+    },
+    {
+      "artist": "美空ひばり",
+      "title": "お祭りマンボ",
+      "kind": "歌枠",
+      "dText": "20250910 【歌枠・昼の部】初見歓迎🌟もうすぐデビュー1か月⚛️🌐歌うまになりたい！ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=v1zIpKYOMT0&t=4779s"
+    },
+    {
+      "artist": "スペクタクルP",
+      "title": "The Beast",
+      "kind": "ショート",
+      "dText": "20250908 The Beast./スペクタクルP #歌ってみた #スペクタクルP #ボカロ #ピアノ #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/u7s35fqZnwg"
+    },
+    {
+      "artist": "Miwa",
+      "title": "441",
+      "kind": "歌枠",
+      "dText": "20250908 【歌枠】もうすぐデビュー1か月✨⚛️🌐リクエスト中心で歌う♪ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=aClH33lmUjc&t=2835s"
+    },
+    {
+      "artist": "ポルノグラフィティ",
+      "title": "サウダージ",
+      "kind": "歌枠",
+      "dText": "20250908 【歌枠】もうすぐデビュー1か月✨⚛️🌐リクエスト中心で歌う♪ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=aClH33lmUjc&t=726s"
+    },
+    {
+      "artist": "放課後ティータイム",
+      "title": "ふわふわ時間",
+      "kind": "歌枠",
+      "dText": "20250908 【歌枠】もうすぐデビュー1か月✨⚛️🌐リクエスト中心で歌う♪ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=aClH33lmUjc&t=3834s"
+    },
+    {
+      "artist": "μ's",
+      "title": "夏色えがおで1,2,Jump!",
+      "kind": "歌枠",
+      "dText": "20250908 【歌枠】もうすぐデビュー1か月✨⚛️🌐リクエスト中心で歌う♪ 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=aClH33lmUjc&t=3297s"
+    },
+    {
+      "artist": "YOASOBI",
+      "title": "夜に駆ける",
+      "kind": "ショート",
+      "dText": "20250907 【アカペラ】夜に駆ける/YOASOBI #歌ってみた #yoasobi #アカペラ #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/AYoq_7MZFRQ"
+    },
+    {
+      "artist": "吸う彩度",
+      "title": "天才なんかじゃなかった",
+      "kind": "ショート",
+      "dText": "20250906 「天才なんかじゃなかった」/吸う彩度 #歌ってみた #邦楽ロック #吸う彩度 #新人vtuber",
+      "dUrl": "https://www.youtube.com/shorts/lnv0bU_-umk"
+    },
+    {
+      "artist": "吉本おじさん",
+      "title": "お返事まだカナ？おじさん構文！",
+      "kind": "ショート",
+      "dText": "20250905 お返事まだカナ？おじさん構文！/ #雨衣 #歌ってみた #しぐれうい #お返事まだカナおじさん構文 #吉本おじさん",
+      "dUrl": "https://www.youtube.com/shorts/EiqcLFp3Gd8"
+    },
+    {
+      "artist": "9Lana",
+      "title": "BALALAIKA(Acoustic)",
+      "kind": "ショート",
+      "dText": "20250904 BALALAIKA(Acoustic)/9Lana #歌ってみた #acoustic #9lana #vtuber",
+      "dUrl": "https://www.youtube.com/shorts/E3_s4jj9ot4"
+    },
+    {
+      "artist": "DREAMS COME TRUE",
+      "title": "LOVE LOVE LOVE",
+      "kind": "歌枠",
+      "dText": "20250904 【歌枠】初見歓迎🌸歌が上手くなりたい 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DkTLDiMNQpY&t=3326s"
+    },
+    {
+      "artist": "凛として時雨",
+      "title": "JPOP Xfile",
+      "kind": "歌枠",
+      "dText": "20250904 【歌枠】初見歓迎🌸歌が上手くなりたい 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=DkTLDiMNQpY&t=2883s"
+    },
+    {
+      "artist": "石川さゆり",
+      "title": "天城越え",
+      "kind": "歌枠",
+      "dText": "20250901 【歌枠】初見歓迎🌸歌枠リレーに向けて歌練習！花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=a7dvUuObXxo&t=3375s"
+    },
+    {
+      "artist": "原口沙輔",
+      "title": "人マニア",
+      "kind": "ショート",
+      "dText": "20250831 人マニア/原口沙輔 人間観察を仕事にしています #歌ってみた #cover #原口沙輔 #人マニア #新人vtuber",
+      "dUrl": "https://www.youtube.com/shorts/Xepntc6sDvM"
+    },
+    {
+      "artist": "山口百恵",
+      "title": "絶体絶命",
+      "kind": "歌枠",
+      "dText": "20250830 【歌枠・耐久】高評価50🌟今月デビューの新人V！初耐久！耐えられる！？花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=x71xevrwtRs&t=6867s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "修羅場",
+      "kind": "歌枠",
+      "dText": "20250830 【歌枠・耐久】高評価50🌟今月デビューの新人V！初耐久！耐えられる！？花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=x71xevrwtRs&t=7230s"
+    },
+    {
+      "artist": "和楽器バンド",
+      "title": "千本桜",
+      "kind": "歌枠",
+      "dText": "20250830 【歌枠・耐久】高評価50🌟今月デビューの新人V！初耐久！耐えられる！？花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=x71xevrwtRs&t=1450s"
+    },
+    {
+      "artist": "椎名林檎",
+      "title": "ポルターガイスト",
+      "kind": "歌枠",
+      "dText": "20250823 【歌枠】初見歓迎🌸リクエスト曲中心！花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=bK_DA8AFQEs&t=4739s"
+    },
+    {
+      "artist": "和ぬか",
+      "title": "絶頂讃歌",
+      "kind": "歌枠",
+      "dText": "20250823 【歌枠】初見歓迎🌸リクエスト曲中心！花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=bK_DA8AFQEs&t=3630s"
+    },
+    {
+      "artist": "AiScReam",
+      "title": "愛♡スクリ～ム！",
+      "kind": "ショート",
+      "dText": "20250818 愛♡スクリ~ム！ 一人三役 #歌ってみた #cover #新人VTuber #アカペラ",
+      "dUrl": "https://www.youtube.com/shorts/2JNwor0HAJ4"
+    },
+    {
+      "artist": "Whiteberry",
+      "title": "夏祭り",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=1548s"
+    },
+    {
+      "artist": "YUI for 雨音薫",
+      "title": "Good-bye days",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=5136s"
+    },
+    {
+      "artist": "スピッツ",
+      "title": "チェリー",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=1140s"
+    },
+    {
+      "artist": "ブラックビスケッツ",
+      "title": "タイミング",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=4602s"
+    },
+    {
+      "artist": "松浦亜弥",
+      "title": "桃色片思い",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=420s"
+    },
+    {
+      "artist": "大塚愛",
+      "title": "さくらんぼ",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=798s"
+    },
+    {
+      "artist": "美空ひばり",
+      "title": "川の流れのように",
+      "kind": "歌枠",
+      "dText": "20250818 【歌枠】平成のヒット曲！みんなが知ってる名曲を歌う♪初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=ZpP_Z-AvgOw&t=6413s"
+    },
+    {
+      "artist": "なきそ",
+      "title": "いますぐ輪廻",
+      "kind": "ショート",
+      "dText": "20250816 いますぐ輪廻/なきそ #cover #新人VTuber #歌ってみた #さんきろへるつ #いますぐ輪廻",
+      "dUrl": "https://www.youtube.com/shorts/t_uBNxfDoeA"
+    },
+    {
+      "artist": "Superfly",
+      "title": "Alright!!",
+      "kind": "歌枠",
+      "dText": "20250816 【歌枠】初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=_GtDFCzcTV0&t=5249s"
+    },
+    {
+      "artist": "柊マグネタイト",
+      "title": "マーシャルマキシマイザー",
+      "kind": "歌枠",
+      "dText": "20250816 【歌枠】初見歓迎 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=_GtDFCzcTV0&t=2471s"
+    },
+    {
+      "artist": "太田裕美",
+      "title": "木綿のハンカチーフ",
+      "kind": "歌枠",
+      "dText": "20250815 【深夜の歌枠】眠れない夜に会いましょう 花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
+      "dUrl": "https://www.youtube.com/watch?v=WZMcM3j2VeE&t=1578s"
+    },
+    {
+      "artist": "tuki.",
+      "title": "ギルティ",
+      "kind": "ショート",
+      "dText": "20250810 ギルティ/tuki. #アカペラ #新人vtuber #cover #shorts",
+      "dUrl": "https://www.youtube.com/shorts/2LesYJvUl7Q"
+    },
+    {
+      "artist": "紫今",
+      "title": "ウワサのあの子",
+      "kind": "ショート",
+      "dText": "20250806 【#生歌 】ウワサのあの子/紫今 #歌ってみた #vtuber #邦ロック",
+      "dUrl": "https://www.youtube.com/shorts/E5bR4P3bS-s"
+    },
+    {
+      "artist": "rinri×Kyiku",
+      "title": "白絵にもならない",
+      "kind": "歌ってみた",
+      "dText": "20250725【歌ってみた】白絵にもならない/rinri×Kyiku coverd by 花彩音_3kHz",
+      "dUrl": "https://www.youtube.com/watch?v=v9TLVdXZ5kY"
     }
   ],
   "total": 429,
