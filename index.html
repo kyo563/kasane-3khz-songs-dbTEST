@@ -740,6 +740,7 @@
     const INITIAL_FETCH_LIMIT = 50;
     const SECOND_FETCH_LIMIT = 120;
     const ARCHIVE_SAFE_FETCH_LIMIT = 120;
+    const ARCHIVE_LIMIT_BACKOFFS = [120, 80, 50, 30, 20, 10];
 
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
@@ -1243,6 +1244,40 @@
       }
     }
 
+    function isArgumentTooLargeErrorMessage(message){
+      const msg = (message || '').toString();
+      return msg.includes('引数が大きすぎます') || msg.toLowerCase().includes('argument too large');
+    }
+
+    function buildArchiveLimitCandidates(limit){
+      const upper = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : ARCHIVE_SAFE_FETCH_LIMIT;
+      const candidates = [upper, ...ARCHIVE_LIMIT_BACKOFFS.filter(v => v < upper)];
+      return [...new Set(candidates.filter(v => Number.isFinite(v) && v > 0))];
+    }
+
+    async function fetchArchiveRowsResilient({ query = '', limit = ARCHIVE_SAFE_FETCH_LIMIT } = {}){
+      const candidates = buildArchiveLimitCandidates(limit);
+      let lastErr = null;
+
+      for (let i = 0; i < candidates.length; i++) {
+        const candidateLimit = candidates[i];
+        try {
+          if ((query || '').trim()) {
+            return await fetchArchiveRowsByQuery(query, candidateLimit);
+          }
+          return await fetchSheetRowsWithFallback('archive', { limit: candidateLimit });
+        } catch (err) {
+          lastErr = err;
+          const msg = err instanceof Error ? err.message : String(err);
+          const canRetrySmaller = isArgumentTooLargeErrorMessage(msg) && i < candidates.length - 1;
+          if (!canRetrySmaller) throw err;
+        }
+      }
+
+      if (lastErr) throw lastErr;
+      return [];
+    }
+
     async function fetchSheetRows(tab, useDeploy = false, extraParams = {}){
       beginServerRequest();
       try {
@@ -1283,7 +1318,9 @@
         const limit = limits[i];
         const params = limit ? { limit } : {};
         try {
-          const rows = await fetchSheetRowsWithFallback(tab, params);
+          const rows = tab === 'archive'
+            ? await fetchArchiveRowsResilient({ limit: limit || ARCHIVE_SAFE_FETCH_LIMIT })
+            : await fetchSheetRowsWithFallback(tab, params);
           lastRows = rows;
           if (typeof onStage === 'function') onStage(rows, { limit, stage: i + 1 });
           if (limit && rows.length < limit) break;
@@ -1315,7 +1352,7 @@
           const [songsRows, gagsRows, archiveRows] = await Promise.all([
             fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT }),
             fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT }),
-            fetchSheetRowsWithFallback('archive', { limit: ARCHIVE_SAFE_FETCH_LIMIT })
+            fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT })
           ]);
 
           state.cache.songs = songsRows;
@@ -1387,7 +1424,7 @@
         for (let i = 0; i < limits.length; i++) {
           const limit = limits[i];
           try {
-            const rows = await fetchArchiveRowsByQuery(query, limit || undefined);
+            const rows = await fetchArchiveRowsResilient({ query, limit: limit || ARCHIVE_SAFE_FETCH_LIMIT });
             mergeArchiveRows(rows);
             state.archiveMeta.rows = state.archiveRows.length;
             state.archiveMeta.updatedAt = Date.now();
