@@ -331,7 +331,18 @@
 
   <script>
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
-    const API_URL = DEPLOY_URL;
+    function resolveApiUrl(){
+      try {
+        const byQuery = new URLSearchParams(window.location.search).get('api_url');
+        if (byQuery) return byQuery;
+      } catch {}
+      try {
+        const byStorage = localStorage.getItem('apiUrl');
+        if (byStorage) return byStorage;
+      } catch {}
+      return DEPLOY_URL;
+    }
+    const API_URL = resolveApiUrl();
     const GITHUB_DATA_BASE = './public-data/';
     const HARD_LIMIT = 10000;
     const ARCHIVE_VERSION = 'v2.5';
