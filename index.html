@@ -354,6 +354,7 @@
 
   <script>
     const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
+    const DEFAULT_STATIC_BASE = new URL('./public-data/', window.location.href).toString();
     function resolveApiUrl(){
       try {
         const byQuery = new URLSearchParams(window.location.search).get('api_url');
@@ -365,7 +366,19 @@
       } catch {}
       return DEPLOY_URL;
     }
+    function resolveStaticDataBase(){
+      try {
+        const byQuery = new URLSearchParams(window.location.search).get('static_base');
+        if (byQuery) return new URL(byQuery, window.location.href).toString();
+      } catch {}
+      try {
+        const byStorage = localStorage.getItem('staticDataBase');
+        if (byStorage) return new URL(byStorage, window.location.href).toString();
+      } catch {}
+      return DEFAULT_STATIC_BASE;
+    }
     const API_URL = resolveApiUrl();
+    const STATIC_DATA_BASE = resolveStaticDataBase();
     const HARD_LIMIT = 10000;
     const state = {
       current: 'songs',
@@ -515,25 +528,39 @@
       renderServerMonitor();
 
       let apiOk = false;
+      let staticOk = false;
       let detail = '正常';
+
+      try {
+        const staticRes = await fetchWithTimeout(buildStaticDataUrl('meta'), 7000);
+        staticOk = staticRes.ok;
+        if (!staticOk) detail = `静的データ ${staticRes.status}`;
+      } catch (err) {
+        const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
+        detail = `静的データ失敗: ${reason}`;
+      }
 
       try {
         const apiRes = await fetchWithTimeout(buildApiFetchUrl('songs', false, { limit: 1, _health: Date.now() }), 7000);
         apiOk = apiRes.ok;
-        if (!apiOk) detail = `API ${apiRes.status}`;
+        if (!apiOk && staticOk) detail = `API ${apiRes.status}`;
       } catch (err) {
         const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
-        detail = `API失敗: ${reason}`;
+        if (staticOk) detail = `API失敗: ${reason}`;
       }
 
       mon.lastCheckAt = Date.now();
-      mon.staticOk = apiOk;
+      mon.staticOk = staticOk;
       mon.apiOk = apiOk;
 
-      if (apiOk) {
+      if (staticOk && apiOk) {
         mon.status = 'ok';
         mon.failCount = 0;
-        mon.detail = '正常（API応答あり）';
+        mon.detail = '正常（静的データ / API 応答あり）';
+      } else if (staticOk || apiOk) {
+        mon.status = 'ok';
+        mon.failCount = 0;
+        mon.detail = staticOk ? '静的データのみ正常（API要確認）' : 'APIのみ正常（静的データ要確認）';
       } else {
         mon.status = 'error';
         mon.failCount += 1;
@@ -1076,6 +1103,18 @@
       base.search = params.toString();
       return base.toString();
     }
+    function buildStaticDataUrl(tab){
+      const base = new URL(STATIC_DATA_BASE, window.location.href);
+      const filename = tab === 'meta' ? 'meta.json' : `${tab}.json`;
+      return new URL(filename, base).toString();
+    }
+    async function fetchStaticSnapshot(tab){
+      const res = await fetchWithTimeout(buildStaticDataUrl(tab), 7000);
+      if (!res.ok) throw new Error(`static ${tab}: HTTP ${res.status}`);
+      const payload = await res.json();
+      if (payload?.ok === false) throw new Error(`static ${tab}: ok=false`);
+      return normalizeRowsForTab(tab, payload);
+    }
 
     function jsonp(tab, attempt, useDeploy = false){
       const req = requestState[tab];
@@ -1387,9 +1426,9 @@
       }
 
       state.preloadPromise = (async () => {
-        $('status').textContent = 'songs / gags / archive をサーバーから取得中…';
+        $('status').textContent = 'songs / gags / archive を静的データから取得中…';
         state.archiveMeta.phase = 'loading';
-        state.archiveMeta.source = 'network';
+        state.archiveMeta.source = 'static';
         state.archiveMeta.transport = 'fetch';
         state.archiveMeta.useDeploy = false;
         state.archiveMeta.retry = 0;
@@ -1397,19 +1436,31 @@
         renderHistoryProcess();
 
         try {
-          const [songsRows, gagsRows, archiveRows] = await Promise.all([
-            fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT }),
-            fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT }),
-            fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT })
+          const [songsStatic, gagsStatic, archiveStatic] = await Promise.allSettled([
+            fetchStaticSnapshot('songs'),
+            fetchStaticSnapshot('gags'),
+            fetchStaticSnapshot('archive')
           ]);
+
+          const songsRows = songsStatic.status === 'fulfilled'
+            ? songsStatic.value
+            : await fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT });
+          const gagsRows = gagsStatic.status === 'fulfilled'
+            ? gagsStatic.value
+            : await fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT });
+          const archiveRows = archiveStatic.status === 'fulfilled'
+            ? archiveStatic.value
+            : await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
 
+          const usedStatic = songsStatic.status === 'fulfilled' && gagsStatic.status === 'fulfilled' && archiveStatic.status === 'fulfilled';
+
           state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = 'network';
-          state.archiveMeta.transport = 'fetch';
+          state.archiveMeta.source = usedStatic ? 'static' : 'mixed';
+          state.archiveMeta.transport = usedStatic ? 'static-json' : 'fetch';
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();

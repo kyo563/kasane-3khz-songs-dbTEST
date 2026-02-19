@@ -60,6 +60,28 @@ GitHub リポジトリ → **Settings** → **Secrets and variables** → **Acti
 4. 成功後、Cloudflare Dashboard → R2 → 対象バケット → **Objects** を確認
 5. `public-data/...json` が増えていれば OK
 
+### 5-1. HTML 側が R2 を優先参照しているか確認する
+
+`index.html` は `static_base` クエリか `localStorage.staticDataBase` があれば、その URL 配下の `public-data/*.json` を優先して読み込みます。
+
+1. まず R2 の公開 URL を確認（例: `https://pub-xxxx.r2.dev/public-data/`）
+2. ブラウザで以下を開く
+   - `https://<あなたのHTMLのURL>/?static_base=https://pub-xxxx.r2.dev/public-data/`
+3. 画面の「稼働モニター」で `静的データ: OK` になることを確認
+
+> 毎回クエリを付けたくない場合は、開発者ツール Console で次を1回実行します。  
+> `localStorage.setItem('staticDataBase', 'https://pub-xxxx.r2.dev/public-data/')`
+
+### 5-2. 公開 URL で CORS が必要なケース
+
+HTML と R2 のドメインが異なる場合、R2 側に CORS 設定が必要です。最低限、以下を許可してください。
+
+- Allowed origins: `https://<あなたのHTMLのドメイン>`
+- Allowed methods: `GET`, `HEAD`
+- Allowed headers: `*`（または空）
+
+`静的データ: NG` かつブラウザ Console に CORS エラーが出る場合は、この設定不足が原因です。
+
 ## 6. （任意）ブラウザ公開 URL が必要な場合
 
 GitHub Actions でアップロードするだけなら不要です。ブラウザで直接見たい場合のみ設定します。
