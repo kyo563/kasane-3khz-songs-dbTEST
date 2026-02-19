@@ -701,6 +701,27 @@
       return out;
     }
 
+    function sortHistoryEntriesDesc(entries){
+      return [...(entries || [])].sort((a, b) => {
+        if ((b.date || 0) !== (a.date || 0)) return (b.date || 0) - (a.date || 0);
+        return String(b.url || '').localeCompare(String(a.url || ''));
+      });
+    }
+
+    function mergeHistoryEntriesUnique(...entryLists){
+      const seen = new Set();
+      const merged = [];
+      for (const list of entryLists) {
+        for (const entry of list || []) {
+          const key = `${entry.date || 0}|${entry.url || ''}|${entry.kind || ''}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(entry);
+        }
+      }
+      return sortHistoryEntriesDesc(merged);
+    }
+
     function uniqueArchiveRows(rows){
       const seen = new Set();
       const out = [];
@@ -734,6 +755,9 @@
         if (!byTitle.has(title)) byTitle.set(title, []);
         byTitle.get(title).push({ date, url, kind });
       }
+
+      byKey.forEach((list, key) => byKey.set(key, sortHistoryEntriesDesc(list)));
+      byTitle.forEach((list, key) => byTitle.set(key, sortHistoryEntriesDesc(list)));
 
       state.archiveByKey = byKey;
       state.archiveByTitle = byTitle;
@@ -1564,19 +1588,48 @@
     }
 
     function getMergedHistoryList(artist, title){
+      const listRows = state.current === 'gags' ? state.cache.gags : state.cache.songs;
+      const listEntries = toHistoryEntries(listRows || [], artist, title);
       const key = `${normalize(artist)}|${normalize(title)}`;
-      let mergedList = state.archiveByKey?.get(key);
-      if (!mergedList || mergedList.length === 0) {
-        mergedList = state.archiveByTitle?.get(normalize(title)) || [];
-      }
-      return mergedList;
+      const archiveByKey = state.archiveByKey?.get(key) || [];
+      return mergeHistoryEntriesUnique(listEntries, archiveByKey);
     }
 
     async function fetchSongHistoryFromArchive(artist, title){
       const cacheKey = `${normalize(artist)}|${normalize(title)}`;
       if (state.historyCache.has(cacheKey)) return state.historyCache.get(cacheKey);
 
-      const task = Promise.resolve();
+      const task = (async () => {
+        if (!artist || !title) return;
+
+        state.archiveMeta.phase = 'loading';
+        state.archiveMeta.source = 'gas-direct';
+        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.lastError = '';
+        renderHistoryProcess();
+
+        const rows = await fetchSheetRowsWithFallback('archive', {
+          artist,
+          title,
+          exact: '1',
+          q: title,
+          limit: ARCHIVE_SAFE_FETCH_LIMIT
+        });
+
+        const filtered = normalizeArchiveRows(rows).filter((r) =>
+          normalize(r.artist) === normalize(artist) && normalize(r.title) === normalize(title)
+        );
+
+        const mergedRows = mergeArchiveRows(filtered);
+        state.archiveMeta.phase = 'ready';
+        state.archiveMeta.source = 'gas-direct';
+        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.retry = 0;
+        state.archiveMeta.lastError = '';
+        state.archiveMeta.rows = mergedRows.length;
+        state.archiveMeta.updatedAt = Date.now();
+        renderHistoryProcess();
+      })();
       state.historyCache.set(cacheKey, task);
       try {
         await task;
