@@ -7,7 +7,7 @@ const TABS = ['songs', 'gags', 'archive'];
 const DEFAULT_LIMITS = {
   songs: 500,
   gags: 500,
-  archive: 120,
+  archive: 10,
 };
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
