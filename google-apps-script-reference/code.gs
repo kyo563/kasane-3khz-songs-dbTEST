@@ -22,6 +22,11 @@ const CFG = {
     archive: 500,
   },
   CACHE_SECONDS: 60, // キャッシュ不要なら 0
+  SHEET_CACHE_SECONDS: {
+    songs: 60,
+    gags: 60,
+    archive: 0,
+  },
   CACHE_MAX_BYTES: 95 * 1024 // CacheService の value 上限（約100KB）未満に抑える
 };
 
@@ -45,15 +50,19 @@ function main_(e) {
   // 読み込み（行開始はシート別）
   const startRow = CFG.START_ROWS[tabKey] || 4;
   const includeSrc = String(p.debug || '') === '1';
-  const { rows } = readSheet_(sheetName, startRow, includeSrc);
+  const { rows } = readSheet_(sheetName, startRow, includeSrc, tabKey);
 
   // サーバ側フィルタ（任意）
   const q = normalize_(p.q || '');
   const limitParam = Number(p.limit || 0);
+  const offsetParam = Number(p.offset || 0);
   const sheetMaxReturn = CFG.SHEET_MAX_RETURN[tabKey] || CFG.MAX_RETURN;
   const limit = (Number.isFinite(limitParam) && limitParam > 0)
     ? Math.min(limitParam, sheetMaxReturn)
     : sheetMaxReturn;
+  const offset = (Number.isFinite(offsetParam) && offsetParam > 0)
+    ? Math.floor(offsetParam)
+    : 0;
 
   let filtered = rows;
   if (q) {
@@ -65,12 +74,14 @@ function main_(e) {
   // 最終的にも一応ユニーク化（artist|title|dUrl）
   const uniq = uniqueByKey_(filtered, r => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl||''}`);
 
-  const out = uniq.slice(0, limit);
+  const out = uniq.slice(offset, offset + limit);
   return {
     ok: true,
     sheet: tabKey,
     total: rows.length,
     matched: uniq.length,
+    offset,
+    limit,
     rows: out // {artist,title,kind,dText,dUrl,(debug時のみ dSrc)}
   };
 }
@@ -89,9 +100,10 @@ function out_(payload, e) {
 }
 
 /***** シート読取（A:B:C:D）— D はリンク抽出対応 + サーバ側ユニーク化 *****/
-function readSheet_(sheetName, startRow, includeSrc) {
+function readSheet_(sheetName, startRow, includeSrc, tabKey) {
   const cacheKey = `rows:${sheetName}:${startRow}:${includeSrc ? 'withSrc' : 'noSrc'}`;
-  if (CFG.CACHE_SECONDS > 0) {
+  const cacheSeconds = CFG.SHEET_CACHE_SECONDS[tabKey] ?? CFG.CACHE_SECONDS;
+  if (cacheSeconds > 0) {
     const cache = CacheService.getScriptCache();
     const hit = cache.get(cacheKey);
     if (hit) {
@@ -138,9 +150,9 @@ function readSheet_(sheetName, startRow, includeSrc) {
   // サーバ側でもユニーク化（artist|title|dUrl）
   const uniq = uniqueByKey_(rows, r => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl||''}`);
 
-  if (CFG.CACHE_SECONDS > 0) {
+  if (cacheSeconds > 0) {
     const cache = CacheService.getScriptCache();
-    putCacheIfSmall_(cache, cacheKey, { rows: uniq }, CFG.CACHE_SECONDS);
+    putCacheIfSmall_(cache, cacheKey, { rows: uniq }, cacheSeconds);
   }
   return { rows: uniq };
 }

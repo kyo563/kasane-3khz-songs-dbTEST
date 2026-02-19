@@ -741,6 +741,8 @@
     const SECOND_FETCH_LIMIT = 120;
     const ARCHIVE_SAFE_FETCH_LIMIT = 120;
     const ARCHIVE_LIMIT_BACKOFFS = [120, 80, 50, 30, 20, 10];
+    const ARCHIVE_PAGE_LIMIT = 30;
+    const ARCHIVE_MAX_PAGES = 8;
 
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
@@ -1255,6 +1257,52 @@
       return [...new Set(candidates.filter(v => Number.isFinite(v) && v > 0))];
     }
 
+    function archiveRowKey(row){
+      const normalized = normalizeBaseRow(row);
+      return [
+        normalize(normalized.artist),
+        normalize(normalized.title),
+        normalize(normalized.kind),
+        normalize(normalized.dText),
+        normalize(normalized.dUrl)
+      ].join('|');
+    }
+
+    async function fetchArchiveRowsChunked(limit = ARCHIVE_SAFE_FETCH_LIMIT){
+      const pageLimit = Math.max(1, Math.min(ARCHIVE_PAGE_LIMIT, Math.floor(limit || ARCHIVE_PAGE_LIMIT)));
+      const maxPages = Math.max(1, Math.min(ARCHIVE_MAX_PAGES, Math.ceil(limit / pageLimit)));
+
+      const merged = [];
+      const seenKeys = new Set();
+      let repeatedPageCount = 0;
+
+      for (let page = 0; page < maxPages; page++) {
+        const offset = page * pageLimit;
+        const rows = await fetchSheetRowsWithFallback('archive', { limit: pageLimit, offset });
+        if (!Array.isArray(rows) || rows.length === 0) break;
+
+        let added = 0;
+        for (const row of rows) {
+          const key = archiveRowKey(row);
+          if (seenKeys.has(key)) continue;
+          seenKeys.add(key);
+          merged.push(normalizeBaseRow(row));
+          added++;
+        }
+
+        if (added === 0) {
+          repeatedPageCount++;
+          if (repeatedPageCount >= 1) break;
+        } else {
+          repeatedPageCount = 0;
+        }
+
+        if (rows.length < pageLimit) break;
+      }
+
+      return normalizeArchiveRows(merged).slice(0, limit);
+    }
+
     async function fetchArchiveRowsResilient({ query = '', limit = ARCHIVE_SAFE_FETCH_LIMIT } = {}){
       const candidates = buildArchiveLimitCandidates(limit);
       let lastErr = null;
@@ -1265,7 +1313,7 @@
           if ((query || '').trim()) {
             return await fetchArchiveRowsByQuery(query, candidateLimit);
           }
-          return await fetchSheetRowsWithFallback('archive', { limit: candidateLimit });
+          return await fetchArchiveRowsChunked(candidateLimit);
         } catch (err) {
           lastErr = err;
           const msg = err instanceof Error ? err.message : String(err);
