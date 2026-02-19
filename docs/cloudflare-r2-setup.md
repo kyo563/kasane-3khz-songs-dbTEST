@@ -46,7 +46,7 @@ GitHub リポジトリ → **Settings** → **Secrets and variables** → **Acti
 
 追加された `.github/workflows/sync-r2.yml` は次を実行します。
 
-- 15分ごと（`*/15 * * * *`）に起動
+- 30分ごと（`*/30 * * * *`）に起動
 - `node scripts/sync-gas.mjs` を実行して `public-data/*.json` を生成
 - `aws s3 sync` で `public-data` を R2 の `public-data/` プレフィックスへアップロード
 - `--delete` により、ローカルで消えたファイルは R2 側でも削除

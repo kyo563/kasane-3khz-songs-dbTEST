@@ -1,5 +1,9 @@
 name: Sync GAS snapshot to Cloudflare R2
 
+concurrency:
+  group: sync-r2
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
   schedule:
@@ -23,6 +27,8 @@ jobs:
       ARCHIVE_PAGE_LIMIT: "10"
       ARCHIVE_MAX_PAGES: "500"
       ARCHIVE_TOTAL_CAP: "20000"
+      SYNC_TIMEOUT_MS: "15000"
+      SYNC_MAX_RETRY: "5"
 
     steps:
       - name: Checkout
@@ -49,7 +55,20 @@ jobs:
 
       - name: Upload public-data to R2
         run: |
-          aws s3 sync public-data "s3://$R2_BUCKET/public-data" \
-            --endpoint-url "$R2_ENDPOINT" \
-            --region auto \
-            --delete
+          for attempt in 1 2 3; do
+            if aws s3 sync public-data "s3://$R2_BUCKET/public-data" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto \
+              --delete; then
+              echo "R2 upload succeeded on attempt ${attempt}"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "R2 upload failed on attempt ${attempt}; retrying..."
+              sleep $((attempt * 10))
+            fi
+          done
+
+          echo "R2 upload failed after 3 attempts"
+          exit 1
