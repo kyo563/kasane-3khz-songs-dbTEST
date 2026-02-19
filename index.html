@@ -1443,6 +1443,7 @@
       }
 
       state.preloadPromise = (async () => {
+        beginServerRequest();
         $('status').textContent = 'songs / gags / archive を静的データから取得中…';
         state.archiveMeta.phase = 'loading';
         state.archiveMeta.source = 'static';
@@ -1502,12 +1503,14 @@
           if ($('page-history').classList.contains('active') && state.histKey) {
             renderHistory(state.histKey.artist, state.histKey.title);
           }
+          endServerRequest(true, 'warmCaches/static');
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           state.archiveMeta.phase = 'error';
           state.archiveMeta.lastError = msg;
           renderHistoryProcess();
           $('status').textContent = `データ取得に失敗しました: ${msg}`;
+          endServerRequest(false, 'warmCaches/static', msg);
           throw err;
         } finally {
           state.preloadPromise = null;
