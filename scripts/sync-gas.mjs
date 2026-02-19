@@ -6,6 +6,7 @@ const OUT_DIR = process.env.OUT_DIR || 'public-data';
 const CORE_TABS = ['songs', 'gags'];
 const ARCHIVE_TAB = 'archive';
 const ENABLE_ARCHIVE_SYNC = process.env.ENABLE_ARCHIVE_SYNC === 'true';
+const ARCHIVE_STRICT_SYNC = process.env.ARCHIVE_STRICT_SYNC === 'true';
 const DEFAULT_LIMITS = {
   songs: 500,
   gags: 100,
@@ -183,17 +184,6 @@ async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
 }
 
 
-async function verifyArchiveHealthCheck() {
-  const payload = await fetchJsonWithRetry('archive', { offset: 0, limit: 1 });
-  if (!Array.isArray(payload.rows)) {
-    throw new Error('[archive] health check failed: rows が配列ではありません');
-  }
-  if (payload.rows.length < 1 && Number(payload.total || 0) > 0) {
-    throw new Error('[archive] health check failed: total > 0 なのに rows が空です');
-  }
-  return payload;
-}
-
 async function fetchArchiveWithBackoff({ offset = 0 } = {}) {
   const limits = (process.env.ARCHIVE_LIMITS ?? '20,10,5,3,1')
     .split(',')
@@ -294,7 +284,6 @@ async function main() {
 
   if (ENABLE_ARCHIVE_SYNC) {
     try {
-      await verifyArchiveHealthCheck();
       const archive = await fetchArchivePaged();
       const archivePayload = {
         ok: true,
@@ -308,7 +297,11 @@ async function main() {
       await writeFile(`${OUT_DIR}/${ARCHIVE_TAB}.json`, `${JSON.stringify(archivePayload, null, 2)}\n`, 'utf8');
     } catch (e) {
       if (isArgumentTooLargeError(e)) {
-        console.warn('[archive] 全limitで失敗。前回の public-data/archive.json を維持して続行します');
+        const strictMsg = '[archive] 全limitで失敗（Argument too large）。ARCHIVE_LIMITS / ARCHIVE_PAGE_LIMIT を見直してください';
+        if (ARCHIVE_STRICT_SYNC) {
+          throw new Error(strictMsg, { cause: e });
+        }
+        console.warn(`${strictMsg}。archive は今回スキップし、songs/gags のみ更新します`);
       } else {
         throw e;
       }
@@ -317,7 +310,7 @@ async function main() {
     console.warn('[archive] ENABLE_ARCHIVE_SYNC=true になるまで archive の取得をスキップします（隔離中）');
   }
 
-  const outputTabs = ENABLE_ARCHIVE_SYNC
+  const outputTabs = ENABLE_ARCHIVE_SYNC && outputs.archive
     ? [...CORE_TABS, ARCHIVE_TAB]
     : [...CORE_TABS];
 
