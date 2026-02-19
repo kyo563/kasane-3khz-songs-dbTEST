@@ -15,6 +15,11 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
 - 必要に応じて GitHub repository secret `GAS_URL` を設定してください。
   - 未設定時は `scripts/sync-gas.mjs` 内の既定URLを使用します。
 
+## 外部ストレージ連携（Cloudflare R2）
+
+- 「GASデータを独立ストレージへ定期同期する」最小手順は `docs/cloudflare-r2-setup.md` を参照してください。
+- 既存の `scripts/sync-gas.mjs` と `.github/workflows/sync-gas.yml` を前提に、追記で導入できる構成です。
+
 ## 補足
 
 - `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
