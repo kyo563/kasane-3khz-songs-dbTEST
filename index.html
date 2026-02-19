@@ -1482,15 +1482,31 @@
 
           const songsRows = songsStatic.value;
           const gagsRows = gagsStatic.value;
-          const archiveRows = archiveStatic.value;
+          let archiveRows = archiveStatic.value;
+
+          if (archiveRows.length === 0) {
+            try {
+              const fallbackRows = await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
+              if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
+                archiveRows = fallbackRows;
+                state.archiveMeta.source = 'network';
+                state.archiveMeta.transport = 'fetch-fallback';
+              }
+            } catch (fallbackErr) {
+              const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+              console.warn(`[archive] static が 0 件のため network fallback を試行しましたが失敗: ${fallbackMsg}`);
+            }
+          }
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
 
           state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = 'r2';
-          state.archiveMeta.transport = 'static-json';
+          if (state.archiveMeta.transport !== 'fetch-fallback') {
+            state.archiveMeta.source = 'r2';
+            state.archiveMeta.transport = 'static-json';
+          }
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
