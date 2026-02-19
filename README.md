@@ -20,6 +20,7 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
 - `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
 - `public-data` は静的配信用のキャッシュであり、取得失敗時は前回成功時のデータが残ります。
 - `archive` は GAS 側のレスポンスサイズ超過（`Exception: 引数が大きすぎます: value`）を避けるため、1回の取得を小さいページに分割し、失敗時はさらに小さい `limit` へ自動バックオフします。
+- `scripts/sync-gas.mjs` は `archive` 取得時に `limit=1` の最小ヘルスチェック後、`limit=10` + `offset` ページングで全件を結合します。
 
 
 ## トラブルシュート: `archive/fetch(stage)` が `引数が大きすぎます: value` で失敗する理由
@@ -53,3 +54,8 @@ GitHub経由のデータ配信を優先することで表示の安定性を高�
    - `debug=1` を付けると `dSrc` が返るため、`rich/formula/text` のどこでURLが取れているか検証できる。
 5. **運用監視は `public-data/meta.json` と突合**
    - GitHub Actions 同期後の `counts.archive` と API の `total` を比較し、急減や0件化を検知する。
+
+### それでも不安定な場合（根本対策）
+
+- `offset/limit` は返却サイズを抑える有効策ですが、GAS 側で「全行読込→後で `slice`」していると処理途中で落ちることがあります。
+- 根本的には `archive` の読み込み処理を、`offset/limit` に応じて最初から必要範囲だけ読む実装（例: 読み取り行数を限定して `getRange` する）へ寄せると安定しやすくなります。

@@ -9,6 +9,7 @@ const DEFAULT_LIMITS = {
   gags: 100,
   archive: 10,
 };
+const ARCHIVE_MAX_PAGES = Number(process.env.ARCHIVE_MAX_PAGES || 200);
 const TIMEOUT_MS = Number(process.env.SYNC_TIMEOUT_MS || 8000);
 const MAX_RETRY = Number(process.env.SYNC_MAX_RETRY || 3);
 
@@ -77,19 +78,22 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildUrl(tab) {
+function buildUrl(tab, offset = 0) {
   const url = new URL(GAS_URL);
   url.searchParams.set('sheet', tab);
   const limit = DEFAULT_LIMITS[tab];
   if (Number.isFinite(limit) && limit > 0) {
     url.searchParams.set('limit', String(limit));
   }
+  if (Number.isFinite(offset) && offset > 0) {
+    url.searchParams.set('offset', String(Math.floor(offset)));
+  }
   url.searchParams.set('authuser', '0');
   url.searchParams.set('v', String(Date.now()));
   return url.toString();
 }
 
-async function fetchJsonWithRetry(tab) {
+async function fetchJsonWithRetry(tab, { offset = 0 } = {}) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRY; attempt += 1) {
@@ -97,7 +101,7 @@ async function fetchJsonWithRetry(tab) {
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const res = await fetch(buildUrl(tab), {
+      const res = await fetch(buildUrl(tab, offset), {
         method: 'GET',
         signal: controller.signal,
         headers: { Accept: 'application/json' },
@@ -157,13 +161,75 @@ async function fetchJsonWithRetry(tab) {
   throw new Error(`[${tab}] 取得失敗: ${String(lastError)}`);
 }
 
+function archiveRowKey(row) {
+  return [
+    row.artist ?? '',
+    row.title ?? '',
+    row.kind ?? '',
+    row.dText ?? '',
+    row.dUrl ?? '',
+  ].map((v) => String(v).trim().toLowerCase()).join('|');
+}
+
+async function verifyArchiveHealthCheck() {
+  const payload = await fetchJsonWithRetry('archive', { offset: 0 });
+  if (!Array.isArray(payload.rows)) {
+    throw new Error('[archive] health check failed: rows が配列ではありません');
+  }
+  if (payload.rows.length < 1 && Number(payload.total || 0) > 0) {
+    throw new Error('[archive] health check failed: total > 0 なのに rows が空です');
+  }
+  return payload;
+}
+
+async function fetchArchivePaged() {
+  const pageLimit = Math.max(1, Math.floor(DEFAULT_LIMITS.archive || 10));
+  const merged = [];
+  const seen = new Set();
+  let previousFirstKey = '';
+
+  for (let page = 0; page < ARCHIVE_MAX_PAGES; page += 1) {
+    const offset = page * pageLimit;
+    const payload = await fetchJsonWithRetry('archive', { offset });
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    console.log(`[archive] page=${page + 1} offset=${offset} rows=${rows.length}`);
+    if (rows.length === 0) break;
+
+    const currentFirstKey = archiveRowKey(rows[0]);
+    if (page > 0 && currentFirstKey && currentFirstKey === previousFirstKey) {
+      break;
+    }
+    previousFirstKey = currentFirstKey;
+
+    let added = 0;
+    for (const row of rows) {
+      const key = archiveRowKey(row);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(row);
+      added += 1;
+    }
+
+    if (added === 0 || rows.length < pageLimit) break;
+  }
+
+  return {
+    sheet: 'archive',
+    total: merged.length,
+    matched: merged.length,
+    rows: merged,
+  };
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const startedAt = new Date().toISOString();
 
   const outputs = {};
   for (const tab of TABS) {
-    const payload = await fetchJsonWithRetry(tab);
+    const payload = tab === 'archive'
+      ? (await verifyArchiveHealthCheck(), await fetchArchivePaged())
+      : await fetchJsonWithRetry(tab);
     outputs[tab] = {
       ok: true,
       sheet: tab,
