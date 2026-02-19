@@ -289,7 +289,7 @@
             <div>状態: <span id="monitor-status" class="server-monitor-pill">未確認</span></div>
             <div>最終確認: <span id="monitor-last-check">未確認</span></div>
             <div>静的データ: <span id="monitor-static">未確認</span></div>
-            <div>API: <span id="monitor-api">未確認</span></div>
+            <div>配信: <span id="monitor-api">未確認</span></div>
             <div>連続失敗: <span id="monitor-fail-count">0</span></div>
             <div>詳細: <span id="monitor-detail">-</span></div>
           </div>
@@ -353,18 +353,10 @@
   </div>
 
   <script>
-    const DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     const DEFAULT_STATIC_BASE = new URL('./public-data/', window.location.href).toString();
+    const DEPLOY_URL = DEFAULT_STATIC_BASE;
     function resolveApiUrl(){
-      try {
-        const byQuery = new URLSearchParams(window.location.search).get('api_url');
-        if (byQuery) return byQuery;
-      } catch {}
-      try {
-        const byStorage = localStorage.getItem('apiUrl');
-        if (byStorage) return byStorage;
-      } catch {}
-      return DEPLOY_URL;
+      return DEFAULT_STATIC_BASE;
     }
     function resolveStaticDataBase(){
       try {
@@ -541,7 +533,7 @@
       }
 
       try {
-        const apiRes = await fetchWithTimeout(buildApiFetchUrl('songs', false, { limit: 1, _health: Date.now() }), 7000);
+        const apiRes = await fetchWithTimeout(buildStaticDataUrl('songs'), 7000);
         apiOk = apiRes.ok;
         if (!apiOk && staticOk) detail = `API ${apiRes.status}`;
       } catch (err) {
@@ -556,11 +548,11 @@
       if (staticOk && apiOk) {
         mon.status = 'ok';
         mon.failCount = 0;
-        mon.detail = '正常（静的データ / API 応答あり）';
+        mon.detail = '正常（R2静的データ応答あり）';
       } else if (staticOk || apiOk) {
         mon.status = 'ok';
         mon.failCount = 0;
-        mon.detail = staticOk ? '静的データのみ正常（API要確認）' : 'APIのみ正常（静的データ要確認）';
+        mon.detail = staticOk ? '静的データ応答あり' : '配信応答あり';
       } else {
         mon.status = 'error';
         mon.failCount += 1;
@@ -759,7 +751,7 @@
     const REQUEST_RETRY_DELAY_MS = 500;
     const FETCH_TIMEOUT_MS = 10000;
     const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
-    const JSONP_ALLOWED_ORIGIN = 'script.google.com';
+    const JSONP_ALLOWED_ORIGIN = ''; // legacy: 未使用
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     // 検証時の通信量と失敗率を抑えるため、取得件数を小さめに固定
     const LIST_FETCH_LIMIT = 500;
@@ -1060,7 +1052,7 @@
       if (!$('page-list').classList.contains('active')) return;
       if (isListDataReady()) return;
       if (isListRequestInflight()) return;
-      $('status').textContent = 'データ取得に失敗しました（JSONP未着／API_URLとデプロイ設定を確認）';
+      $('status').textContent = 'データ取得に失敗しました（R2静的データ設定を確認）';
     }, INITIAL_ERROR_NOTICE_DELAY_MS);
 
     function toSafeApiBase(rawUrl){
@@ -1483,25 +1475,21 @@
           if (!gagsStaticCheck.ok) console.warn(`[static] gags を不採用: ${gagsStaticCheck.reason}`);
           if (!archiveStaticCheck.ok) console.warn(`[static] archive を不採用: ${archiveStaticCheck.reason}`);
 
-          const songsRows = songsStaticCheck.ok
-            ? songsStatic.value
-            : await fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT });
-          const gagsRows = gagsStaticCheck.ok
-            ? gagsStatic.value
-            : await fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT });
-          const archiveRows = archiveStaticCheck.ok
-            ? archiveStatic.value
-            : await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
+          if (!songsStaticCheck.ok) throw new Error(`songs 読み込み失敗: ${songsStaticCheck.reason}`);
+          if (!gagsStaticCheck.ok) throw new Error(`gags 読み込み失敗: ${gagsStaticCheck.reason}`);
+          if (!archiveStaticCheck.ok) throw new Error(`archive 読み込み失敗: ${archiveStaticCheck.reason}`);
+
+          const songsRows = songsStatic.value;
+          const gagsRows = gagsStatic.value;
+          const archiveRows = archiveStatic.value;
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
 
-          const usedStatic = songsStaticCheck.ok && gagsStaticCheck.ok && archiveStaticCheck.ok;
-
           state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = usedStatic ? 'static' : 'mixed';
-          state.archiveMeta.transport = usedStatic ? 'static-json' : 'fetch';
+          state.archiveMeta.source = 'r2';
+          state.archiveMeta.transport = 'static-json';
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
@@ -1556,29 +1544,7 @@
       const cacheKey = `${normalize(artist)}|${normalize(title)}`;
       if (state.historyCache.has(cacheKey)) return state.historyCache.get(cacheKey);
 
-      const task = (async () => {
-        const query = (title || artist || '').trim();
-        if (!query) return;
-
-        const limits = [INITIAL_FETCH_LIMIT, ARCHIVE_SAFE_FETCH_LIMIT];
-        for (let i = 0; i < limits.length; i++) {
-          const limit = limits[i];
-          try {
-            const rows = await fetchArchiveRowsResilient({ query, limit: limit || ARCHIVE_SAFE_FETCH_LIMIT });
-            mergeArchiveRows(rows);
-            state.archiveMeta.rows = state.archiveRows.length;
-            state.archiveMeta.updatedAt = Date.now();
-            state.archiveMeta.phase = 'ready';
-            state.archiveMeta.lastError = '';
-            renderHistoryProcess();
-            if (limit && rows.length < limit) break;
-          } catch (err) {
-            if (i === 0) throw err;
-            break;
-          }
-        }
-      })();
-
+      const task = Promise.resolve();
       state.historyCache.set(cacheKey, task);
       try {
         await task;
