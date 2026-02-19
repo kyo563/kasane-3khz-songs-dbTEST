@@ -23,6 +23,7 @@ jobs:
       - name: Sync data from GAS
         env:
           GAS_URL: ${{ secrets.GAS_URL }}
+          ENABLE_ARCHIVE_SYNC: "false"
         run: node scripts/sync-gas.mjs
 
       - name: Commit and push if changed
