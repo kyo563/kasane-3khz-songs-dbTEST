@@ -182,7 +182,7 @@ async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
 
 
 async function verifyArchiveHealthCheck() {
-  const payload = await fetchJsonWithRetry('archive', { offset: 0 });
+  const payload = await fetchJsonWithRetry('archive', { offset: 0, limit: 1 });
   if (!Array.isArray(payload.rows)) {
     throw new Error('[archive] health check failed: rows が配列ではありません');
   }
@@ -212,6 +212,73 @@ async function fetchArchiveWithBackoff(buildUrlFn) {
   throw lastErr;
 }
 
+function archiveRowKey(row) {
+  if (!row || typeof row !== 'object') return '';
+  const artist = String(row.artist ?? '').trim();
+  const title = String(row.title ?? '').trim();
+  const kind = String(row.kind ?? '').trim();
+  const dText = String(row.dText ?? '').trim();
+  const dUrl = String(row.dUrl ?? '').trim();
+  return `${artist}\u001f${title}\u001f${kind}\u001f${dText}\u001f${dUrl}`;
+}
+
+async function fetchArchivePaged() {
+  const pageLimit = Number(process.env.ARCHIVE_PAGE_LIMIT || 10);
+  const maxPages = Number(process.env.ARCHIVE_MAX_PAGES || 200);
+  const totalCap = Number(process.env.ARCHIVE_TOTAL_CAP || 5000);
+
+  let offset = 0;
+  let total = null;
+  let matched = null;
+  const merged = [];
+  const seen = new Set();
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const payload = await fetchArchiveWithBackoff(({ sheet, limit }) => {
+      const url = new URL(GAS_URL);
+      url.searchParams.set('sheet', sheet);
+      url.searchParams.set('limit', String(limit));
+      url.searchParams.set('offset', String(offset));
+      return url.toString();
+    });
+
+    if (total == null && Number.isFinite(Number(payload.total))) total = Number(payload.total);
+    if (matched == null && Number.isFinite(Number(payload.matched))) matched = Number(payload.matched);
+
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    if (rows.length === 0) break;
+
+    let newCount = 0;
+    for (const row of rows) {
+      const key = archiveRowKey(row);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(row);
+      newCount += 1;
+      if (merged.length >= totalCap) break;
+    }
+
+    if (merged.length >= totalCap) {
+      console.warn(`[archive] total cap (${totalCap}) に到達したため取得を打ち切ります`);
+      break;
+    }
+    if (rows.length < pageLimit) break;
+    if (newCount === 0) {
+      console.warn('[archive] 同一ページ応答の可能性があるため取得を打ち切ります');
+      break;
+    }
+    if (total != null && merged.length >= total) break;
+
+    offset += pageLimit;
+  }
+
+  return {
+    rows: merged,
+    total: total ?? merged.length,
+    matched: matched ?? merged.length,
+  };
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const startedAt = new Date().toISOString();
@@ -232,12 +299,7 @@ async function main() {
 
   try {
     await verifyArchiveHealthCheck();
-    const archive = await fetchArchiveWithBackoff(({ sheet, limit }) => {
-      const url = new URL(GAS_URL);
-      url.searchParams.set('sheet', sheet);
-      url.searchParams.set('limit', String(limit));
-      return url.toString();
-    });
+    const archive = await fetchArchivePaged();
     const archivePayload = {
       ok: true,
       sheet: 'archive',
