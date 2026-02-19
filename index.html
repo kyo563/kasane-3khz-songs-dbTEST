@@ -682,6 +682,7 @@
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     const LIST_FETCH_LIMIT = 500;
+    const ARCHIVE_FETCH_LIMIT = 120;
     const INITIAL_FETCH_LIMIT = 200;
     const SECOND_FETCH_LIMIT = 500;
     const ARCHIVE_SAFE_FETCH_LIMIT = 200;
@@ -996,6 +997,7 @@
         v: String(Date.now())
       });
       if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
+      if (tab === 'archive') params.set('limit', String(ARCHIVE_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -1010,6 +1012,7 @@
         v: String(Date.now())
       });
       if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
+      if (tab === 'archive') params.set('limit', String(ARCHIVE_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
