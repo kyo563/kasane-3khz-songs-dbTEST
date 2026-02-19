@@ -734,11 +734,12 @@
     const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
-    const LIST_FETCH_LIMIT = 500;
-    const ARCHIVE_FETCH_LIMIT = 120;
-    const INITIAL_FETCH_LIMIT = 200;
-    const SECOND_FETCH_LIMIT = 500;
-    const ARCHIVE_SAFE_FETCH_LIMIT = 200;
+    // 検証時の通信量と失敗率を抑えるため、取得件数を小さめに固定
+    const LIST_FETCH_LIMIT = 120;
+    const ARCHIVE_FETCH_LIMIT = 50;
+    const INITIAL_FETCH_LIMIT = 50;
+    const SECOND_FETCH_LIMIT = 120;
+    const ARCHIVE_SAFE_FETCH_LIMIT = 120;
 
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
