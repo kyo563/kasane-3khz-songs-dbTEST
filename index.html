@@ -366,9 +366,7 @@
       return DEPLOY_URL;
     }
     const API_URL = resolveApiUrl();
-    const GITHUB_DATA_BASE = './public-data/';
     const HARD_LIMIT = 10000;
-    const ARCHIVE_VERSION = 'v2.5';
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
@@ -516,17 +514,8 @@
       mon.detail = manual ? '手動チェック中…' : '定期チェック中…';
       renderServerMonitor();
 
-      let staticOk = false;
       let apiOk = false;
       let detail = '正常';
-
-      try {
-        const staticRes = await fetchWithTimeout(`${GITHUB_DATA_BASE}meta.json?_=${Date.now()}`, 5000);
-        staticOk = staticRes.ok;
-        if (!staticOk) detail = `静的データ ${staticRes.status}`;
-      } catch (err) {
-        detail = `静的データ失敗: ${err?.name === 'AbortError' ? 'timeout' : 'network'}`;
-      }
 
       try {
         const apiRes = await fetchWithTimeout(buildApiFetchUrl('songs', false, { limit: 1, _health: Date.now() }), 7000);
@@ -534,17 +523,17 @@
         if (!apiOk) detail = `API ${apiRes.status}`;
       } catch (err) {
         const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
-        detail = detail === '正常' ? `API失敗: ${reason}` : `${detail} / API失敗: ${reason}`;
+        detail = `API失敗: ${reason}`;
       }
 
       mon.lastCheckAt = Date.now();
-      mon.staticOk = staticOk;
+      mon.staticOk = apiOk;
       mon.apiOk = apiOk;
 
-      if (staticOk && apiOk) {
+      if (apiOk) {
         mon.status = 'ok';
         mon.failCount = 0;
-        mon.detail = '正常（静的データ/APIとも応答）';
+        mon.detail = '正常（API応答あり）';
       } else {
         mon.status = 'error';
         mon.failCount += 1;
@@ -639,12 +628,6 @@
       state.archiveMeta.rows = 0;
       state.archiveMeta.updatedAt = 0;
 
-      try {
-        localStorage.removeItem('archiveVersion');
-        localStorage.removeItem('archiveJson');
-        localStorage.removeItem('archiveUpdatedAt');
-      } catch {}
-
       $('q').value = '';
       $('status').textContent = 'キャッシュを破棄して再取得中…';
       $('stats-row').innerHTML = '';
@@ -696,7 +679,6 @@
         unique.add(key);
         out.push({ date, url, kind });
       }
-      out.sort((x,y)=> y.date - x.date || (x.url>y.url?1:-1));
       return out;
     }
 
@@ -734,10 +716,6 @@
         byTitle.get(title).push({ date, url, kind });
       }
 
-      const sortDesc = arr => arr.sort((x,y)=> y.date - x.date || (x.url > y.url ? 1 : -1));
-      for (const arr of byKey.values()) sortDesc(arr);
-      for (const arr of byTitle.values()) sortDesc(arr);
-
       state.archiveByKey = byKey;
       state.archiveByTitle = byTitle;
     }
@@ -746,35 +724,6 @@
       const merged = uniqueArchiveRows([...(state.archiveRows || []), ...(rows || [])]);
       buildArchiveIndex(merged);
       return merged;
-    }
-
-    function tryLoadArchiveFromCache(){
-      try {
-        const ver = localStorage.getItem('archiveVersion');
-        const json = localStorage.getItem('archiveJson');
-        if (ver === ARCHIVE_VERSION && json) {
-          const rows = JSON.parse(json);
-          buildArchiveIndex(rows);
-          state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = 'localStorage cache';
-          state.archiveMeta.transport = 'cache';
-          state.archiveMeta.useDeploy = false;
-          state.archiveMeta.retry = 0;
-          state.archiveMeta.lastError = '';
-          state.archiveMeta.rows = rows.length;
-          state.archiveMeta.updatedAt = Number(localStorage.getItem('archiveUpdatedAt') || Date.now());
-          return true;
-        }
-      } catch {}
-      return false;
-    }
-
-    function saveArchiveToCache(rows){
-      try {
-        localStorage.setItem('archiveVersion', ARCHIVE_VERSION);
-        localStorage.setItem('archiveJson', JSON.stringify(rows));
-        localStorage.setItem('archiveUpdatedAt', String(Date.now()));
-      } catch {}
     }
 
     let __jsonpHit = false;
@@ -790,6 +739,7 @@
     const INITIAL_FETCH_LIMIT = 200;
     const SECOND_FETCH_LIMIT = 500;
     const ARCHIVE_SAFE_FETCH_LIMIT = 200;
+
     const requestState = {
       songs: { id:0, timer:null, inflight:false },
       gags: { id:0, timer:null, inflight:false },
@@ -1053,7 +1003,6 @@
       if (tab === 'archive') {
         markRequestSuccess(tab);
         buildArchiveIndex(rows);
-        saveArchiveToCache(rows);
         state.archiveMeta.phase = 'ready';
         state.archiveMeta.source = 'network';
         state.archiveMeta.retry = 0;
@@ -1122,11 +1071,6 @@
       });
       base.search = params.toString();
       return base.toString();
-    }
-
-    function buildGithubDataUrl(name){
-      const base = new URL(GITHUB_DATA_BASE, window.location.href);
-      return new URL(`${name}.json`, base).toString();
     }
 
     function jsonp(tab, attempt, useDeploy = false){
@@ -1264,9 +1208,8 @@
     }
 
     function ensureArchiveFast(){
-      const ok = tryLoadArchiveFromCache();
       renderHistoryProcess();
-      if (!ok && !requestState.archive.inflight) requestData('archive', 0, false, 'fetch');
+      if (!requestState.archive.inflight) requestData('archive', 0, false, 'fetch');
     }
 
     async function fetchArchiveRowsByQuery(query, limit = ARCHIVE_SAFE_FETCH_LIMIT){
@@ -1330,34 +1273,6 @@
       }
     }
 
-    async function fetchRowsFromGithubCache(tab){
-      beginServerRequest();
-      try {
-        const res = await fetch(buildGithubDataUrl(tab), {
-          mode: 'cors',
-          credentials: 'omit',
-          cache: 'no-store'
-        });
-        if (!res.ok) throw new Error(`GitHub cache HTTP ${res.status}`);
-        const rows = normalizeRowsForTab(tab, await res.text());
-        endServerRequest(true, `${tab}/github-cache`);
-        return rows;
-      } catch (err) {
-        const reason = err instanceof Error ? err.message : String(err);
-        endServerRequest(false, `${tab}/github-cache`, reason);
-        throw err;
-      }
-    }
-
-    async function fetchAllRowsFromGithubCache(){
-      const [songsRows, gagsRows, archiveRows] = await Promise.all([
-        fetchRowsFromGithubCache('songs'),
-        fetchRowsFromGithubCache('gags'),
-        fetchRowsFromGithubCache('archive')
-      ]);
-      return { songsRows, gagsRows, archiveRows };
-    }
-
     async function fetchInStages(tab, { onStage } = {}){
       const limits = tab === 'archive'
         ? [INITIAL_FETCH_LIMIT, ARCHIVE_SAFE_FETCH_LIMIT]
@@ -1386,7 +1301,7 @@
       }
 
       state.preloadPromise = (async () => {
-        $('status').textContent = 'songs / gags / archive を取得中…';
+        $('status').textContent = 'songs / gags / archive をサーバーから取得中…';
         state.archiveMeta.phase = 'loading';
         state.archiveMeta.source = 'network';
         state.archiveMeta.transport = 'fetch';
@@ -1396,86 +1311,26 @@
         renderHistoryProcess();
 
         try {
-          let songsRows;
-          let gagsRows;
-          let archiveRows;
-          let source = 'network';
-          let transport = 'fetch';
-          let useGithubCache = false;
-
-          try {
-            const rows = await fetchAllRowsFromGithubCache();
-            const hasCacheData = [rows.songsRows, rows.gagsRows, rows.archiveRows]
-              .some(list => Array.isArray(list) && list.length > 0);
-            if (!hasCacheData) throw new Error('GitHub cache is empty');
-
-            songsRows = rows.songsRows;
-            gagsRows = rows.gagsRows;
-            archiveRows = rows.archiveRows;
-            source = 'github-pages';
-            transport = 'github-cache';
-            useGithubCache = true;
-          } catch (cacheErr) {
-            console.warn('GitHub cache取得に失敗。GASへフォールバックします。', cacheErr);
-            [songsRows, gagsRows, archiveRows] = await Promise.all([
-              fetchSheetRowsWithFallback('songs', { limit: INITIAL_FETCH_LIMIT }),
-              fetchSheetRowsWithFallback('gags', { limit: INITIAL_FETCH_LIMIT }),
-              fetchSheetRowsWithFallback('archive', { limit: INITIAL_FETCH_LIMIT })
-            ]);
-          }
+          const [songsRows, gagsRows, archiveRows] = await Promise.all([
+            fetchSheetRowsWithFallback('songs', { limit: LIST_FETCH_LIMIT }),
+            fetchSheetRowsWithFallback('gags', { limit: LIST_FETCH_LIMIT }),
+            fetchSheetRowsWithFallback('archive', { limit: ARCHIVE_SAFE_FETCH_LIMIT })
+          ]);
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
           buildArchiveIndex(archiveRows);
-          saveArchiveToCache(archiveRows);
 
           state.archiveMeta.phase = 'ready';
-          state.archiveMeta.source = source;
-          state.archiveMeta.transport = transport;
+          state.archiveMeta.source = 'network';
+          state.archiveMeta.transport = 'fetch';
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
 
           if (state.cache[state.current]) {
-            $('status').textContent = `初期読み込み完了：${state.cache[state.current].length}件`;
+            $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
             render();
-          }
-
-          if (!useGithubCache) {
-            Promise.allSettled([
-              fetchInStages('songs', {
-                onStage: (rows) => {
-                  state.cache.songs = rows;
-                  if (state.current === 'songs') render();
-                }
-              }),
-              fetchInStages('gags', {
-                onStage: (rows) => {
-                  state.cache.gags = rows;
-                  if (state.current === 'gags') render();
-                }
-              }),
-              fetchInStages('archive', {
-                onStage: (rows, info) => {
-                  buildArchiveIndex(rows);
-                  state.archiveMeta.rows = rows.length;
-                  state.archiveMeta.updatedAt = Date.now();
-                  if (info.limit === null || rows.length < SECOND_FETCH_LIMIT) {
-                    saveArchiveToCache(rows);
-                  }
-                  renderHistoryProcess();
-                  if ($('page-history').classList.contains('active') && state.histKey) {
-                    renderHistory(state.histKey.artist, state.histKey.title);
-                  }
-                }
-              })
-            ]).then(()=> {
-              if (state.cache[state.current]) {
-                $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
-              }
-            });
-          } else if (state.cache[state.current]) {
-            $('status').textContent = `GitHubキャッシュ読込完了：${state.cache[state.current].length}件`;
           }
 
           if ($('page-history').classList.contains('active') && state.histKey) {
