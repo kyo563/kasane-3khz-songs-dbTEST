@@ -681,6 +681,9 @@
     const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
+    const JSONP_CALLBACK_MAX_LENGTH = 96;
+    const JSONP_REQUIRED_QUERY_KEYS = ['callback', 'sheet', 'authuser', 'v'];
+    const JSONP_REQUIREMENTS_VERSION = '2026-02-jsonp-hardening-v1';
     const LIST_FETCH_LIMIT = 500;
     const INITIAL_FETCH_LIMIT = 200;
     const SECOND_FETCH_LIMIT = 500;
@@ -987,6 +990,43 @@
       return u;
     }
 
+    function jsonpRequirementGuide(){
+      return [
+        `JSONP要件(${JSONP_REQUIREMENTS_VERSION})`,
+        '1) https://script.google.com/macros/s/{SCRIPT_ID}/exec 形式のみ許可',
+        '2) callback は英数字/$_のみ、先頭は英字/$_、長さ96文字以下',
+        '3) callback/sheet/authuser/v の4クエリを必須化し、authuser=0 を固定',
+        '4) script 読込は timeout/onerror 監視 + callback一度だけ実行',
+        '5) payload に error / ok=false があれば失敗扱いにして再試行'
+      ].join(' | ');
+    }
+
+    function assertJsonpRequestRequirements(tab, requestUrl, callbackName){
+      if (!JSONP_CALLBACK_RE.test(callbackName)) throw new Error('callback名が要件違反です');
+      if (callbackName.length > JSONP_CALLBACK_MAX_LENGTH) throw new Error('callback名が長すぎます');
+
+      const request = new URL(requestUrl);
+      toSafeApiBase(`${request.origin}${request.pathname}`);
+
+      for (const key of JSONP_REQUIRED_QUERY_KEYS) {
+        if (!request.searchParams.has(key)) throw new Error(`必須クエリ不足: ${key}`);
+      }
+      if (request.searchParams.get('callback') !== callbackName) throw new Error('callbackクエリ不一致');
+      if (request.searchParams.get('sheet') !== tab) throw new Error('sheetクエリ不一致');
+      if (request.searchParams.get('authuser') !== '0') throw new Error('authuser固定要件違反');
+    }
+
+    function validateJsonpPayloadEnvelope(payload){
+      const parsed = parsePayloadLoose(payload);
+      if (parsed && typeof parsed === 'object') {
+        const failed = parsed.ok === false || Boolean(parsed.error) || Boolean(parsed.err);
+        if (failed) {
+          const reason = parsed.error || parsed.err || parsed.message || 'JSONP payload error';
+          throw new Error(`サーバーエラー: ${reason}`);
+        }
+      }
+    }
+
     function buildApiRequestUrl(tab, callbackName, useDeploy, extraParams = {}){
       const base = toSafeApiBase(useDeploy ? DEPLOY_URL : API_URL);
       const params = new URLSearchParams({
@@ -1046,18 +1086,23 @@
       }
 
       let script = null;
+      let callbackUsed = false;
       const cleanup = () => {
         clearRequestTimer(tab);
         if (script && script.parentNode) script.parentNode.removeChild(script);
         script = null;
+        window[callbackName] = undefined;
         delete window[callbackName];
       };
 
       window[callbackName] = (payload) => {
         if (req.id !== requestId) return;
+        if (callbackUsed) return;
+        callbackUsed = true;
         req.inflight = false;
         cleanup();
         try {
+          validateJsonpPayloadEnvelope(payload);
           handlePayload(tab, payload);
           endServerRequest(true, `${tab}/jsonp`);
         } catch (err) {
@@ -1073,13 +1118,17 @@
       };
 
       script=document.createElement('script');
-      script.src = buildApiRequestUrl(tab, callbackName, useDeploy);
+      const requestUrl = buildApiRequestUrl(tab, callbackName, useDeploy);
+      assertJsonpRequestRequirements(tab, requestUrl, callbackName);
+      script.src = requestUrl;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
       script.referrerPolicy = 'no-referrer';
       script.onerror=()=>{
         if (req.id !== requestId) return;
         req.inflight = false;
         cleanup();
-        endServerRequest(false, `${tab}/jsonp`, 'script読込失敗');
+        endServerRequest(false, `${tab}/jsonp`, `script読込失敗 / ${jsonpRequirementGuide()}`);
         requestData(tab, attempt, useDeploy, 'fetch');
       };
       document.head.appendChild(script);
@@ -1088,7 +1137,7 @@
         if (req.id !== requestId || !req.inflight) return;
         req.inflight = false;
         cleanup();
-        endServerRequest(false, `${tab}/jsonp`, 'タイムアウト');
+        endServerRequest(false, `${tab}/jsonp`, `タイムアウト / ${jsonpRequirementGuide()}`);
         requestData(tab, attempt, useDeploy, 'fetch');
       }, REQUEST_TIMEOUT_MS);
     }
