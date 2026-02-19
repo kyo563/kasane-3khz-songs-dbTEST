@@ -1478,11 +1478,23 @@
 
           if (!songsStaticCheck.ok) throw new Error(`songs 読み込み失敗: ${songsStaticCheck.reason}`);
           if (!gagsStaticCheck.ok) throw new Error(`gags 読み込み失敗: ${gagsStaticCheck.reason}`);
-          if (!archiveStaticCheck.ok) throw new Error(`archive 読み込み失敗: ${archiveStaticCheck.reason}`);
-
           const songsRows = songsStatic.value;
           const gagsRows = gagsStatic.value;
-          let archiveRows = archiveStatic.value;
+          let archiveRows = archiveStaticCheck.ok ? archiveStatic.value : [];
+
+          if (!archiveStaticCheck.ok) {
+            try {
+              const fallbackRows = await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
+              if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
+                archiveRows = fallbackRows;
+                state.archiveMeta.source = 'network';
+                state.archiveMeta.transport = 'fetch-fallback';
+              }
+            } catch (fallbackErr) {
+              const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+              console.warn(`[archive] static 失敗時の network fallback も失敗: ${fallbackMsg}`);
+            }
+          }
 
           if (archiveRows.length === 0) {
             try {
@@ -1504,9 +1516,10 @@
 
           state.archiveMeta.phase = 'ready';
           if (state.archiveMeta.transport !== 'fetch-fallback') {
-            state.archiveMeta.source = 'r2';
-            state.archiveMeta.transport = 'static-json';
+            state.archiveMeta.source = archiveStaticCheck.ok ? 'r2' : 'unknown';
+            state.archiveMeta.transport = archiveStaticCheck.ok ? 'static-json' : 'unavailable';
           }
+          state.archiveMeta.lastError = archiveStaticCheck.ok ? '' : String(archiveStaticCheck.reason || 'archive 読み込み失敗');
           state.archiveMeta.rows = archiveRows.length;
           state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
