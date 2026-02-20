@@ -691,12 +691,13 @@
       for(const r of rows || []){
         if (normalize(r.artist) !== na || normalize(r.title) !== nt) continue;
         const url = r.dUrl || urlFromText(r.dText);
-        const date = extractDate8(r.dText);
+        const date = Number(r.date8) || extractDate8(r.dText);
         const kind = (r.kind || '').toString();
-        const key = `${date}|${url}|${kind}`;
+        const rowId = String(r.rowId || '').trim();
+        const key = rowId || `${date}|${url}|${kind}`;
         if (unique.has(key)) continue;
         unique.add(key);
-        out.push({ date, url, kind });
+        out.push({ date, url, kind, rowId });
       }
       return out;
     }
@@ -713,7 +714,7 @@
       const merged = [];
       for (const list of entryLists) {
         for (const entry of list || []) {
-          const key = `${entry.date || 0}|${entry.url || ''}|${entry.kind || ''}`;
+          const key = String(entry.rowId || '').trim() || `${entry.date || 0}|${entry.url || ''}|${entry.kind || ''}`;
           if (seen.has(key)) continue;
           seen.add(key);
           merged.push(entry);
@@ -726,7 +727,8 @@
       const seen = new Set();
       const out = [];
       for (const r of rows || []) {
-        const key = `${normalize(r.artist)}|${normalize(r.title)}|${r.kind || ''}|${r.dText || ''}|${r.dUrl || ''}`;
+        const key = String(r.rowId || '').trim()
+          || `${normalize(r.artist)}|${normalize(r.title)}|${r.kind || ''}|${r.dUrl || ''}`;
         if (seen.has(key)) continue;
         seen.add(key);
         out.push(r);
@@ -745,15 +747,16 @@
         const title = normalize(r.title);
         const url = r.dUrl || urlFromText(r.dText);
         if (!url) continue;
-        const date = extractDate8(r.dText);
+        const date = Number(r.date8) || extractDate8(r.dText);
         const kind = (r.kind || '').toString();
+        const rowId = String(r.rowId || '').trim();
         const key = `${artist}|${title}`;
 
         if (!byKey.has(key)) byKey.set(key, []);
-        byKey.get(key).push({ date, url, kind });
+        byKey.get(key).push({ date, url, kind, rowId });
 
         if (!byTitle.has(title)) byTitle.set(title, []);
-        byTitle.get(title).push({ date, url, kind });
+        byTitle.get(title).push({ date, url, kind, rowId });
       }
 
       byKey.forEach((list, key) => byKey.set(key, sortHistoryEntriesDesc(list)));
@@ -780,6 +783,7 @@
     // 検証時の通信量と失敗率を抑えるため、取得件数を小さめに固定
     const LIST_FETCH_LIMIT = 500;
     const ARCHIVE_FETCH_LIMIT = 50;
+    const ARCHIVE_EXACT_FETCH_LIMIT = 40;
     const INITIAL_FETCH_LIMIT = 50;
     const SECOND_FETCH_LIMIT = 120;
     const ARCHIVE_SAFE_FETCH_LIMIT = 120;
@@ -880,16 +884,25 @@
           title : r[1] ?? '',
           kind  : r[2] ?? '',
           dText : r[3] ?? '',
-          dUrl  : r[4] ?? ''
+          dUrl  : r[4] ?? '',
+          date8 : Number(r[5]) || extractDate8(r[3]),
+          rowId : String(r[6] ?? '').trim()
         };
       }
       const row = r && typeof r === 'object' ? r : {};
+      const dText = row.dText  ?? row.dtext  ?? row.DTEXT ?? row.text ?? row.source ?? row['出典元情報(直リンク)'] ?? row.出典元情報 ?? row.出典 ?? '';
+      const dUrl = row.dUrl   ?? row.durl   ?? row.DURL  ?? row.url ?? row.directUrl ?? row.link ?? '';
+      const date8Raw = row.date8 ?? row.date ?? row.投稿日 ?? row.postedDate ?? '';
+      const date8 = Number(date8Raw) || extractDate8(dText);
+      const rowId = String(row.rowId ?? row.rowid ?? '').trim();
       return {
         artist: row.artist ?? row.Artist ?? row.artistName ?? row.singer ?? row.アーティスト ?? row.アーティスト名 ?? row.歌手名 ?? '',
         title : row.title  ?? row.Title  ?? row.song ?? row.songName ?? row.曲名 ?? row.楽曲名 ?? '',
         kind  : row.kind   ?? row.Kind   ?? row.category ?? row.type ?? row.区分 ?? '',
-        dText : row.dText  ?? row.dtext  ?? row.DTEXT ?? row.text ?? row.source ?? row['出典元情報(直リンク)'] ?? row.出典元情報 ?? row.出典 ?? '',
-        dUrl  : row.dUrl   ?? row.durl   ?? row.DURL  ?? row.url ?? row.directUrl ?? row.link ?? ''
+        dText,
+        dUrl,
+        date8,
+        rowId,
       };
     }
     function normalizeListRows(payloadRows){
@@ -1339,11 +1352,10 @@
 
     function archiveRowKey(row){
       const normalized = normalizeBaseRow(row);
-      return [
+      return String(normalized.rowId || '').trim() || [
         normalize(normalized.artist),
         normalize(normalized.title),
         normalize(normalized.kind),
-        normalize(normalized.dText),
         normalize(normalized.dUrl)
       ].join('|');
     }
@@ -1612,8 +1624,7 @@
           artist,
           title,
           exact: '1',
-          q: title,
-          limit: ARCHIVE_SAFE_FETCH_LIMIT
+          limit: ARCHIVE_EXACT_FETCH_LIMIT
         });
 
         const filtered = normalizeArchiveRows(rows).filter((r) =>

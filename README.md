@@ -14,6 +14,19 @@
 - 必要に応じて GitHub repository secret `GAS_URL` を設定してください。
   - 未設定時は `scripts/sync-gas.mjs` 内の既定URLを使用します。
 
+## 返却仕様（songs / gags / archive 共通）
+
+- スプレッドシートの A/B/C/D 列を以下として取り込みます。
+  - A列: `artist`
+  - B列: `title`
+  - C列: `kind`
+  - D列: `dText`
+- D列の先頭8桁 (`YYYYMMDD`) を `date8` として保持します。
+- `rowId` は `artist|title|kind|dUrl` を連結した識別子です。
+  - 同一曲（歌手名 + 楽曲名一致）の複数履歴を URL 差分まで含めて識別できます。
+- 履歴表示は `date8` 優先で新しい順に並べます。
+- `archive` 直接取得時は `exact=1` と小さめ `limit` を優先し、通信量を抑えます。
+
 ## 補足
 
 - `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
