@@ -388,6 +388,7 @@
       debounce: null,
       initialMobileOffsetConsumed: false,
       historyCache: new Map(),
+      historyRequests: new Map(),
       archiveRows: [],
       archiveByKey: null,
       archiveByTitle: null,
@@ -678,6 +679,7 @@
       state.cache.songs = null;
       state.cache.gags = null;
       state.historyCache.clear();
+      state.historyRequests.clear();
       state.archiveRows = [];
       state.archiveByKey = null;
       state.archiveByTitle = null;
@@ -821,6 +823,8 @@
     const REQUEST_TIMEOUT_MS = 8000;
     const REQUEST_RETRY_DELAY_MS = 500;
     const FETCH_TIMEOUT_MS = 10000;
+    const HISTORY_CACHE_TTL_MS = 20 * 60 * 1000;
+    const ARCHIVE_HISTORY_PREVIEW_LIMIT = 5;
     const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
@@ -1603,20 +1607,25 @@
       }
     }
 
-    function getMergedHistoryList(artist, title){
-      const listRows = state.current === 'gags' ? state.cache.gags : state.cache.songs;
-      const listEntries = toHistoryEntries(listRows || [], artist, title);
+    function getCachedHistoryEntries(artist, title){
       const key = `${normalize(artist)}|${normalize(title)}`;
-      const archiveByKey = state.archiveByKey?.get(key) || [];
-      return mergeHistoryEntriesUnique(listEntries, archiveByKey);
+      const cached = state.historyCache.get(key);
+      if (!cached) return null;
+      if (cached.expiresAt <= Date.now()) {
+        state.historyCache.delete(key);
+        return null;
+      }
+      return Array.isArray(cached.entries) ? cached.entries : [];
     }
 
     async function fetchSongHistoryFromArchive(artist, title){
       const cacheKey = `${normalize(artist)}|${normalize(title)}`;
-      if (state.historyCache.has(cacheKey)) return state.historyCache.get(cacheKey);
+      const cachedEntries = getCachedHistoryEntries(artist, title);
+      if (cachedEntries) return cachedEntries;
+      if (state.historyRequests.has(cacheKey)) return state.historyRequests.get(cacheKey);
 
       const task = (async () => {
-        if (!artist || !title) return;
+        if (!artist || !title) return [];
 
         state.archiveMeta.phase = 'loading';
         state.archiveMeta.source = 'gas-direct';
@@ -1647,21 +1656,28 @@
           normalize(r.artist) === normalize(artist) && normalize(r.title) === normalize(title)
         );
 
-        const mergedRows = mergeArchiveRows(filtered);
+        const entries = toHistoryEntries(filtered, artist, title);
+
         state.archiveMeta.phase = 'ready';
         state.archiveMeta.source = 'gas-direct';
         state.archiveMeta.transport = 'jsonp(exact)';
         state.archiveMeta.retry = 0;
         state.archiveMeta.lastError = '';
-        state.archiveMeta.rows = mergedRows.length;
+        state.archiveMeta.rows = entries.length;
         state.archiveMeta.updatedAt = Date.now();
         renderHistoryProcess();
+
+        state.historyCache.set(cacheKey, {
+          entries,
+          expiresAt: Date.now() + HISTORY_CACHE_TTL_MS
+        });
+        return entries;
       })();
-      state.historyCache.set(cacheKey, task);
+      state.historyRequests.set(cacheKey, task);
       try {
-        await task;
+        return await task;
       } finally {
-        state.historyCache.delete(cacheKey);
+        state.historyRequests.delete(cacheKey);
       }
     }
 
@@ -1678,30 +1694,41 @@
       for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
       $('hist-sub').textContent = '履歴データを準備しています…';
 
-      if (!state.archiveByKey || !state.archiveByTitle) {
-        warmCaches().catch(()=>{});
-        return;
-      }
+      let songsEntries = [];
+      let archiveEntries = [];
+      let archiveExpanded = false;
+      let archiveFromCache = false;
 
-      const drawHistory = () => {
-        const mergedList = getMergedHistoryList(artist, title);
+      const renderHistoryRows = () => {
         wrap.innerHTML = '';
+        empty.style.display = 'none';
 
-        if (mergedList.length===0){
+        const visibleArchive = (archiveFromCache || archiveExpanded)
+          ? archiveEntries
+          : archiveEntries.slice(0, ARCHIVE_HISTORY_PREVIEW_LIMIT);
+        const entries = [...songsEntries, ...visibleArchive];
+
+        if (entries.length === 0){
           empty.style.display = 'block';
           $('hist-sub').textContent = '該当データがありません。';
           return;
         }
 
-        $('hist-sub').textContent = '新しい順に表示しています。';
+        if (archiveFromCache) {
+          $('hist-sub').textContent = `SONGS + archive（キャッシュ）を表示中: ${entries.length}件`;
+        } else if (archiveEntries.length > ARCHIVE_HISTORY_PREVIEW_LIMIT && !archiveExpanded) {
+          $('hist-sub').textContent = `SONGS + archive先頭${ARCHIVE_HISTORY_PREVIEW_LIMIT}件を表示中`;
+        } else {
+          $('hist-sub').textContent = `SONGS + archiveを表示中: ${entries.length}件`;
+        }
 
         const CHUNK = 50;
         let i = 0;
         function drawChunk(){
           const frag = document.createDocumentFragment();
-          const end = Math.min(i+CHUNK, mergedList.length);
+          const end = Math.min(i+CHUNK, entries.length);
           for(; i<end; i++){
-            const {date,url,kind} = mergedList[i];
+            const {date,url,kind} = entries[i];
             const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
             const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
 
@@ -1727,17 +1754,62 @@
             frag.appendChild(row);
           }
           wrap.appendChild(frag);
-          if (i < mergedList.length) requestAnimationFrame(drawChunk);
+          if (i < entries.length) {
+            requestAnimationFrame(drawChunk);
+            return;
+          }
+          if (!archiveFromCache && !archiveExpanded && archiveEntries.length > ARCHIVE_HISTORY_PREVIEW_LIMIT) {
+            const remain = archiveEntries.length - ARCHIVE_HISTORY_PREVIEW_LIMIT;
+            const moreBtn = document.createElement('button');
+            moreBtn.type = 'button';
+            moreBtn.className = 'btn btn-subtle';
+            moreBtn.textContent = `さらに読み込む（残り${remain}件）`;
+            moreBtn.style.marginTop = '10px';
+            moreBtn.addEventListener('click', () => {
+              archiveExpanded = true;
+              renderHistoryRows();
+            });
+            wrap.appendChild(moreBtn);
+          }
         }
         requestAnimationFrame(drawChunk);
       };
 
-      drawHistory();
-      fetchSongHistoryFromArchive(artist, title)
-        .then(() => {
+      const applySongsEntries = () => {
+        const songRows = state.cache.songs || [];
+        songsEntries = toHistoryEntries(songRows, artist, title);
+      };
+
+      const ensureSongsReady = async () => {
+        if (state.cache.songs) return;
+        await warmCaches();
+      };
+
+      ensureSongsReady()
+        .then(async () => {
           if (!state.histKey) return;
           if (normalize(state.histKey.artist) !== normalize(artist) || normalize(state.histKey.title) !== normalize(title)) return;
-          drawHistory();
+
+          applySongsEntries();
+          renderHistoryRows();
+
+          const cachedArchive = getCachedHistoryEntries(artist, title);
+          if (cachedArchive !== null) {
+            archiveFromCache = true;
+            archiveExpanded = true;
+            archiveEntries = cachedArchive;
+            renderHistoryRows();
+            return;
+          }
+
+          const entries = await fetchSongHistoryFromArchive(artist, title);
+          if (!state.histKey) return;
+          if (normalize(state.histKey.artist) !== normalize(artist) || normalize(state.histKey.title) !== normalize(title)) return;
+
+          archiveFromCache = false;
+          archiveExpanded = false;
+          archiveEntries = entries || [];
+          renderHistoryRows();
         })
         .catch((err) => {
           const msg = err instanceof Error ? err.message : String(err);
