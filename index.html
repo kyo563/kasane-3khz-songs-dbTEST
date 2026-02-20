@@ -363,6 +363,7 @@
     const DEPLOY_URL = API_URL;
     const STATIC_DATA_BASE = resolveStaticDataBase();
     const HARD_LIMIT = 10000;
+    const AUTO_COMPACT_FINAL_THRESHOLD = 0.9;
     const state = {
       current: 'songs',
       cache: { songs:null, gags:null },
@@ -1663,7 +1664,7 @@
       state.filterAutoCollapseProgress = progress;
       panel.style.setProperty('--scroll-collapse', progress.toFixed(3));
       panel.classList.toggle('auto-collapsing', progress > 0.001);
-      panel.classList.toggle('auto-compact-final', progress >= 0.999);
+      panel.classList.toggle('auto-compact-final', progress >= AUTO_COMPACT_FINAL_THRESHOLD);
       scheduleFilterMetrics();
     }
 
