@@ -54,13 +54,28 @@ jobs:
             sudo apt-get install -y awscli
           fi
 
-      - name: Upload public-data to R2
+      - name: Upload songs/gags/meta to R2
         run: |
           for attempt in 1 2 3; do
-            if aws s3 sync public-data "s3://$R2_BUCKET/public-data" \
+            set +e
+            aws s3 cp public-data/songs.json "s3://$R2_BUCKET/public-data/songs.json" \
               --endpoint-url "$R2_ENDPOINT" \
-              --region auto \
-              --delete; then
+              --region auto
+            songs_rc=$?
+            aws s3 cp public-data/gags.json "s3://$R2_BUCKET/public-data/gags.json" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto
+            gags_rc=$?
+            aws s3 cp public-data/meta.json "s3://$R2_BUCKET/public-data/meta.json" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto
+            meta_rc=$?
+            aws s3 rm "s3://$R2_BUCKET/public-data/archive.json" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto >/dev/null 2>&1
+            set -e
+
+            if [ "$songs_rc" -eq 0 ] && [ "$gags_rc" -eq 0 ] && [ "$meta_rc" -eq 0 ]; then
               echo "R2 upload succeeded on attempt ${attempt}"
               exit 0
             fi
