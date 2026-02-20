@@ -545,8 +545,8 @@
       const maxScroll = Math.max((scroller?.scrollHeight || 0) - (scroller?.clientHeight || 0), 1);
       const progress = Math.min(Math.max((scroller?.scrollTop || 0) / maxScroll, 0), 1);
 
-      const start = { r: 241, g: 223, b: 122 }; // #f1df7a
-      const end = { r: 221, g: 146, b: 51 };    // #dd9233
+      const start = { r: 82, g: 196, b: 122 };  // #52C47A
+      const end = { r: 153, g: 255, b: 102 };   // #99ff66
       const r = Math.round(start.r + (end.r - start.r) * progress);
       const g = Math.round(start.g + (end.g - start.g) * progress);
       const b = Math.round(start.b + (end.b - start.b) * progress);
