@@ -1288,6 +1288,10 @@
         req.inflight = false;
         cleanup();
         endServerRequest(false, `${tab}/jsonp`, 'script読込失敗');
+        if (tab === 'archive') {
+          handleRequestFailure(tab, attempt, 'script読込失敗');
+          return;
+        }
         requestData(tab, attempt, useDeploy, 'fetch');
       };
       document.head.appendChild(script);
@@ -1297,6 +1301,10 @@
         req.inflight = false;
         cleanup();
         endServerRequest(false, `${tab}/jsonp`, 'タイムアウト');
+        if (tab === 'archive') {
+          handleRequestFailure(tab, attempt, 'タイムアウト');
+          return;
+        }
         requestData(tab, attempt, useDeploy, 'fetch');
       }, REQUEST_TIMEOUT_MS);
     }
