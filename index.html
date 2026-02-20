@@ -10,10 +10,11 @@
       --bg:#a9dba3; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
       --thead:#d3ebdd; --focus:#56adeb; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
       --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb;
+      --bg-top:#98fb98; --bg-mid:#78bced; --bg-bottom:#5b82d8;
     }
     *{box-sizing:border-box}
     body{
-      background:linear-gradient(180deg,#98fb98 0%,#78bced 100%);
+      background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-mid) 52%,var(--bg-bottom) 100%);
       background-attachment:fixed;
       background-position:center top;
       background-repeat:no-repeat;
@@ -40,7 +41,7 @@
       top:14px;
       width:100%;
       z-index:30;
-      padding-bottom:34px;
+      padding-bottom:10px;
       overflow:hidden;
       transition:padding .2s ease,max-height .2s ease;
     }
@@ -80,11 +81,12 @@
     .server-response.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
-    .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+    .quick-filter-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:0}
     #filter-panel.compact .server-response,
     #filter-panel.compact .stats-row,
-    #filter-panel.compact .quick-filters{display:none}
-    .filter-toggle{position:absolute;right:12px;bottom:8px;appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.2}
+    #filter-panel.compact .quick-filter-row{display:none}
+    .filter-toggle{flex:0 0 auto;appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.2;white-space:nowrap}
     .filter-chip{appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
     .filter-chip.active{background:linear-gradient(135deg,#6dd3ff,#6fb1ff);color:#05233d;border-color:transparent;font-weight:700}
     .input-dock{
@@ -179,6 +181,11 @@
         margin-bottom:9px;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       }
+      .item.item-blank{
+        min-height:90px;
+        background:linear-gradient(160deg,rgba(255,255,255,.5) 0%,rgba(236,248,255,.35) 100%);
+        border-style:dashed;
+      }
       .item:active,
       .item:focus-within{
         transform:translateY(-1px) scale(1.01);
@@ -238,8 +245,10 @@
         <div class="muted" id="status">読み込み中…</div>
         <div class="server-response" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
-        <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
-        <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
+        <div class="quick-filter-row">
+          <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
+          <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
+        </div>
       </div>
 
       <div class="card result-card">
@@ -499,6 +508,21 @@
       if (!isMobile || !onListPage) return;
       const filterHeight = Math.ceil($('filter-panel').getBoundingClientRect().height);
       document.documentElement.style.setProperty('--filter-panel-height', `${Math.max(filterHeight, 0)}px`);
+    }
+
+    function updateScrollGradient(){
+      const scroller = getListScroller();
+      if (!scroller) return;
+      const maxScroll = Math.max(scroller.scrollHeight - scroller.clientHeight, 1);
+      const progress = Math.min(Math.max((scroller.scrollTop || 0) / maxScroll, 0), 1);
+
+      const topHue = 120 - Math.round(progress * 36);
+      const midHue = 205 + Math.round(progress * 12);
+      const bottomHue = 220 + Math.round(progress * 18);
+
+      document.documentElement.style.setProperty('--bg-top', `hsl(${topHue} 88% 78%)`);
+      document.documentElement.style.setProperty('--bg-mid', `hsl(${midHue} 78% 67%)`);
+      document.documentElement.style.setProperty('--bg-bottom', `hsl(${bottomHue} 68% 58%)`);
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
@@ -1719,9 +1743,16 @@
           item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
 
+        const blank = document.createElement('div');
+        blank.className = 'item item-blank';
+        blank.setAttribute('aria-hidden', 'true');
+        $('mblist').appendChild(blank);
+
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
         state.activeSnapIndex = 0;
       }
+
+      updateScrollGradient();
     }
 
     $('btn-back').addEventListener('click', ()=>{
@@ -1749,6 +1780,7 @@
     getListScroller().addEventListener('scroll', ()=>{
       const y = getListScroller().scrollTop || 0;
       $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
+      updateScrollGradient();
     });
 
     (function init(){
@@ -1765,6 +1797,7 @@
       warmCaches().catch(()=>{});
       renderServerResponse();
       updateCompactFilterMode();
+      updateScrollGradient();
 
     })();
   </script>
