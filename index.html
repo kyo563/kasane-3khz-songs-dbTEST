@@ -354,9 +354,17 @@
 
   <script>
     const DEFAULT_STATIC_BASE = new URL('./public-data/', window.location.href).toString();
-    const DEPLOY_URL = DEFAULT_STATIC_BASE;
+    const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw7AIt8edC5Q24Gvvf6o5T7gCbWgWZq53pPbpNsONKsExOHZpxdQronK68ZMj61y1bU/exec';
     function resolveApiUrl(){
-      return DEFAULT_STATIC_BASE;
+      try {
+        const byQuery = new URLSearchParams(window.location.search).get('gas_url');
+        if (byQuery) return new URL(byQuery, window.location.href).toString();
+      } catch {}
+      try {
+        const byStorage = localStorage.getItem('gasApiUrl');
+        if (byStorage) return new URL(byStorage, window.location.href).toString();
+      } catch {}
+      return DEFAULT_GAS_API_URL;
     }
     function resolveStaticDataBase(){
       try {
@@ -370,6 +378,7 @@
       return DEFAULT_STATIC_BASE;
     }
     const API_URL = resolveApiUrl();
+    const DEPLOY_URL = API_URL;
     const STATIC_DATA_BASE = resolveStaticDataBase();
     const HARD_LIMIT = 10000;
     const state = {
@@ -512,6 +521,41 @@
       } finally {
         clearTimeout(timer);
       }
+    }
+    function fetchByJsonp(tab, { timeoutMs = REQUEST_TIMEOUT_MS, extraParams = {} } = {}){
+      return new Promise((resolve, reject) => {
+        const callbackName = `__direct_jsonp_${tab}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        if (!JSONP_CALLBACK_RE.test(callbackName)) {
+          reject(new Error('callback名の生成に失敗'));
+          return;
+        }
+
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error('JSONP timeout'));
+        }, timeoutMs);
+
+        let script = null;
+        const cleanup = () => {
+          clearTimeout(timer);
+          if (script && script.parentNode) script.parentNode.removeChild(script);
+          delete window[callbackName];
+        };
+
+        window[callbackName] = (payload) => {
+          cleanup();
+          resolve(payload);
+        };
+
+        script = document.createElement('script');
+        script.src = buildApiRequestUrl(tab, callbackName, false, extraParams);
+        script.referrerPolicy = 'no-referrer';
+        script.onerror = () => {
+          cleanup();
+          reject(new Error('JSONP script load error'));
+        };
+        document.head.appendChild(script);
+      });
     }
     async function probeServerHealth({ manual = false } = {}){
       const mon = state.serverMonitor;
@@ -778,7 +822,7 @@
     const REQUEST_RETRY_DELAY_MS = 500;
     const FETCH_TIMEOUT_MS = 10000;
     const INITIAL_ERROR_NOTICE_DELAY_MS = 12000;
-    const JSONP_ALLOWED_ORIGIN = ''; // legacy: 未使用
+    const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     // 検証時の通信量と失敗率を抑えるため、取得件数を小さめに固定
     const LIST_FETCH_LIMIT = 500;
@@ -1620,12 +1664,24 @@
         state.archiveMeta.lastError = '';
         renderHistoryProcess();
 
-        const rows = await fetchSheetRowsWithFallback('archive', {
-          artist,
-          title,
-          exact: '1',
-          limit: ARCHIVE_EXACT_FETCH_LIMIT
-        });
+        beginServerRequest();
+        let rows = [];
+        try {
+          const payload = await fetchByJsonp('archive', {
+            extraParams: {
+              artist,
+              title,
+              exact: '1',
+              limit: ARCHIVE_EXACT_FETCH_LIMIT
+            }
+          });
+          rows = normalizeRowsForTab('archive', payload);
+          endServerRequest(true, 'archive/jsonp(exact)');
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : String(err);
+          endServerRequest(false, 'archive/jsonp(exact)', reason);
+          throw err;
+        }
 
         const filtered = normalizeArchiveRows(rows).filter((r) =>
           normalize(r.artist) === normalize(artist) && normalize(r.title) === normalize(title)
