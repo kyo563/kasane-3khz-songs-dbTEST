@@ -81,6 +81,7 @@
     .server-response.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
+    .status-row{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
     .quick-filter-row{display:flex;align-items:center;gap:8px;margin-top:10px}
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:0}
     #filter-panel.compact .server-response,
@@ -242,12 +243,14 @@
           </div>
         </div>
 
-        <div class="muted" id="status">読み込み中…</div>
+        <div class="status-row">
+          <div class="muted" id="status">読み込み中…</div>
+          <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
+        </div>
         <div class="server-response" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filter-row">
           <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
-          <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
         </div>
       </div>
 
