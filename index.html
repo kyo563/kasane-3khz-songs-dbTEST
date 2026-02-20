@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#8bcf90">
+  <meta name="theme-color" content="#dff3ff">
   <title>歌唱曲・一発ネタ 検索（履歴 高速化版）</title>
   <style>
     :root{
       --bg:#a9dba3; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
       --thead:#d3ebdd; --focus:#56adeb; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
       --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb;
-      --bg-top:#98fb98; --bg-mid:#78bced; --bg-bottom:#5b82d8;
+      --bg-top:#dff3ff; --bg-bottom:#ecf9df;
     }
     *{box-sizing:border-box}
     body{
-      background:linear-gradient(180deg,var(--bg-top) 0%,var(--bg-mid) 52%,var(--bg-bottom) 100%);
+      background:linear-gradient(160deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
       background-attachment:fixed;
       background-position:center top;
       background-repeat:no-repeat;
@@ -514,18 +514,8 @@
     }
 
     function updateScrollGradient(){
-      const scroller = getListScroller();
-      if (!scroller) return;
-      const maxScroll = Math.max(scroller.scrollHeight - scroller.clientHeight, 1);
-      const progress = Math.min(Math.max((scroller.scrollTop || 0) / maxScroll, 0), 1);
-
-      const topHue = 120 - Math.round(progress * 36);
-      const midHue = 205 + Math.round(progress * 12);
-      const bottomHue = 220 + Math.round(progress * 18);
-
-      document.documentElement.style.setProperty('--bg-top', `hsl(${topHue} 88% 78%)`);
-      document.documentElement.style.setProperty('--bg-mid', `hsl(${midHue} 78% 67%)`);
-      document.documentElement.style.setProperty('--bg-bottom', `hsl(${bottomHue} 68% 58%)`);
+      document.documentElement.style.setProperty('--bg-top', '#dff3ff');
+      document.documentElement.style.setProperty('--bg-bottom', '#ecf9df');
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
@@ -1516,17 +1506,27 @@
       const renderSeq = ++state.historyRenderSeq;
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
-      $('hist-sub').textContent = '履歴を読み込み中…';
+      const latestOnly = sortHistoryEntriesDesc(
+        toHistoryEntries(state.cache.songs || [], artist, title)
+      ).slice(0, ARCHIVE_HISTORY_PREVIEW_LIMIT);
+
+      $('hist-sub').textContent = latestOnly.length > 0
+        ? `最新履歴 ${latestOnly.length} 件を表示中…過去履歴を取得しています。`
+        : '履歴を読み込み中…';
       renderHistoryProcess();
 
       const wrap = $('hist-list');
       const empty = $('hist-empty');
       wrap.innerHTML = '';
       empty.style.display = 'none';
-      for (let i = 0; i < 3; i++) {
-        const sk = document.createElement('div');
-        sk.className = 'skeleton';
-        wrap.appendChild(sk);
+      if (latestOnly.length > 0) {
+        drawHistoryEntries(wrap, latestOnly);
+      } else {
+        for (let i = 0; i < 3; i++) {
+          const sk = document.createElement('div');
+          sk.className = 'skeleton';
+          wrap.appendChild(sk);
+        }
       }
 
       let list = [];
@@ -1551,6 +1551,10 @@
 
       $('hist-sub').textContent = `新しい順に ${list.length} 件を表示しています。`;
 
+      drawHistoryEntries(wrap, list);
+    }
+
+    function drawHistoryEntries(wrap, list){
       const CHUNK = 50;
       let i = 0;
       function drawChunk(){
