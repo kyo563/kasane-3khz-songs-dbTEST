@@ -1647,6 +1647,14 @@
       const task = (async () => {
         if (!artist || !title) return [];
 
+        if (!state.cache.songs) {
+          try {
+            await warmCaches();
+          } catch (err) {
+            console.warn('[history] songs キャッシュの初期化に失敗:', err);
+          }
+        }
+
         state.archiveMeta.phase = 'loading';
         state.archiveMeta.source = 'gas-direct';
         state.archiveMeta.transport = 'jsonp(exact)';
@@ -1694,7 +1702,9 @@
           normalize(r.artist) === normalize(artist) && normalize(r.title) === normalize(title)
         );
 
-        const entries = toHistoryEntries(filtered, artist, title);
+        const archiveEntries = toHistoryEntries(filtered, artist, title);
+        const songsEntries = toHistoryEntries(state.cache.songs || [], artist, title);
+        const entries = mergeHistoryEntriesUnique(archiveEntries, songsEntries);
 
         state.archiveMeta.phase = 'ready';
         state.archiveMeta.source = 'gas-direct';
