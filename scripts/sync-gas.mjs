@@ -76,6 +76,16 @@ function resolveRows(payload) {
   return null;
 }
 
+
+function extractDate8(text) {
+  const m = String(text || '').match(/^(\d{8})/);
+  return m ? Number(m[1]) : 0;
+}
+
+function buildRowId({ artist = '', title = '', kind = '', dUrl = '' } = {}) {
+  return [artist, title, kind, dUrl].map((v) => String(v ?? '').trim().toLowerCase()).join('|');
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -149,15 +159,28 @@ async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
       const normalized = (rows || [])
         .map((r) => {
           if (Array.isArray(r)) {
+            const dText = r[3] ?? '';
+            const dUrl = r[4] ?? '';
+            const date8 = Number(r[5]) || extractDate8(dText);
+            const rowId = String(r[6] ?? '').trim() || buildRowId({ artist: r[0], title: r[1], kind: r[2], dUrl });
             return {
               artist: r[0] ?? '',
               title: r[1] ?? '',
               kind: r[2] ?? '',
-              dText: r[3] ?? '',
-              dUrl: r[4] ?? '',
+              dText,
+              dUrl,
+              date8,
+              rowId,
             };
           }
-          return r && typeof r === 'object' ? r : null;
+          if (!r || typeof r !== 'object') return null;
+          const dText = r.dText ?? '';
+          const dUrl = r.dUrl ?? '';
+          return {
+            ...r,
+            date8: Number(r.date8) || extractDate8(dText),
+            rowId: String(r.rowId ?? '').trim() || buildRowId({ artist: r.artist, title: r.title, kind: r.kind, dUrl }),
+          };
         })
         .filter((r) => r && typeof r === 'object');
 
@@ -216,13 +239,15 @@ async function fetchArchiveWithBackoff({ offset = 0 } = {}) {
 
 function archiveRowKey(row) {
   if (!row || typeof row !== 'object') return '';
+  const rowId = String(row.rowId ?? '').trim();
+  if (rowId) return rowId;
   const artist = String(row.artist ?? '').trim();
   const title = String(row.title ?? '').trim();
   const kind = String(row.kind ?? '').trim();
-  const dText = String(row.dText ?? '').trim();
   const dUrl = String(row.dUrl ?? '').trim();
-  return `${artist}\u001f${title}\u001f${kind}\u001f${dText}\u001f${dUrl}`;
+  return `${artist}${title}${kind}${dUrl}`;
 }
+
 
 async function fetchArchivePaged() {
   const pageLimit = Number(process.env.ARCHIVE_PAGE_LIMIT || 5);

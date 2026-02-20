@@ -4,7 +4,7 @@
  * 期待仕様:
  * - GET /exec?sheet=songs|gags|archive[&q=...&artist=...&title=...&exact=1&limit=...&offset=...&debug=1]
  * - 返却: { ok, sheet, total, matched, offset, limit, rows }
- * - rows: [{ artist, title, kind, dText, dUrl, (debug時のみ)dSrc }]
+ * - rows: [{ artist, title, kind, dText, dUrl, date8, rowId, (debug時のみ)dSrc }]
  * - callback 指定時は JSONP を返す
  */
 
@@ -76,8 +76,7 @@ function main_(e) {
     filtered = rows.filter((r) =>
       normalize_(r.artist) === exactArtist && normalize_(r.title) === exactTitle
     );
-  }
-  if (q) {
+  } else if (q) {
     filtered = filtered.filter((r) =>
       normalize_(r.artist).includes(q) || normalize_(r.title).includes(q)
     );
@@ -85,10 +84,10 @@ function main_(e) {
 
   const uniq = uniqueByKey_(
     filtered,
-    (r) => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl || ''}`
+    (r) => r.rowId || makeRowId_(r.artist, r.title, r.kind, r.dUrl)
   );
 
-  const sorted = uniq.sort((a, b) => extractDate8_(b.dText) - extractDate8_(a.dText));
+  const sorted = uniq.sort((a, b) => (b.date8 || 0) - (a.date8 || 0));
 
   return {
     ok: true,
@@ -161,6 +160,8 @@ function readSheet_(sheetName, startRow, includeSrc, tabKey) {
       kind,
       dText,
       dUrl: link.url,
+      date8: extractDate8_(dText),
+      rowId: makeRowId_(artist, title, kind, link.url),
     };
     if (includeSrc) row.dSrc = link.src;
     parsed.push(row);
@@ -168,7 +169,7 @@ function readSheet_(sheetName, startRow, includeSrc, tabKey) {
 
   const uniq = uniqueByKey_(
     parsed,
-    (r) => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl || ''}`
+    (r) => r.rowId || makeRowId_(r.artist, r.title, r.kind, r.dUrl)
   );
 
   const output = { rows: uniq };
@@ -278,6 +279,15 @@ function normalize_(text) {
 function extractDate8_(text) {
   const m = String(text || '').match(/^(\d{8})/);
   return m ? Number(m[1]) : 0;
+}
+
+function makeRowId_(artist, title, kind, dUrl) {
+  return [
+    normalize_(artist || ''),
+    normalize_(title || ''),
+    normalize_(kind || ''),
+    String(dUrl || '').trim(),
+  ].join('|');
 }
 
 /**
