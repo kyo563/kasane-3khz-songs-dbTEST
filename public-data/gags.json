@@ -1,301 +1,385 @@
 {
   "ok": true,
   "sheet": "gags",
-  "fetchedAt": "2026-02-19T23:55:06.264Z",
+  "fetchedAt": "2026-02-20T01:20:31.288Z",
   "rows": [
     {
       "artist": "¿?shimon",
       "title": "ルシファー (サタンきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=5093s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=5093s",
+      "date8": 20251124,
+      "rowId": "¿?shimon|ルシファー (サタンきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=5093s"
     },
     {
       "artist": "Ado",
       "title": "唱 (ハムボ:ずんだもん)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=3203s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=3203s",
+      "date8": 20250914,
+      "rowId": "ado|唱 (ハムボ:ずんだもん)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=3203s"
     },
     {
       "artist": "Ado",
       "title": "唱 (イケボ：ぎゃう)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4578s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4578s",
+      "date8": 20251011,
+      "rowId": "ado|唱 (イケボ：ぎゃう)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=4578s"
     },
     {
       "artist": "Aiko",
       "title": "カブトムシ (透明感:クセ強)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=4276s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=4276s",
+      "date8": 20250914,
+      "rowId": "aiko|カブトムシ (透明感:クセ強)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=4276s"
     },
     {
       "artist": "DECO*27",
       "title": "モニタリングremix (吹いてみた)",
       "kind": "ショート",
       "dText": "20250912 【カズー吹いてみた】 モニタリングremix/DECO*27 #kazoo #instrument  #deco27 #初音ミク",
-      "dUrl": "https://www.youtube.com/shorts/ZoUi_w0ezdY"
+      "dUrl": "https://www.youtube.com/shorts/ZoUi_w0ezdY",
+      "date8": 20250912,
+      "rowId": "deco*27|モニタリングremix (吹いてみた)|ショート|https://www.youtube.com/shorts/zoui_w0ezdy"
     },
     {
       "artist": "DREAMS COME TRUE",
       "title": "やさしいキスをして (おねえさんきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3539s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3539s",
+      "date8": 20251124,
+      "rowId": "dreams come true|やさしいキスをして (おねえさんきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=3539s"
     },
     {
       "artist": "Giga",
       "title": "G4L (ギャルきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2057s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2057s",
+      "date8": 20251124,
+      "rowId": "giga|g4l (ギャルきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=2057s"
     },
     {
       "artist": "HoneyWorks",
       "title": "可愛くてごめん (ぎゃう：ドラえもん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=1663s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=1663s",
+      "date8": 20251011,
+      "rowId": "honeyworks|可愛くてごめん (ぎゃう：ドラえもん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=1663s"
     },
     {
       "artist": "JUDY AND MARY",
       "title": "くじら12号 (かわいい：お姉さん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=1235s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=1235s",
+      "date8": 20251011,
+      "rowId": "judy and mary|くじら12号 (かわいい：お姉さん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=1235s"
     },
     {
       "artist": "Kanaria",
       "title": "酔いどれしらず (かわいい:ハムボ)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=1211s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=1211s",
+      "date8": 20250914,
+      "rowId": "kanaria|酔いどれしらず (かわいい:ハムボ)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=1211s"
     },
     {
       "artist": "Mao",
       "title": "夢をかなえてドラえもん (風邪ひき：演歌)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=805s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=805s",
+      "date8": 20251011,
+      "rowId": "mao|夢をかなえてドラえもん (風邪ひき：演歌)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=805s"
     },
     {
       "artist": "Supercell",
       "title": "M.K.O (ギャルきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=1687s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=1687s",
+      "date8": 20251124,
+      "rowId": "supercell|m.k.o (ギャルきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=1687s"
     },
     {
       "artist": "Superfly",
       "title": "愛と感謝 (かっこいい：演歌：歌のお姉さん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=6062s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=6062s",
+      "date8": 20251011,
+      "rowId": "superfly|愛と感謝 (かっこいい：演歌：歌のお姉さん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=6062s"
     },
     {
       "artist": "Superfly",
       "title": "愛をこめて花束を (イケボ:ハイテンション)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=6205s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=6205s",
+      "date8": 20250914,
+      "rowId": "superfly|愛をこめて花束を (イケボ:ハイテンション)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=6205s"
     },
     {
       "artist": "YOASOBI",
       "title": "アイドル (セクシー:悲しみ)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=3719s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=3719s",
+      "date8": 20250914,
+      "rowId": "yoasobi|アイドル (セクシー:悲しみ)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=3719s"
     },
     {
       "artist": "かいりきベア",
       "title": "バグ (かっこいい:セクシー)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=5720s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=5720s",
+      "date8": 20250914,
+      "rowId": "かいりきベア|バグ (かっこいい:セクシー)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=5720s"
     },
     {
       "artist": "すりぃ",
       "title": "テレキャスタービーボーイ (ショタきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=854s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=854s",
+      "date8": 20251124,
+      "rowId": "すりぃ|テレキャスタービーボーイ (ショタきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=854s"
     },
     {
       "artist": "ちゃんみな",
       "title": "SAD SONG (ギャルきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2364s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2364s",
+      "date8": 20251124,
+      "rowId": "ちゃんみな|sad song (ギャルきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=2364s"
     },
     {
       "artist": "ツミキ",
       "title": "フォニイ (クセ強:演歌)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=834s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=834s",
+      "date8": 20250914,
+      "rowId": "ツミキ|フォニイ (クセ強:演歌)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=834s"
     },
     {
       "artist": "みきとP",
       "title": "少女レイ (ドラえもん:ハムボ)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=2680s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=2680s",
+      "date8": 20250914,
+      "rowId": "みきとp|少女レイ (ドラえもん:ハムボ)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=2680s"
     },
     {
       "artist": "ヨルシカ",
       "title": "だから僕は音楽を辞めた (演歌：風邪ひき)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=5623s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=5623s",
+      "date8": 20251011,
+      "rowId": "ヨルシカ|だから僕は音楽を辞めた (演歌：風邪ひき)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=5623s"
     },
     {
       "artist": "ヨルシカ",
       "title": "ただ君に晴れ (透明感:クセ強)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=5275s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=5275s",
+      "date8": 20250914,
+      "rowId": "ヨルシカ|ただ君に晴れ (透明感:クセ強)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=5275s"
     },
     {
       "artist": "ヨルシカ",
       "title": "パレード (ハムボ：歌のお姉さん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2876s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2876s",
+      "date8": 20251011,
+      "rowId": "ヨルシカ|パレード (ハムボ：歌のお姉さん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=2876s"
     },
     {
       "artist": "羽生まゐご",
       "title": "オノマトペ (おねえさんきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3196s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3196s",
+      "date8": 20251124,
+      "rowId": "羽生まゐご|オノマトペ (おねえさんきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=3196s"
     },
     {
       "artist": "倖田來未",
       "title": "キューティーハニー (おねえさんきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2849s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=2849s",
+      "date8": 20251124,
+      "rowId": "倖田來未|キューティーハニー (おねえさんきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=2849s"
     },
     {
       "artist": "高橋洋子",
       "title": "残酷な天使のテーゼ (演歌:ドラえもん)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=2250s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=2250s",
+      "date8": 20250914,
+      "rowId": "高橋洋子|残酷な天使のテーゼ (演歌:ドラえもん)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=2250s"
     },
     {
       "artist": "煮ル果実",
       "title": "トラフィックジャム (サタンきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=5527s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=5527s",
+      "date8": 20251124,
+      "rowId": "煮ル果実|トラフィックジャム (サタンきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=5527s"
     },
     {
       "artist": "松本梨香",
       "title": "めざせポケモンマスター (ショタきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=1214s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=1214s",
+      "date8": 20251124,
+      "rowId": "松本梨香|めざせポケモンマスター (ショタきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=1214s"
     },
     {
       "artist": "森カリオペ",
       "title": "Go-Getters (クセ強：クセ強)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2172s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2172s",
+      "date8": 20251011,
+      "rowId": "森カリオペ|go-getters (クセ強：クセ強)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=2172s"
     },
     {
       "artist": "星街すいせい",
       "title": "ビビデバ (ずんだもん:クセ強)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=502s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=502s",
+      "date8": 20250914,
+      "rowId": "星街すいせい|ビビデバ (ずんだもん:クセ強)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=502s"
     },
     {
       "artist": "石川さゆり",
       "title": "津軽海峡冬景色 (クセ強:ハイテンション)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=4835s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=4835s",
+      "date8": 20250914,
+      "rowId": "石川さゆり|津軽海峡冬景色 (クセ強:ハイテンション)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=4835s"
     },
     {
       "artist": "大野克夫",
       "title": "名探偵コナンのテーマ (吹いてみた)",
       "kind": "ショート",
       "dText": "20250914 【吹いてみた】名探偵コナンのテーマ #kazoo",
-      "dUrl": "https://www.youtube.com/shorts/15KIO-R5FSE"
+      "dUrl": "https://www.youtube.com/shorts/15KIO-R5FSE",
+      "date8": 20250914,
+      "rowId": "大野克夫|名探偵コナンのテーマ (吹いてみた)|ショート|https://www.youtube.com/shorts/15kio-r5fse"
     },
     {
       "artist": "椎名林檎",
       "title": "ギブス (透明感:かっこいい)",
       "kind": "ネタ歌枠",
       "dText": "20250914 【歌枠】声色ルーレット🌈🎲イケボ～ハムボまで練習中⚛️🌐花彩音_3kHz かさねさんきろへるつ【#新人vtuber #karaoke 】",
-      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=1722s"
+      "dUrl": "https://www.youtube.com/watch?v=v7zREcdxUEk&t=1722s",
+      "date8": 20250914,
+      "rowId": "椎名林檎|ギブス (透明感:かっこいい)|ネタ歌枠|https://www.youtube.com/watch?v=v7zrecdxuek&t=1722s"
     },
     {
       "artist": "椎名林檎",
       "title": "歌舞伎町の女王 (演歌：ぎゃう)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=3806s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=3806s",
+      "date8": 20251011,
+      "rowId": "椎名林檎|歌舞伎町の女王 (演歌：ぎゃう)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=3806s"
     },
     {
       "artist": "椎名林檎",
       "title": "丸ノ内サディスティック (ドラえもん：歌のお姉さん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=3405s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=3405s",
+      "date8": 20251011,
+      "rowId": "椎名林檎|丸ノ内サディスティック (ドラえもん：歌のお姉さん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=3405s"
     },
     {
       "artist": "内緒のピアス",
       "title": "プロポーズ (かっこいい：透明感)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4983s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4983s",
+      "date8": 20251011,
+      "rowId": "内緒のピアス|プロポーズ (かっこいい：透明感)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=4983s"
     },
     {
       "artist": "日向電工",
       "title": "ブキリノダンス (ショタきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=488s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=488s",
+      "date8": 20251124,
+      "rowId": "日向電工|ブキリノダンス (ショタきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=488s"
     },
     {
       "artist": "日食なつこ",
       "title": "水流のロック (かわいい：風邪ひき)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2533s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=2533s",
+      "date8": 20251011,
+      "rowId": "日食なつこ|水流のロック (かわいい：風邪ひき)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=2533s"
     },
     {
       "artist": "柊マグネタイト",
       "title": "テトリス (VTR 版)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3990s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=3990s",
+      "date8": 20251124,
+      "rowId": "柊マグネタイト|テトリス (vtr 版)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=3990s"
     },
     {
       "artist": "米良美一",
       "title": "もののけ姫 (かっこいい：ドラえもん)",
       "kind": "ネタ歌枠",
       "dText": "20251011 【歌枠】デビュー2か月記念！ルーレット歌枠🌟いつもありがとう⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4114s"
+      "dUrl": "https://www.youtube.com/watch?v=nTy5QUnN330&t=4114s",
+      "date8": 20251011,
+      "rowId": "米良美一|もののけ姫 (かっこいい：ドラえもん)|ネタ歌枠|https://www.youtube.com/watch?v=nty5qunn330&t=4114s"
     },
     {
       "artist": "友成空",
       "title": "鬼の宴 (サタンきろへるつ)",
       "kind": "ネタ歌枠",
       "dText": "20251124 【#歌枠】一人歌枠リレー🌟全部一人で歌います⚛️🌐花彩音_3kHz かさねさんきろへるつ 【#新人vtuber】",
-      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=4670s"
+      "dUrl": "https://www.youtube.com/watch?v=QqrI5UQ9fcg&t=4670s",
+      "date8": 20251124,
+      "rowId": "友成空|鬼の宴 (サタンきろへるつ)|ネタ歌枠|https://www.youtube.com/watch?v=qqri5uq9fcg&t=4670s"
     },
     {
       "artist": "木村わいP",
       "title": "高音域テスト(吹いてみた)",
       "kind": "ショート",
       "dText": "20251224 【高音域テストカズーで吹いてみた #kazoo #高音域テスト #新人vtuber  #吹いてみた",
-      "dUrl": ""
+      "dUrl": "",
+      "date8": 20251224,
+      "rowId": "木村わいp|高音域テスト(吹いてみた)|ショート|"
     }
   ],
   "total": 42,
