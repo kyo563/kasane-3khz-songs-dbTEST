@@ -7,13 +7,14 @@
   <title>歌唱曲・一発ネタ 検索（履歴 高速化版）</title>
   <style>
     :root{
-      --bg:#87ceeb; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
+      --bg:#87ceeb; --bg-top:#87ceeb; --bg-bottom:#87ceeb; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
       --thead:#d3ebdd; --focus:#8a2be2; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
       --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb;
     }
     *{box-sizing:border-box}
     body{
-      background:var(--bg);
+      background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      background-attachment:fixed;
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
       line-height:1.6;
@@ -551,10 +552,13 @@
       const scroller = getListScroller();
       const maxScroll = Math.max((scroller?.scrollHeight || 0) - (scroller?.clientHeight || 0), 1);
       const progress = Math.min(Math.max((scroller?.scrollTop || 0) / maxScroll, 0), 1);
+      const sky = { r: 135, g: 206, b: 235 };
+      const purple = { r: 138, g: 43, b: 226 };
+      const mix = (start, end) => Math.round(start + (end - start) * progress);
+      const current = `rgb(${mix(sky.r, purple.r)} ${mix(sky.g, purple.g)} ${mix(sky.b, purple.b)})`;
 
-      void progress;
-      document.documentElement.style.setProperty('--bg-top', '#bdddc4');
-      document.documentElement.style.setProperty('--bg-bottom', '#9e9cca');
+      document.documentElement.style.setProperty('--bg-top', 'rgb(135 206 235)');
+      document.documentElement.style.setProperty('--bg-bottom', current);
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
