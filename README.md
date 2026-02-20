@@ -7,7 +7,7 @@
 1. `scripts/sync-gas.mjs` が GAS API から `songs/gags` を取得（`archive` はフロント側で必要時にJSONP直接取得）
 2. `public-data/*.json` にスナップショットを保存
 3. GitHub Actions (`.github/workflows/sync-gas.yml`) が 15分ごとに同期（songs/gags のみ）
-4. `index.html` は `public-data/*.json`（または `static_base` で指定したR2配信先）からのみ取得
+4. `index.html` は `songs/gags` を `public-data/*.json`（または `static_base` で指定したR2配信先）から取得し、`archive` は履歴表示時にGASから直接取得
 
 ## セットアップ
 
@@ -38,6 +38,6 @@
 
 ## トラブルシュート（R2静的配信）
 
-- `index.html` は `songs.json` / `gags.json` / `archive.json` / `meta.json` の4ファイルを前提に読み込みます。
-- `meta.json` の `counts` と各JSONの件数が一致しない場合、読み込みを失敗として扱います。
+- `index.html` は `songs.json` / `gags.json` / `meta.json` の3ファイルをR2静的データとして読み込みます。
+- `meta.json` の `counts.songs` / `counts.gags` と各JSONの件数が一致しない場合、読み込みを失敗として扱います。
 - 配信先を切り替える場合は `?static_base=<URL>` か `localStorage.staticDataBase` を使用してください。

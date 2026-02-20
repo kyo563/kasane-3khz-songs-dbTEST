@@ -1524,21 +1524,13 @@
 
       state.preloadPromise = (async () => {
         beginServerRequest();
-        $('status').textContent = 'songs / gags / archive を静的データから取得中…';
-        state.archiveMeta.phase = 'loading';
-        state.archiveMeta.source = 'static';
-        state.archiveMeta.transport = 'fetch';
-        state.archiveMeta.useDeploy = false;
-        state.archiveMeta.retry = 0;
-        state.archiveMeta.lastError = '';
-        renderHistoryProcess();
+        $('status').textContent = 'songs / gags をR2静的データから取得中…';
 
         try {
-          const [metaStatic, songsStatic, gagsStatic, archiveStatic] = await Promise.allSettled([
+          const [metaStatic, songsStatic, gagsStatic] = await Promise.allSettled([
             fetchStaticMeta(),
             fetchStaticSnapshot('songs'),
-            fetchStaticSnapshot('gags'),
-            fetchStaticSnapshot('archive')
+            fetchStaticSnapshot('gags')
           ]);
 
           const staticMeta = metaStatic.status === 'fulfilled' ? metaStatic.value : null;
@@ -1548,60 +1540,28 @@
           const gagsStaticCheck = gagsStatic.status === 'fulfilled'
             ? validateStaticRowsWithMeta('gags', gagsStatic.value, staticMeta)
             : { ok: false, reason: gagsStatic.reason instanceof Error ? gagsStatic.reason.message : 'static gags 取得失敗' };
-          const archiveStaticCheck = archiveStatic.status === 'fulfilled'
-            ? validateStaticRowsWithMeta('archive', archiveStatic.value, staticMeta)
-            : { ok: false, reason: archiveStatic.reason instanceof Error ? archiveStatic.reason.message : 'static archive 取得失敗' };
 
           if (!songsStaticCheck.ok) console.warn(`[static] songs を不採用: ${songsStaticCheck.reason}`);
           if (!gagsStaticCheck.ok) console.warn(`[static] gags を不採用: ${gagsStaticCheck.reason}`);
-          if (!archiveStaticCheck.ok) console.warn(`[static] archive を不採用: ${archiveStaticCheck.reason}`);
 
           if (!songsStaticCheck.ok) throw new Error(`songs 読み込み失敗: ${songsStaticCheck.reason}`);
           if (!gagsStaticCheck.ok) throw new Error(`gags 読み込み失敗: ${gagsStaticCheck.reason}`);
           const songsRows = songsStatic.value;
           const gagsRows = gagsStatic.value;
-          let archiveRows = archiveStaticCheck.ok ? archiveStatic.value : [];
-
-          if (!archiveStaticCheck.ok) {
-            try {
-              const fallbackRows = await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
-              if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
-                archiveRows = fallbackRows;
-                state.archiveMeta.source = 'network';
-                state.archiveMeta.transport = 'fetch-fallback';
-              }
-            } catch (fallbackErr) {
-              const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-              console.warn(`[archive] static 失敗時の network fallback も失敗: ${fallbackMsg}`);
-            }
-          }
-
-          if (archiveRows.length === 0) {
-            try {
-              const fallbackRows = await fetchArchiveRowsResilient({ limit: ARCHIVE_SAFE_FETCH_LIMIT });
-              if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
-                archiveRows = fallbackRows;
-                state.archiveMeta.source = 'network';
-                state.archiveMeta.transport = 'fetch-fallback';
-              }
-            } catch (fallbackErr) {
-              const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-              console.warn(`[archive] static が 0 件のため network fallback を試行しましたが失敗: ${fallbackMsg}`);
-            }
-          }
 
           state.cache.songs = songsRows;
           state.cache.gags = gagsRows;
-          buildArchiveIndex(archiveRows);
+          buildArchiveIndex(state.archiveRows || []);
 
-          state.archiveMeta.phase = 'ready';
-          if (state.archiveMeta.transport !== 'fetch-fallback') {
-            state.archiveMeta.source = archiveStaticCheck.ok ? 'r2' : 'unknown';
-            state.archiveMeta.transport = archiveStaticCheck.ok ? 'static-json' : 'unavailable';
+          if (state.archiveMeta.phase === 'idle' || state.archiveMeta.phase === 'error') {
+            state.archiveMeta.source = 'gas-direct';
+            state.archiveMeta.transport = 'jsonp(exact)';
+            state.archiveMeta.useDeploy = false;
+            state.archiveMeta.retry = 0;
+            state.archiveMeta.lastError = '';
+            state.archiveMeta.rows = state.archiveRows.length;
+            state.archiveMeta.updatedAt = Date.now();
           }
-          state.archiveMeta.lastError = archiveStaticCheck.ok ? '' : String(archiveStaticCheck.reason || 'archive 読み込み失敗');
-          state.archiveMeta.rows = archiveRows.length;
-          state.archiveMeta.updatedAt = Date.now();
           renderHistoryProcess();
 
           if (state.cache[state.current]) {
@@ -1660,7 +1620,7 @@
 
         state.archiveMeta.phase = 'loading';
         state.archiveMeta.source = 'gas-direct';
-        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.transport = 'jsonp(exact)';
         state.archiveMeta.lastError = '';
         renderHistoryProcess();
 
@@ -1690,7 +1650,7 @@
         const mergedRows = mergeArchiveRows(filtered);
         state.archiveMeta.phase = 'ready';
         state.archiveMeta.source = 'gas-direct';
-        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.transport = 'jsonp(exact)';
         state.archiveMeta.retry = 0;
         state.archiveMeta.lastError = '';
         state.archiveMeta.rows = mergedRows.length;
