@@ -13,9 +13,11 @@
     }
     *{box-sizing:border-box}
     body{
-      background:linear-gradient(160deg,#98fb98 0%,#78bced 100%);
+      background:linear-gradient(180deg,#98fb98 0%,#78bced 100%);
       background-attachment:fixed;
-      background-position:center var(--bg-shift, 0px);
+      background-position:center top;
+      background-repeat:no-repeat;
+      background-size:100% 100%;
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
       line-height:1.6;
@@ -36,11 +38,12 @@
       left:50%;
       transform:translateX(-50%);
       width:min(760px,calc(100vw - 28px));
-      z-index:50;
-      padding-bottom:42px;
+      z-index:30;
+      padding-bottom:34px;
       overflow:hidden;
       transition:padding .2s ease,max-height .2s ease;
     }
+    #filter-panel.compact{padding-bottom:10px}
     .hero{margin-bottom:12px}
     .hero-title{margin:0;font-size:20px;line-height:1.35;letter-spacing:.02em}
     .hero-sub{margin:6px 0 0;color:var(--muted);font-size:13px}
@@ -77,6 +80,10 @@
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+    #filter-panel.compact .server-response,
+    #filter-panel.compact .stats-row,
+    #filter-panel.compact .quick-filters{display:none}
+    .filter-toggle{position:absolute;right:12px;bottom:8px;appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.2}
     .filter-chip{appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
     .filter-chip.active{background:linear-gradient(135deg,#6dd3ff,#6fb1ff);color:#05233d;border-color:transparent;font-weight:700}
     .input-dock{
@@ -110,7 +117,7 @@
       min-height:0;
       height:100%;
       position:relative;
-      z-index:1;
+      z-index:30;
     }
     .result-scroll{margin-top:8px;flex:1;min-height:0;overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}
 
@@ -167,6 +174,7 @@
         margin-bottom:9px;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       }
+      .item.item-dummy{opacity:0;pointer-events:none}
       .item:active,
       .item:focus-within{
         transform:translateY(-1px) scale(1.01);
@@ -228,6 +236,7 @@
         <div class="server-response" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
+        <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
       </div>
 
       <div class="card result-card">
@@ -338,7 +347,8 @@
         lastError: ''
       },
       activeSnapIndex: -1,
-      historyRenderSeq: 0
+      historyRenderSeq: 0,
+      isFilterCompact: false
     };
 
     const $ = id => document.getElementById(id);
@@ -1557,7 +1567,15 @@
       renderHistory(artist, title);
     }
 
-    function updateCompactFilterMode(){
+    function updateCompactFilterMode(force){
+      if (typeof force === 'boolean') state.isFilterCompact = force;
+      const panel = $('filter-panel');
+      const btn = $('filter-toggle');
+      if (!panel || !btn) return;
+      panel.classList.toggle('compact', state.isFilterCompact);
+      btn.setAttribute('aria-expanded', String(!state.isFilterCompact));
+      btn.textContent = state.isFilterCompact ? '展開する' : '折りたたむ';
+      syncInitialMobileOffset();
     }
 
     function normalizeKindFilters(allKinds){
@@ -1697,6 +1715,13 @@
 
           item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
+
+        const dummy=document.createElement('div');
+        dummy.className='item item-dummy';
+        dummy.setAttribute('aria-hidden','true');
+        dummy.innerHTML='<div class="l1">ダミーカード</div><div class="l2"></div>';
+        $('mblist').appendChild(dummy);
+
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
         state.activeSnapIndex = 0;
       }
@@ -1706,7 +1731,7 @@
       showPage('page-list');
       const scroller = getListScroller();
       if (scroller) scroller.scrollTop = state.lastScroll || 0;
-      updateCompactFilterMode(state.lastScroll || 0);
+      updateCompactFilterMode();
     });
 
     window.addEventListener('resize', ()=>{
@@ -1727,13 +1752,16 @@
     getListScroller().addEventListener('scroll', ()=>{
       const y = getListScroller().scrollTop || 0;
       $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
-      document.documentElement.style.setProperty('--bg-shift', `${Math.round(y * 0.35)}px`);
     });
 
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,200); });
+      $('filter-toggle').addEventListener('click', ()=>{
+        state.isFilterCompact = !state.isFilterCompact;
+        updateCompactFilterMode();
+      });
       showPage('page-list');
       updateViewportMetrics();
       setActiveTab('songs');
