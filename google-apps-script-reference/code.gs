@@ -53,9 +53,6 @@ function main_(e) {
 
   const startRow = CFG.START_ROWS[tabKey] || 4;
   const includeSrc = String(p.debug || '') === '1';
-  const result = readSheet_(sheetName, startRow, includeSrc, tabKey);
-  const rows = result.rows || [];
-
   const q = normalize_(p.q || '');
   const exactArtist = normalize_(p.artist || '');
   const exactTitle = normalize_(p.title || '');
@@ -70,6 +67,27 @@ function main_(e) {
   const offset = Number.isFinite(offsetParam) && offsetParam > 0
     ? Math.floor(offsetParam)
     : 0;
+
+  if (tabKey === 'archive' && exact && exactArtist && exactTitle) {
+    const exactResult = readArchiveExactRows_(sheetName, startRow, includeSrc, {
+      exactArtist,
+      exactTitle,
+      limit,
+      offset,
+    });
+    return {
+      ok: true,
+      sheet: tabKey,
+      total: exactResult.total,
+      matched: exactResult.matched,
+      offset,
+      limit,
+      rows: exactResult.rows,
+    };
+  }
+
+  const result = readSheet_(sheetName, startRow, includeSrc, tabKey);
+  const rows = result.rows || [];
 
   let filtered = rows;
   if (exact && exactArtist && exactTitle) {
@@ -113,6 +131,73 @@ function out_(payload, e) {
   return ContentService
     .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+function readArchiveExactRows_(sheetName, startRow, includeSrc, opts) {
+  const exactArtist = opts && opts.exactArtist ? opts.exactArtist : '';
+  const exactTitle = opts && opts.exactTitle ? opts.exactTitle : '';
+  const limit = opts && Number.isFinite(opts.limit) ? Math.max(0, Math.floor(opts.limit)) : 0;
+  const offset = opts && Number.isFinite(opts.offset) ? Math.max(0, Math.floor(opts.offset)) : 0;
+  const needCount = offset + limit;
+  const chunkSize = 200;
+
+  const ss = SpreadsheetApp.openById(CFG.SHEET_ID);
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) throw new Error('指定シートが見つかりません: ' + sheetName);
+
+  const last = sh.getLastRow();
+  if (last < startRow) return { total: 0, matched: 0, rows: [] };
+
+  let total = 0;
+  let matched = 0;
+  const collected = [];
+
+  for (let row = startRow; row <= last; row += chunkSize) {
+    const size = Math.min(chunkSize, last - row + 1);
+    const range = sh.getRange(row, 1, size, CFG.COLS);
+    const values = range.getDisplayValues();
+    const formulas = range.getFormulas();
+    const rich = range.getRichTextValues();
+
+    for (let i = 0; i < size; i += 1) {
+      const artist = values[i][0] || '';
+      const title = values[i][1] || '';
+      const kind = values[i][2] || '';
+      const dText = values[i][3] || '';
+      if ((artist + title).trim() === '') continue;
+      total += 1;
+
+      if (normalize_(artist) !== exactArtist || normalize_(title) !== exactTitle) continue;
+      matched += 1;
+      if (needCount > 0 && collected.length >= needCount) continue;
+
+      const link = getUrlWithSource_(rich[i][3], formulas[i][3], dText);
+      const item = {
+        artist,
+        title,
+        kind,
+        dText,
+        dUrl: link.url,
+        date8: extractDate8_(dText),
+        rowId: makeRowId_(artist, title, kind, link.url),
+      };
+      if (includeSrc) item.dSrc = link.src;
+      collected.push(item);
+    }
+  }
+
+  const uniq = uniqueByKey_(
+    collected,
+    (r) => r.rowId || makeRowId_(r.artist, r.title, r.kind, r.dUrl)
+  );
+  const sorted = uniq.sort((a, b) => (b.date8 || 0) - (a.date8 || 0));
+
+  return {
+    total,
+    matched,
+    rows: sorted.slice(offset, offset + limit),
+  };
 }
 
 function readSheet_(sheetName, startRow, includeSrc, tabKey) {

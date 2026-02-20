@@ -423,7 +423,8 @@
       monitorTimer: null,
       snapTimer: null,
       snapLock: false,
-      activeSnapIndex: -1
+      activeSnapIndex: -1,
+      historyRenderSeq: 0
     };
 
     const $ = id => document.getElementById(id);
@@ -1131,7 +1132,7 @@
         state.archiveMeta.updatedAt = Date.now();
         renderHistoryProcess();
         if ($('page-history').classList.contains('active') && state.histKey) {
-          renderHistory(state.histKey.artist, state.histKey.title, false);
+          renderHistory(state.histKey.artist, state.histKey.title);
         }
         return;
       }
@@ -1592,7 +1593,7 @@
           }
 
           if ($('page-history').classList.contains('active') && state.histKey) {
-            renderHistory(state.histKey.artist, state.histKey.title, false);
+            renderHistory(state.histKey.artist, state.histKey.title);
           }
           endServerRequest(true, 'warmCaches/static');
         } catch (err) {
@@ -1659,14 +1660,14 @@
             artist,
             title,
             exact: '1',
-            limit: ARCHIVE_EXACT_FETCH_LIMIT
+            limit: ARCHIVE_HISTORY_PREVIEW_LIMIT
           });
           const payload = await fetchByJsonp('archive', {
             extraParams: {
               artist,
               title,
               exact: '1',
-              limit: ARCHIVE_EXACT_FETCH_LIMIT
+              limit: ARCHIVE_HISTORY_PREVIEW_LIMIT
             }
           });
           console.info('[history] archive exact response', {
@@ -1718,33 +1719,36 @@
       }
     }
 
-    function renderHistory(artist, title, requestArchive = true){
-      // 履歴ボタンから開いたときのみ archive を再取得し、再描画時は二重通信を避ける
-      if (requestArchive) requestData('archive');
-
+    async function renderHistory(artist, title){
+      const renderSeq = ++state.historyRenderSeq;
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
+      $('hist-sub').textContent = '履歴を読み込み中…';
       renderHistoryProcess();
 
       const wrap = $('hist-list');
       const empty = $('hist-empty');
       wrap.innerHTML = '';
       empty.style.display = 'none';
-
-      if (!state.archiveByKey || !state.archiveByTitle) {
-        if (!requestArchive) ensureArchiveFast();
-        for (let i = 0; i < 6; i++) {
-          const sk = document.createElement('div');
-          sk.className = 'skeleton';
-          wrap.appendChild(sk);
-        }
-        $('hist-sub').textContent = '履歴を読み込み中…';
-        return;
+      for (let i = 0; i < 3; i++) {
+        const sk = document.createElement('div');
+        sk.className = 'skeleton';
+        wrap.appendChild(sk);
       }
 
-      const key = `${normalize(artist)}|${normalize(title)}`;
-      let list = state.archiveByKey.get(key);
-      if (!list || list.length === 0) list = state.archiveByTitle.get(normalize(title)) || [];
+      let list = [];
+      try {
+        list = await fetchSongHistoryFromArchive(artist, title);
+      } catch (err) {
+        if (renderSeq !== state.historyRenderSeq) return;
+        const reason = err instanceof Error ? err.message : String(err);
+        showHistoryLoadError(`履歴の取得に失敗しました: ${reason}`);
+        return;
+      }
+      if (renderSeq !== state.historyRenderSeq) return;
+
+      wrap.innerHTML = '';
+      list = sortHistoryEntriesDesc(list).slice(0, ARCHIVE_HISTORY_PREVIEW_LIMIT);
 
       if (list.length === 0) {
         empty.style.display = 'block';
@@ -1752,7 +1756,7 @@
         return;
       }
 
-      $('hist-sub').textContent = '新しい順に表示しています。';
+      $('hist-sub').textContent = `新しい順に ${list.length} 件を表示しています。`;
 
       const CHUNK = 50;
       let i = 0;
@@ -1798,7 +1802,7 @@
       state.lastScroll = currentScrollTop();
       document.body.classList.remove('filters-collapsed');
       showPage('page-history');
-      renderHistory(artist, title, true);
+      renderHistory(artist, title);
     }
 
     function updateCompactFilterMode(scrollY = currentScrollTop()){
