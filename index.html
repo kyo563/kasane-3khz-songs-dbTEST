@@ -119,6 +119,10 @@
       flex:1;
       position:relative;
       z-index:20;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      padding:0;
     }
     .result-scroll{margin-top:8px;flex:1;min-height:0;overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}
 
@@ -162,6 +166,7 @@
         overflow:visible;
         -webkit-overflow-scrolling:touch;
         padding-right:2px;
+        padding-bottom:calc(var(--dock-height, 110px) + 16px);
       }
       .item{
         border:1px solid var(--line);
@@ -174,7 +179,6 @@
         margin-bottom:9px;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       }
-      .item.item-dummy{opacity:0;pointer-events:none}
       .item:active,
       .item:focus-within{
         transform:translateY(-1px) scale(1.01);
@@ -196,7 +200,6 @@
         right:10px;
         top:calc(var(--filter-panel-height, 0px) + 6px);
         bottom:calc(var(--dock-height, 110px) + 8px);
-        padding:10px;
       }
       .result-scroll{margin-top:0;}
     }
@@ -1715,12 +1718,6 @@
 
           item.appendChild(l1); item.appendChild(l2); $('mblist').appendChild(item);
         });
-
-        const dummy=document.createElement('div');
-        dummy.className='item item-dummy';
-        dummy.setAttribute('aria-hidden','true');
-        dummy.innerHTML='<div class="l1">ダミーカード</div><div class="l2"></div>';
-        $('mblist').appendChild(dummy);
 
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
         state.activeSnapIndex = 0;
