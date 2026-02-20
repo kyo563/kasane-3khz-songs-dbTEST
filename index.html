@@ -8,9 +8,9 @@
   <style>
     :root{
       --bg:#a9dba3; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
-      --thead:#d3ebdd; --focus:#56adeb; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
+      --thead:#d3ebdd; --focus:#8a2be2; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
       --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb;
-      --bg-top:#87ceeb; --bg-bottom:#9acd32;
+      --bg-top:#68c6f5; --bg-bottom:#f1df7a;
     }
     *{box-sizing:border-box}
     body{
@@ -37,6 +37,8 @@
     }
     .card{background:linear-gradient(160deg,var(--card) 0%,var(--card-soft) 100%);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 14px 24px rgba(29,77,60,.12)}
     #filter-panel{
+      --scroll-collapse:0;
+      --scroll-open:calc(1 - var(--scroll-collapse));
       position:sticky;
       top:14px;
       width:100%;
@@ -46,6 +48,20 @@
       transition:padding .2s ease,max-height .2s ease;
     }
     #filter-panel.compact{padding-bottom:10px}
+    .filter-collapse-target{
+      max-height:140px;
+      opacity:1;
+      transform:translateY(0);
+      margin-top:10px;
+      overflow:hidden;
+      transition:max-height .14s linear, opacity .14s linear, transform .14s linear, margin .14s linear;
+    }
+    #filter-panel.auto-collapsing .filter-collapse-target{
+      max-height:calc(140px * var(--scroll-open));
+      opacity:var(--scroll-open);
+      transform:translateY(calc(-10px * var(--scroll-collapse)));
+      margin-top:calc(10px * var(--scroll-open));
+    }
     .hero{margin-bottom:12px}
     .hero-title{margin:0;font-size:20px;line-height:1.35;letter-spacing:.02em}
     .hero-sub{margin:6px 0 0;color:var(--muted);font-size:13px}
@@ -55,6 +71,7 @@
     .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:10px 15px;font-size:14px;cursor:pointer;transition:.2s}
     .tab[aria-selected="true"]{background:var(--tab-active);border-color:transparent;color:#062033;font-weight:700;box-shadow:0 8px 18px rgba(76,201,240,.35)}
     .tab:focus{outline:none}
+    .tab:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
@@ -62,6 +79,7 @@
     #clear-search{flex:2 1 0;min-width:84px}
     input[type="search"],select{width:100%;padding:12px 14px;border:1px solid #9cc8b6;border-radius:13px;font-size:16px;background:#f7fffb;color:var(--text);outline:none}
     :where(button,[href],input,select):focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+    :where(button,[href],input,select):active{outline:3px solid var(--focus);outline-offset:2px}
     input::placeholder{color:#759789}
 
     .dm-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
@@ -186,6 +204,13 @@
         min-height:90px;
         background:linear-gradient(160deg,rgba(255,255,255,.5) 0%,rgba(236,248,255,.35) 100%);
         border-style:dashed;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        font-weight:700;
+        font-size:18px;
+        color:#35524f;
       }
       .item:active,
       .item:focus-within{
@@ -247,9 +272,9 @@
           <div class="muted" id="status">読み込み中…</div>
           <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
         </div>
-        <div class="server-response" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
-        <div class="stats-row" id="stats-row" aria-live="polite"></div>
-        <div class="quick-filter-row">
+        <div class="server-response filter-collapse-target" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
+        <div class="stats-row filter-collapse-target" id="stats-row" aria-live="polite"></div>
+        <div class="quick-filter-row filter-collapse-target">
           <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
         </div>
       </div>
@@ -363,7 +388,9 @@
       },
       activeSnapIndex: -1,
       historyRenderSeq: 0,
-      isFilterCompact: false
+      isFilterCompact: false,
+      filterAutoCollapseProgress: 0,
+      filterAutoCollapseFrame: null
     };
 
     const $ = id => document.getElementById(id);
@@ -514,8 +541,8 @@
     }
 
     function updateScrollGradient(){
-      document.documentElement.style.setProperty('--bg-top', '#dff3ff');
-      document.documentElement.style.setProperty('--bg-bottom', '#ecf9df');
+      document.documentElement.style.setProperty('--bg-top', '#68c6f5');
+      document.documentElement.style.setProperty('--bg-bottom', '#f1df7a');
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
@@ -1601,6 +1628,32 @@
       renderHistory(artist, title);
     }
 
+    function scheduleFilterMetrics(){
+      if (state.filterAutoCollapseFrame) return;
+      state.filterAutoCollapseFrame = requestAnimationFrame(()=>{
+        state.filterAutoCollapseFrame = null;
+        syncInitialMobileOffset();
+      });
+    }
+
+    function updateAutoFilterCollapse(){
+      const panel = $('filter-panel');
+      if (!panel) return;
+      if (state.isFilterCompact) {
+        panel.classList.remove('auto-collapsing');
+        panel.style.setProperty('--scroll-collapse', '1');
+        scheduleFilterMetrics();
+        return;
+      }
+      const scroller = getListScroller();
+      const y = scroller ? (scroller.scrollTop || 0) : 0;
+      const progress = Math.min(Math.max(y / 180, 0), 1);
+      state.filterAutoCollapseProgress = progress;
+      panel.style.setProperty('--scroll-collapse', progress.toFixed(3));
+      panel.classList.toggle('auto-collapsing', progress > 0.001);
+      scheduleFilterMetrics();
+    }
+
     function updateCompactFilterMode(force){
       if (typeof force === 'boolean') state.isFilterCompact = force;
       const panel = $('filter-panel');
@@ -1609,6 +1662,12 @@
       panel.classList.toggle('compact', state.isFilterCompact);
       btn.setAttribute('aria-expanded', String(!state.isFilterCompact));
       btn.textContent = state.isFilterCompact ? '展開する' : '折りたたむ';
+      if (state.isFilterCompact) {
+        panel.classList.remove('auto-collapsing');
+        panel.style.setProperty('--scroll-collapse', '1');
+      } else {
+        updateAutoFilterCollapse();
+      }
       syncInitialMobileOffset();
     }
 
@@ -1753,6 +1812,7 @@
         const blank = document.createElement('div');
         blank.className = 'item item-blank';
         blank.setAttribute('aria-hidden', 'true');
+        blank.textContent = '＼ﾅｧｧﾝ／';
         $('mblist').appendChild(blank);
 
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
@@ -1788,6 +1848,7 @@
       const y = getListScroller().scrollTop || 0;
       $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
       updateScrollGradient();
+      updateAutoFilterCollapse();
     });
 
     (function init(){
@@ -1805,6 +1866,7 @@
       renderServerResponse();
       updateCompactFilterMode();
       updateScrollGradient();
+      updateAutoFilterCollapse();
 
     })();
   </script>
