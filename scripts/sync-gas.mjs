@@ -155,6 +155,8 @@ async function fetchJsonWithRetry(tab, { offset = 0, limit } = {}) {
               kind: r[2] ?? '',
               dText: r[3] ?? '',
               dUrl: r[4] ?? '',
+              date8: r[5] ?? 0,
+              rowId: r[6] ?? '',
             };
           }
           return r && typeof r === 'object' ? r : null;

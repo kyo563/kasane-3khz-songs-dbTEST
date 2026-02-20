@@ -16,7 +16,7 @@
 
 ## 補足
 
-- `google-apps-script-reference/code.gs` は参照用で、運用ルールとして変更しません。
+- `google-apps-script-reference/code.gs` は参照用実装で、A〜D列のマッピング仕様（artist/title/kind/dText+dUrl/date8）を記載しています。
 - `public-data` は静的配信用のキャッシュであり、取得失敗時は前回成功時のデータが残ります。
 - `archive` は `limit` 縮小リトライ（既定: `20,10,5,3,1`）と `offset` ページング（既定: `ARCHIVE_PAGE_LIMIT=5`）で安全に同期します。
 - 取得件数の暴走を防ぐため `ARCHIVE_TOTAL_CAP`（既定: 20000）で上限を設けています。

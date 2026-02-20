@@ -691,14 +691,36 @@
       for(const r of rows || []){
         if (normalize(r.artist) !== na || normalize(r.title) !== nt) continue;
         const url = r.dUrl || urlFromText(r.dText);
-        const date = extractDate8(r.dText);
+        const date = Number(r.date8) || extractDate8(r.dText);
         const kind = (r.kind || '').toString();
-        const key = `${date}|${url}|${kind}`;
+        const rowId = String(r.rowId || `${normalize(r.artist)}|${normalize(r.title)}|${normalize(kind)}|${url}`).trim();
+        const key = rowId || `${date}|${url}|${kind}`;
         if (unique.has(key)) continue;
         unique.add(key);
-        out.push({ date, url, kind });
+        out.push({ date, url, kind, rowId });
       }
       return out;
+    }
+
+    function sortHistoryEntriesDesc(entries){
+      return [...(entries || [])].sort((a, b) => {
+        if ((b.date || 0) !== (a.date || 0)) return (b.date || 0) - (a.date || 0);
+        return String(b.url || '').localeCompare(String(a.url || ''));
+      });
+    }
+
+    function mergeHistoryEntriesUnique(...entryLists){
+      const seen = new Set();
+      const merged = [];
+      for (const list of entryLists) {
+        for (const entry of list || []) {
+          const key = String(entry.rowId || `${entry.date || 0}|${entry.url || ''}|${entry.kind || ''}`);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(entry);
+        }
+      }
+      return sortHistoryEntriesDesc(merged);
     }
 
     function uniqueArchiveRows(rows){
@@ -724,16 +746,20 @@
         const title = normalize(r.title);
         const url = r.dUrl || urlFromText(r.dText);
         if (!url) continue;
-        const date = extractDate8(r.dText);
+        const date = Number(r.date8) || extractDate8(r.dText);
         const kind = (r.kind || '').toString();
+        const rowId = String(r.rowId || `${artist}|${title}|${normalize(kind)}|${url}`).trim();
         const key = `${artist}|${title}`;
 
         if (!byKey.has(key)) byKey.set(key, []);
-        byKey.get(key).push({ date, url, kind });
+        byKey.get(key).push({ date, url, kind, rowId });
 
         if (!byTitle.has(title)) byTitle.set(title, []);
-        byTitle.get(title).push({ date, url, kind });
+        byTitle.get(title).push({ date, url, kind, rowId });
       }
+
+      byKey.forEach((list, key) => byKey.set(key, sortHistoryEntriesDesc(list)));
+      byTitle.forEach((list, key) => byTitle.set(key, sortHistoryEntriesDesc(list)));
 
       state.archiveByKey = byKey;
       state.archiveByTitle = byTitle;
@@ -759,6 +785,7 @@
     const INITIAL_FETCH_LIMIT = 50;
     const SECOND_FETCH_LIMIT = 120;
     const ARCHIVE_SAFE_FETCH_LIMIT = 120;
+    const ARCHIVE_EXACT_FETCH_LIMIT = 40;
     const ARCHIVE_LIMIT_BACKOFFS = [120, 80, 50, 30, 20, 10];
     const ARCHIVE_PAGE_LIMIT = 30;
     const ARCHIVE_MAX_PAGES = 8;
@@ -856,7 +883,9 @@
           title : r[1] ?? '',
           kind  : r[2] ?? '',
           dText : r[3] ?? '',
-          dUrl  : r[4] ?? ''
+          dUrl  : r[4] ?? '',
+          date8 : r[5] ?? 0,
+          rowId : r[6] ?? ''
         };
       }
       const row = r && typeof r === 'object' ? r : {};
@@ -865,7 +894,9 @@
         title : row.title  ?? row.Title  ?? row.song ?? row.songName ?? row.曲名 ?? row.楽曲名 ?? '',
         kind  : row.kind   ?? row.Kind   ?? row.category ?? row.type ?? row.区分 ?? '',
         dText : row.dText  ?? row.dtext  ?? row.DTEXT ?? row.text ?? row.source ?? row['出典元情報(直リンク)'] ?? row.出典元情報 ?? row.出典 ?? '',
-        dUrl  : row.dUrl   ?? row.durl   ?? row.DURL  ?? row.url ?? row.directUrl ?? row.link ?? ''
+        dUrl  : row.dUrl   ?? row.durl   ?? row.DURL  ?? row.url ?? row.directUrl ?? row.link ?? '',
+        date8 : row.date8  ?? row.date   ?? row.postedAt ?? 0,
+        rowId : row.rowId  ?? row.id ?? ''
       };
     }
     function normalizeListRows(payloadRows){
@@ -1564,19 +1595,47 @@
     }
 
     function getMergedHistoryList(artist, title){
+      const listRows = state.current === 'gags' ? state.cache.gags : state.cache.songs;
+      const listEntries = toHistoryEntries(listRows || [], artist, title);
       const key = `${normalize(artist)}|${normalize(title)}`;
-      let mergedList = state.archiveByKey?.get(key);
-      if (!mergedList || mergedList.length === 0) {
-        mergedList = state.archiveByTitle?.get(normalize(title)) || [];
-      }
-      return mergedList;
+      const archiveByKey = state.archiveByKey?.get(key) || [];
+      return mergeHistoryEntriesUnique(listEntries, archiveByKey);
     }
 
     async function fetchSongHistoryFromArchive(artist, title){
       const cacheKey = `${normalize(artist)}|${normalize(title)}`;
       if (state.historyCache.has(cacheKey)) return state.historyCache.get(cacheKey);
 
-      const task = Promise.resolve();
+      const task = (async () => {
+        if (!artist || !title) return;
+
+        state.archiveMeta.phase = 'loading';
+        state.archiveMeta.source = 'gas-direct';
+        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.lastError = '';
+        renderHistoryProcess();
+
+        const rows = await fetchSheetRowsWithFallback('archive', {
+          artist,
+          title,
+          exact: '1',
+          limit: ARCHIVE_EXACT_FETCH_LIMIT
+        });
+
+        const filtered = normalizeArchiveRows(rows).filter((r) =>
+          normalize(r.artist) === normalize(artist) && normalize(r.title) === normalize(title)
+        );
+
+        const mergedRows = mergeArchiveRows(filtered);
+        state.archiveMeta.phase = 'ready';
+        state.archiveMeta.source = 'gas-direct';
+        state.archiveMeta.transport = 'fetch(exact)';
+        state.archiveMeta.retry = 0;
+        state.archiveMeta.lastError = '';
+        state.archiveMeta.rows = mergedRows.length;
+        state.archiveMeta.updatedAt = Date.now();
+        renderHistoryProcess();
+      })();
       state.historyCache.set(cacheKey, task);
       try {
         await task;

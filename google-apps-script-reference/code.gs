@@ -2,9 +2,9 @@
  * kasane-3khz-songs-db 用 Google Apps Script
  *
  * 期待仕様:
- * - GET /exec?sheet=songs|gags|archive[&q=...&limit=...&offset=...&debug=1]
+ * - GET /exec?sheet=songs|gags|archive[&q=...&artist=...&title=...&exact=1&limit=...&offset=...&debug=1]
  * - 返却: { ok, sheet, total, matched, offset, limit, rows }
- * - rows: [{ artist, title, kind, dText, dUrl, (debug時のみ)dSrc }]
+ * - rows: [{ artist, title, kind, dText, dUrl, date8, rowId, (debug時のみ)dSrc }]
  * - callback 指定時は JSONP を返す
  */
 
@@ -57,6 +57,9 @@ function main_(e) {
   const rows = result.rows || [];
 
   const q = normalize_(p.q || '');
+  const exactArtist = normalize_(p.artist || '');
+  const exactTitle = normalize_(p.title || '');
+  const exact = String(p.exact || '') === '1';
   const limitParam = Number(p.limit || 0);
   const offsetParam = Number(p.offset || 0);
   const sheetMaxReturn = CFG.SHEET_MAX_RETURN[tabKey] || CFG.MAX_RETURN;
@@ -69,8 +72,12 @@ function main_(e) {
     : 0;
 
   let filtered = rows;
-  if (q) {
+  if (exact && exactArtist && exactTitle) {
     filtered = rows.filter((r) =>
+      normalize_(r.artist) === exactArtist && normalize_(r.title) === exactTitle
+    );
+  } else if (q) {
+    filtered = filtered.filter((r) =>
       normalize_(r.artist).includes(q) || normalize_(r.title).includes(q)
     );
   }
@@ -80,14 +87,16 @@ function main_(e) {
     (r) => `${normalize_(r.artist)}|${normalize_(r.title)}|${r.dUrl || ''}`
   );
 
+  const sorted = uniq.sort((a, b) => extractDate8_(b.dText) - extractDate8_(a.dText));
+
   return {
     ok: true,
     sheet: tabKey,
     total: rows.length,
-    matched: uniq.length,
+    matched: sorted.length,
     offset,
     limit,
-    rows: uniq.slice(offset, offset + limit),
+    rows: sorted.slice(offset, offset + limit),
   };
 }
 
@@ -145,12 +154,15 @@ function readSheet_(sheetName, startRow, includeSrc, tabKey) {
     if ((artist + title).trim() === '') continue;
 
     const link = getUrlWithSource_(rich[i][3], formulas[i][3], dText);
+    const date8 = extractDate8_(dText);
     const row = {
       artist,
       title,
       kind,
       dText,
       dUrl: link.url,
+      date8,
+      rowId: buildRowId_(artist, title, kind, link.url),
     };
     if (includeSrc) row.dSrc = link.src;
     parsed.push(row);
@@ -263,6 +275,21 @@ function normalize_(text) {
   s = s.replace(/[！-～]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
   s = s.replace(/\u3000/g, ' ');
   return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+
+function buildRowId_(artist, title, kind, dUrl) {
+  return [
+    normalize_(artist || ''),
+    normalize_(title || ''),
+    normalize_(kind || ''),
+    String(dUrl || '').trim(),
+  ].join('|');
+}
+
+function extractDate8_(text) {
+  const m = String(text || '').match(/^(\d{8})/);
+  return m ? Number(m[1]) : 0;
 }
 
 /**
