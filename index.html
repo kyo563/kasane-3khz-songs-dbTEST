@@ -355,7 +355,7 @@
 
   <script>
     const DEFAULT_STATIC_BASE = new URL('./public-data/', window.location.href).toString();
-    const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw7AIt8edC5Q24Gvvf6o5T7gCbWgWZq53pPbpNsONKsExOHZpxdQronK68ZMj61y1bU/exec';
+    const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwybI81qIBMYN3AYNuPiD4WjPNYHYWa8wkC2tp2Vfx8hedoHKe-boZPa6KRtGZCNoJpXQ/exec';
     function resolveApiUrl(){
       try {
         const byQuery = new URLSearchParams(window.location.search).get('gas_url');
@@ -1120,7 +1120,9 @@
         state.archiveMeta.rows = rows.length;
         state.archiveMeta.updatedAt = Date.now();
         renderHistoryProcess();
-        if (state.histKey) renderHistory(state.histKey.artist, state.histKey.title);
+        if ($('page-history').classList.contains('active') && state.histKey) {
+          renderHistory(state.histKey.artist, state.histKey.title, false);
+        }
         return;
       }
 
@@ -1160,7 +1162,6 @@
         v: String(Date.now())
       });
       if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
-      if (tab === 'archive') params.set('limit', String(ARCHIVE_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -1175,7 +1176,6 @@
         v: String(Date.now())
       });
       if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
-      if (tab === 'archive') params.set('limit', String(ARCHIVE_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -1356,7 +1356,7 @@
 
     function ensureArchiveFast(){
       renderHistoryProcess();
-      if (!requestState.archive.inflight) requestData('archive', 0, false, 'fetch');
+      if (!requestState.archive.inflight) requestData('archive');
     }
 
     async function fetchArchiveRowsByQuery(query, limit = ARCHIVE_SAFE_FETCH_LIMIT){
@@ -1576,7 +1576,7 @@
           }
 
           if ($('page-history').classList.contains('active') && state.histKey) {
-            renderHistory(state.histKey.artist, state.histKey.title);
+            renderHistory(state.histKey.artist, state.histKey.title, false);
           }
           endServerRequest(true, 'warmCaches/static');
         } catch (err) {
@@ -1702,7 +1702,10 @@
       }
     }
 
-    function renderHistory(artist, title){
+    function renderHistory(artist, title, requestArchive = true){
+      // 履歴ボタンから開いたときのみ archive を再取得し、再描画時は二重通信を避ける
+      if (requestArchive) requestData('archive');
+
       state.histKey = { artist, title };
       $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
       renderHistoryProcess();
@@ -1712,137 +1715,74 @@
       wrap.innerHTML = '';
       empty.style.display = 'none';
 
-      for(let i=0;i<6;i++){ const sk=document.createElement('div'); sk.className='skeleton'; wrap.appendChild(sk); }
-      $('hist-sub').textContent = '履歴データを準備しています…';
-
-      let songsEntries = [];
-      let archiveEntries = [];
-      let archiveExpanded = false;
-      let archiveFromCache = false;
-
-      const renderHistoryRows = () => {
-        wrap.innerHTML = '';
-        empty.style.display = 'none';
-
-        const visibleArchive = (archiveFromCache || archiveExpanded)
-          ? archiveEntries
-          : archiveEntries.slice(0, ARCHIVE_HISTORY_PREVIEW_LIMIT);
-        const entries = [...songsEntries, ...visibleArchive];
-
-        if (entries.length === 0){
-          empty.style.display = 'block';
-          $('hist-sub').textContent = '該当データがありません。';
-          return;
+      if (!state.archiveByKey || !state.archiveByTitle) {
+        if (!requestArchive) ensureArchiveFast();
+        for (let i = 0; i < 6; i++) {
+          const sk = document.createElement('div');
+          sk.className = 'skeleton';
+          wrap.appendChild(sk);
         }
+        $('hist-sub').textContent = '履歴を読み込み中…';
+        return;
+      }
 
-        if (archiveFromCache) {
-          $('hist-sub').textContent = `SONGS + archive（キャッシュ）を表示中: ${entries.length}件`;
-        } else if (archiveEntries.length > ARCHIVE_HISTORY_PREVIEW_LIMIT && !archiveExpanded) {
-          $('hist-sub').textContent = `SONGS + archive先頭${ARCHIVE_HISTORY_PREVIEW_LIMIT}件を表示中`;
-        } else {
-          $('hist-sub').textContent = `SONGS + archiveを表示中: ${entries.length}件`;
+      const key = `${normalize(artist)}|${normalize(title)}`;
+      let list = state.archiveByKey.get(key);
+      if (!list || list.length === 0) list = state.archiveByTitle.get(normalize(title)) || [];
+
+      if (list.length === 0) {
+        empty.style.display = 'block';
+        $('hist-sub').textContent = '該当する履歴が見つかりませんでした。';
+        return;
+      }
+
+      $('hist-sub').textContent = '新しい順に表示しています。';
+
+      const CHUNK = 50;
+      let i = 0;
+      function drawChunk(){
+        const frag = document.createDocumentFragment();
+        const end = Math.min(i + CHUNK, list.length);
+        for (; i < end; i++) {
+          const { date, url, kind } = list[i];
+          const yyyy = Math.floor(date / 10000), mm = Math.floor((date % 10000) / 100), dd = date % 100;
+          const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
+
+          const row = document.createElement('div'); row.className = 'history-item';
+
+          const left = document.createElement('div'); left.className = 'history-left';
+          const dt = document.createElement('span');
+          dt.className = 'history-date';
+          dt.textContent = dateLabel;
+          left.appendChild(dt);
+          if ((kind || '').trim() !== '') {
+            const k = document.createElement('span');
+            k.className = 'kind-chip';
+            k.textContent = kind;
+            left.appendChild(k);
+          }
+
+          const right = document.createElement('div');
+          if (url) {
+            const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '▶ 開く'; right.appendChild(a);
+          } else {
+            const span = document.createElement('span'); span.className = 'muted'; span.textContent = 'リンクなし'; right.appendChild(span);
+          }
+
+          row.appendChild(left); row.appendChild(right);
+          frag.appendChild(row);
         }
-
-        const CHUNK = 50;
-        let i = 0;
-        function drawChunk(){
-          const frag = document.createDocumentFragment();
-          const end = Math.min(i+CHUNK, entries.length);
-          for(; i<end; i++){
-            const {date,url,kind} = entries[i];
-            const yyyy = Math.floor(date/10000), mm=Math.floor((date%10000)/100), dd=date%100;
-            const dateLabel = date ? `${yyyy}/${String(mm).padStart(2,'0')}/${String(dd).padStart(2,'0')}` : '----/--/--';
-
-            const row = document.createElement('div'); row.className='history-item';
-
-            const left = document.createElement('div'); left.className='history-left';
-            const dt = document.createElement('span');
-            dt.className = 'history-date';
-            dt.textContent = dateLabel;
-            left.appendChild(dt);
-            if ((kind || '').trim() !== '') {
-              const k = document.createElement('span');
-              k.className = 'kind-chip';
-              k.textContent = kind;
-              left.appendChild(k);
-            }
-
-            const right = document.createElement('div');
-            if (url) { const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent='▶ 開く'; right.appendChild(a); }
-            else { const span=document.createElement('span'); span.className='muted'; span.textContent='リンクなし'; right.appendChild(span); }
-
-            row.appendChild(left); row.appendChild(right);
-            frag.appendChild(row);
-          }
-          wrap.appendChild(frag);
-          if (i < entries.length) {
-            requestAnimationFrame(drawChunk);
-            return;
-          }
-          if (!archiveFromCache && !archiveExpanded && archiveEntries.length > ARCHIVE_HISTORY_PREVIEW_LIMIT) {
-            const remain = archiveEntries.length - ARCHIVE_HISTORY_PREVIEW_LIMIT;
-            const moreBtn = document.createElement('button');
-            moreBtn.type = 'button';
-            moreBtn.className = 'btn btn-subtle';
-            moreBtn.textContent = `さらに読み込む（残り${remain}件）`;
-            moreBtn.style.marginTop = '10px';
-            moreBtn.addEventListener('click', () => {
-              archiveExpanded = true;
-              renderHistoryRows();
-            });
-            wrap.appendChild(moreBtn);
-          }
-        }
-        requestAnimationFrame(drawChunk);
-      };
-
-      const applySongsEntries = () => {
-        const songRows = state.cache.songs || [];
-        songsEntries = toHistoryEntries(songRows, artist, title);
-      };
-
-      const ensureSongsReady = async () => {
-        if (state.cache.songs) return;
-        await warmCaches();
-      };
-
-      ensureSongsReady()
-        .then(async () => {
-          if (!state.histKey) return;
-          if (normalize(state.histKey.artist) !== normalize(artist) || normalize(state.histKey.title) !== normalize(title)) return;
-
-          applySongsEntries();
-          renderHistoryRows();
-
-          const cachedArchive = getCachedHistoryEntries(artist, title);
-          if (cachedArchive !== null) {
-            archiveFromCache = true;
-            archiveExpanded = true;
-            archiveEntries = cachedArchive;
-            renderHistoryRows();
-            return;
-          }
-
-          const entries = await fetchSongHistoryFromArchive(artist, title);
-          if (!state.histKey) return;
-          if (normalize(state.histKey.artist) !== normalize(artist) || normalize(state.histKey.title) !== normalize(title)) return;
-
-          archiveFromCache = false;
-          archiveExpanded = false;
-          archiveEntries = entries || [];
-          renderHistoryRows();
-        })
-        .catch((err) => {
-          const msg = err instanceof Error ? err.message : String(err);
-          $('hist-sub').textContent = `履歴取得に失敗しました: ${msg}`;
-        });
+        wrap.appendChild(frag);
+        if (i < list.length) requestAnimationFrame(drawChunk);
+      }
+      requestAnimationFrame(drawChunk);
     }
 
     function openHistory(artist, title){
       state.lastScroll = currentScrollTop();
       document.body.classList.remove('filters-collapsed');
       showPage('page-history');
-      renderHistory(artist, title);
+      renderHistory(artist, title, true);
     }
 
     function updateCompactFilterMode(scrollY = currentScrollTop()){
