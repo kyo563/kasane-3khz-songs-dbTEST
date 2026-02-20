@@ -14,6 +14,8 @@
     *{box-sizing:border-box}
     body{
       background:linear-gradient(160deg,#98fb98 0%,#78bced 100%);
+      background-attachment:fixed;
+      background-position:center var(--bg-shift, 0px);
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
       line-height:1.6;
@@ -48,8 +50,6 @@
     .tab{appearance:none;border:1px solid var(--tab-border);background:var(--tab-bg);color:var(--text);border-radius:999px;padding:10px 15px;font-size:14px;cursor:pointer;transition:.2s}
     .tab[aria-selected="true"]{background:var(--tab-active);border-color:transparent;color:#062033;font-weight:700;box-shadow:0 8px 18px rgba(76,201,240,.35)}
     .tab:focus{outline:none}
-    .limit-wrap{display:flex;align-items:center;gap:8px;background:#ecf8f1;border:1px solid var(--line);padding:6px 8px;border-radius:999px}
-    #limit{padding:6px 10px;font-size:14px;line-height:1.2;width:auto;min-width:88px;border-radius:999px}
 
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .row>*{flex:1}
@@ -74,15 +74,6 @@
     .server-response.loading{background:#eef6ff;border-color:#9fc3df;color:#234f70}
     .server-response.ok{background:#e9faed;border-color:#9fceaa;color:#22543b}
     .server-response.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
-    .server-monitor{margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#f4fbf7}
-    .server-monitor-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
-    .server-monitor-title{font-size:12px;color:#33584b;font-weight:700}
-    .server-monitor-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;font-size:12px;color:#33584b}
-    .server-monitor-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);background:#eff9f2}
-    .server-monitor-pill.ok{background:#e9faed;border-color:#9fceaa;color:#22543b}
-    .server-monitor-pill.warn{background:#fff8e8;border-color:#e6c987;color:#7c5b22}
-    .server-monitor-pill.error{background:#fff1f1;border-color:#e1adad;color:#7a3434}
-    #server-monitor-refresh{padding:4px 9px;border-radius:999px;font-size:12px}
     .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#eff9f2;font-size:12px;color:#345c4e}
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
@@ -112,8 +103,6 @@
     .toast.show{opacity:1}
     .to-top{position:fixed;right:16px;bottom:134px;z-index:35;display:none;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:10px 12px;font-size:13px;cursor:pointer;box-shadow:0 8px 18px rgba(29,77,60,.18)}
     .to-top.show{display:inline-flex}
-    .cache-refresh{position:fixed;right:14px;top:12px;z-index:45;appearance:none;border:1px solid #91c0aa;background:#eff9f2;color:#285243;border-radius:999px;padding:5px 9px;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 6px 14px rgba(29,77,60,.15)}
-    .cache-refresh:disabled{opacity:.65;cursor:wait}
 
     .result-card{
       display:flex;
@@ -158,10 +147,7 @@
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
-      .result-scroll{
-        scroll-snap-type:y mandatory;
-        scroll-behavior:smooth;
-      }
+      .result-scroll{scroll-behavior:smooth;}
       .mobile-list{
         display:block;
         margin-top:0;
@@ -179,8 +165,6 @@
         gap:8px;
         background:#f8fffb;
         margin-bottom:9px;
-        scroll-snap-align:start;
-        scroll-snap-stop:always;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
       }
       .item:active,
@@ -202,39 +186,11 @@
         position:fixed;
         left:10px;
         right:10px;
-        top:10px;
+        top:calc(var(--filter-panel-height, 0px) + 10px);
         bottom:calc(var(--dock-height, 110px) + 8px);
         padding:10px;
       }
-      .result-scroll{
-        margin-top:0;
-        padding-top:var(--initial-mobile-offset, 0px);
-      }
-
-      body.filters-collapsed #filter-panel{
-        padding:10px 12px 42px;
-        margin-bottom:4px;
-        max-height:100px;
-      }
-      body.filters-collapsed #filter-panel .topbar{
-        margin-bottom:4px;
-      }
-      body.filters-collapsed #status{
-        font-size:12px;
-      }
-      body.filters-collapsed .limit-wrap{
-        display:none;
-      }
-      body.filters-collapsed #stats-row,
-      body.filters-collapsed #quick-filters{
-        display:none;
-      }
-    }
-
-    body.filters-collapsed #stats-row,
-    body.filters-collapsed #quick-filters,
-    body.filters-collapsed .limit-wrap{
-      display:none;
+      .result-scroll{margin-top:0;}
     }
 
     .page{display:none}.page.active{display:block}
@@ -243,9 +199,6 @@
     .back:hover{background:#e2f4e9}
     .title{font-weight:700}
     .history-list{margin-top:8px}
-    .history-process{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f4fbf7;font-size:13px;color:#33584b}
-    .history-process strong{font-size:12px;letter-spacing:.02em;color:#2a4f41}
-    .history-debug{margin-top:6px;line-height:1.5;word-break:break-word}
     .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px;gap:8px}
     .history-left{display:flex;align-items:center;gap:8px;min-width:0}
     .history-date{white-space:nowrap;color:#6a867b}
@@ -269,32 +222,10 @@
             <button id="tab-songs" class="tab" role="tab" aria-selected="true"  data-tab="songs">歌唱曲</button>
             <button id="tab-gags"  class="tab" role="tab" aria-selected="false" data-tab="gags">一発ネタ</button>
           </div>
-          <div class="limit-wrap">
-            <label for="limit" class="muted" style="white-space:nowrap;">表示</label>
-            <select id="limit" aria-label="表示">
-              <option value="10">10件</option>
-              <option value="50" selected>50件</option>
-              <option value="all">全て</option>
-            </select>
-          </div>
         </div>
 
         <div class="muted" id="status">読み込み中…</div>
-        <div class="server-response" id="server-response" aria-live="polite">サーバー応答: 未確認</div>
-        <div class="server-monitor" id="server-monitor" aria-live="polite">
-          <div class="server-monitor-head">
-            <span class="server-monitor-title">稼働モニター</span>
-            <button id="server-monitor-refresh" class="btn btn-subtle" type="button">今すぐ確認</button>
-          </div>
-          <div class="server-monitor-body">
-            <div>状態: <span id="monitor-status" class="server-monitor-pill">未確認</span></div>
-            <div>最終確認: <span id="monitor-last-check">未確認</span></div>
-            <div>静的データ: <span id="monitor-static">未確認</span></div>
-            <div>配信: <span id="monitor-api">未確認</span></div>
-            <div>連続失敗: <span id="monitor-fail-count">0</span></div>
-            <div>詳細: <span id="monitor-detail">-</span></div>
-          </div>
-        </div>
+        <div class="server-response" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
         <div class="stats-row" id="stats-row" aria-live="polite"></div>
         <div class="quick-filters" id="quick-filters" aria-label="区分で絞り込み"></div>
       </div>
@@ -317,10 +248,6 @@
         <div class="title" id="hist-title">/</div>
       </div>
       <div class="muted" id="hist-sub">歌唱履歴を新しい順に表示します。</div>
-      <div id="hist-process" class="history-process" aria-live="polite">
-        <strong>履歴ページで実行中の処理</strong>
-        <div id="hist-debug" class="history-debug">未実行</div>
-      </div>
     </div>
     <div class="card" style="margin-top:12px;">
       <div id="hist-list" class="history-list"></div>
@@ -330,7 +257,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
   <button id="to-top" class="to-top" type="button" aria-label="ページ上部へ戻る">↑ 上へ</button>
-  <button id="cache-refresh" class="cache-refresh" type="button" title="キャッシュを破棄して再取得">更新</button>
   <div class="input-dock" aria-label="入力コンソール">
     <div class="input-console">
       <div class="row">
@@ -387,7 +313,6 @@
       cache: { songs:null, gags:null },
       preloadPromise: null,
       debounce: null,
-      initialMobileOffsetConsumed: false,
       historyCache: new Map(),
       historyRequests: new Map(),
       archiveRows: [],
@@ -412,17 +337,6 @@
         lastLabel: '-',
         lastError: ''
       },
-      serverMonitor: {
-        status: 'unknown',
-        lastCheckAt: 0,
-        staticOk: false,
-        apiOk: false,
-        failCount: 0,
-        detail: '未確認'
-      },
-      monitorTimer: null,
-      snapTimer: null,
-      snapLock: false,
       activeSnapIndex: -1,
       historyRenderSeq: 0
     };
@@ -465,20 +379,20 @@
       el.className = 'server-response';
       if (probe.inflight > 0) {
         el.classList.add('loading');
-        el.textContent = `サーバー応答: 通信中…（${probe.inflight}件）`;
+        el.textContent = 'サーバー状態：＼ﾅｧﾝ／';
         return;
       }
       if (probe.lastError) {
         el.classList.add('error');
-        el.textContent = `サーバー応答: 失敗（${probe.lastLabel} / ${probe.lastError}）`;
+        el.textContent = 'サーバー状態：非稼働';
         return;
       }
       if (probe.lastOkAt) {
         el.classList.add('ok');
-        el.textContent = `サーバー応答: ${formatTime(probe.lastOkAt)} に確認（${probe.lastLabel}）`;
+        el.textContent = 'サーバー状態：稼働中';
         return;
       }
-      el.textContent = 'サーバー応答: 未確認';
+      el.textContent = 'サーバー状態：＼ﾅｧﾝ／';
     }
     function beginServerRequest(){
       state.serverResponse.inflight += 1;
@@ -496,26 +410,6 @@
       renderServerResponse();
     }
 
-    function monitorPillClass(status){
-      if (status === 'ok') return 'server-monitor-pill ok';
-      if (status === 'warn') return 'server-monitor-pill warn';
-      if (status === 'error') return 'server-monitor-pill error';
-      return 'server-monitor-pill';
-    }
-    function renderServerMonitor(){
-      const mon = state.serverMonitor;
-      const statusEl = $('monitor-status');
-      if (!statusEl) return;
-      statusEl.className = monitorPillClass(
-        mon.status === 'ok' ? 'ok' : mon.status === 'checking' ? 'warn' : mon.status === 'error' ? 'error' : 'warn'
-      );
-      statusEl.textContent = mon.status === 'ok' ? '稼働中' : mon.status === 'checking' ? '確認中' : mon.status === 'error' ? '要確認' : '未確認';
-      $('monitor-last-check').textContent = formatTime(mon.lastCheckAt);
-      $('monitor-static').textContent = mon.staticOk ? 'OK' : (mon.lastCheckAt ? 'NG' : '未確認');
-      $('monitor-api').textContent = mon.apiOk ? 'OK' : (mon.lastCheckAt ? 'NG' : '未確認');
-      $('monitor-fail-count').textContent = String(mon.failCount || 0);
-      $('monitor-detail').textContent = mon.detail || '-';
-    }
     async function fetchWithTimeout(url, timeoutMs = 7000){
       const controller = new AbortController();
       const timer = setTimeout(()=>controller.abort(), timeoutMs);
@@ -535,88 +429,7 @@
       }
       return `通信エラー (${msg})`;
     }
-    function fetchByJsonp(tab, { timeoutMs = REQUEST_TIMEOUT_MS, extraParams = {} } = {}){
-      return new Promise((resolve, reject) => {
-        const callbackName = `__direct_jsonp_${tab}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-        if (!JSONP_CALLBACK_RE.test(callbackName)) {
-          reject(new Error('callback名の生成に失敗'));
-          return;
-        }
 
-        const timer = setTimeout(() => {
-          cleanup();
-          reject(new Error('JSONP timeout'));
-        }, timeoutMs);
-
-        let script = null;
-        const cleanup = () => {
-          clearTimeout(timer);
-          if (script && script.parentNode) script.parentNode.removeChild(script);
-          delete window[callbackName];
-        };
-
-        window[callbackName] = (payload) => {
-          cleanup();
-          resolve(payload);
-        };
-
-        script = document.createElement('script');
-        script.src = buildApiRequestUrl(tab, callbackName, false, extraParams);
-        script.referrerPolicy = 'no-referrer';
-        script.onerror = () => {
-          cleanup();
-          reject(new Error('JSONP script load error'));
-        };
-        document.head.appendChild(script);
-      });
-    }
-    async function probeServerHealth({ manual = false } = {}){
-      const mon = state.serverMonitor;
-      mon.status = 'checking';
-      mon.detail = manual ? '手動チェック中…' : '定期チェック中…';
-      renderServerMonitor();
-
-      let apiOk = false;
-      let staticOk = false;
-      let detail = '正常';
-
-      try {
-        const staticRes = await fetchWithTimeout(buildStaticDataUrl('meta'), 7000);
-        staticOk = staticRes.ok;
-        if (!staticOk) detail = `静的データ ${staticRes.status}`;
-      } catch (err) {
-        const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
-        detail = `静的データ失敗: ${reason}`;
-      }
-
-      try {
-        const apiRes = await fetchWithTimeout(buildStaticDataUrl('songs'), 7000);
-        apiOk = apiRes.ok;
-        if (!apiOk && staticOk) detail = `API ${apiRes.status}`;
-      } catch (err) {
-        const reason = err?.name === 'AbortError' ? 'timeout' : 'network';
-        if (staticOk) detail = `API失敗: ${reason}`;
-      }
-
-      mon.lastCheckAt = Date.now();
-      mon.staticOk = staticOk;
-      mon.apiOk = apiOk;
-
-      if (staticOk && apiOk) {
-        mon.status = 'ok';
-        mon.failCount = 0;
-        mon.detail = '正常（R2静的データ応答あり）';
-      } else if (staticOk || apiOk) {
-        mon.status = 'ok';
-        mon.failCount = 0;
-        mon.detail = staticOk ? '静的データ応答あり' : '配信応答あり';
-      } else {
-        mon.status = 'error';
-        mon.failCount += 1;
-        mon.detail = detail;
-      }
-      renderServerMonitor();
-    }
     function currentScrollTop(){
       if ($('page-list').classList.contains('active')) {
         return getListScroller()?.scrollTop || 0;
@@ -634,48 +447,9 @@
     function syncInitialMobileOffset(){
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const onListPage = $('page-list').classList.contains('active');
-      if (!isMobile || !onListPage || state.initialMobileOffsetConsumed) {
-        document.documentElement.style.setProperty('--initial-mobile-offset', '0px');
-        return;
-      }
+      if (!isMobile || !onListPage) return;
       const filterHeight = Math.ceil($('filter-panel').getBoundingClientRect().height);
-      document.documentElement.style.setProperty('--initial-mobile-offset', `${Math.max(filterHeight + 10, 0)}px`);
-    }
-    function runSnapHaptic(){
-      if (!window.matchMedia('(max-width: 768px)').matches) return;
-      if (typeof navigator.vibrate !== 'function') return;
-      navigator.vibrate(14);
-    }
-    function snapToNearestCard(){
-      if (state.snapLock) return;
-      if (!$('page-list').classList.contains('active')) return;
-      if (!window.matchMedia('(max-width: 768px)').matches) return;
-      const scroller = getListScroller();
-      if (!scroller) return;
-      const cards = Array.from($('mblist').querySelectorAll('.item'));
-      if (cards.length === 0) return;
-
-      const top = scroller.scrollTop;
-      let nearest = 0;
-      let distance = Number.POSITIVE_INFINITY;
-      cards.forEach((card, idx)=>{
-        const d = Math.abs(card.offsetTop - top);
-        if (d < distance) {
-          distance = d;
-          nearest = idx;
-        }
-      });
-
-      const target = cards[nearest].offsetTop;
-      state.snapLock = true;
-      scroller.scrollTo({ top: target, behavior: 'smooth' });
-      window.setTimeout(()=>{
-        state.snapLock = false;
-        if (state.activeSnapIndex !== nearest) {
-          state.activeSnapIndex = nearest;
-          runSnapHaptic();
-        }
-      }, 180);
+      document.documentElement.style.setProperty('--filter-panel-height', `${Math.max(filterHeight + 10, 0)}px`);
     }
     document.getElementById('to-top').addEventListener('click', ()=>{
       if ($('page-list').classList.contains('active')) {
@@ -684,54 +458,6 @@
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-    document.getElementById('cache-refresh').addEventListener('click', async ()=>{
-      const btn = $('cache-refresh');
-      btn.disabled = true;
-
-      state.cache.songs = null;
-      state.cache.gags = null;
-      state.historyCache.clear();
-      state.historyRequests.clear();
-      state.archiveRows = [];
-      state.archiveByKey = null;
-      state.archiveByTitle = null;
-      state.kindFilters = [];
-      state.archiveMeta.phase = 'idle';
-      state.archiveMeta.source = 'unknown';
-      state.archiveMeta.transport = '-';
-      state.archiveMeta.useDeploy = false;
-      state.archiveMeta.retry = 0;
-      state.archiveMeta.lastError = '';
-      state.archiveMeta.rows = 0;
-      state.archiveMeta.updatedAt = 0;
-
-      $('q').value = '';
-      $('status').textContent = 'キャッシュを破棄して再取得中…';
-      $('stats-row').innerHTML = '';
-      $('quick-filters').innerHTML = '';
-      $('hint').textContent = '検索結果がここに表示されます。';
-      $('table').innerHTML = '';
-      $('mblist').innerHTML = '';
-      $('table').style.display = 'none';
-      $('mblist').style.display = 'none';
-      if ($('page-history').classList.contains('active')) {
-        $('hist-list').innerHTML = '';
-        $('hist-empty').style.display = 'none';
-        $('hist-sub').textContent = '履歴データを再取得しています…';
-      }
-      renderHistoryProcess();
-
-      try {
-        await warmCaches({ forceReload: true });
-        showToast('キャッシュを破棄して更新しました');
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        showToast(`更新に失敗: ${msg}`);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
     const urlFromText = s => { if(!s) return ''; const m=String(s).match(/https?:\/\/\S+/); return m ? m[0].replace(/[)\]\s]+$/,'') : ''; };
     const extractDate8 = s => { const m=/^(\d{8})/.exec(String(s||'')); return m ? parseInt(m[1],10) : 0; };
 
@@ -842,7 +568,6 @@
     const JSONP_ALLOWED_ORIGIN = 'script.google.com';
     const JSONP_CALLBACK_RE = /^[A-Za-z_$][0-9A-Za-z_$]*$/;
     // 検証時の通信量と失敗率を抑えるため、取得件数を小さめに固定
-    const LIST_FETCH_LIMIT = 500;
     const ARCHIVE_FETCH_LIMIT = 50;
     const ARCHIVE_EXACT_FETCH_LIMIT = 40;
     const INITIAL_FETCH_LIMIT = 50;
@@ -889,23 +614,7 @@
     }
 
     function renderHistoryProcess(){
-      const meta = state.archiveMeta;
-      const updated = meta.updatedAt ? new Date(meta.updatedAt).toLocaleTimeString('ja-JP') : '未取得';
-      const mode = meta.useDeploy ? 'deploy URL' : '通常 URL';
-      let phaseLabel = '待機中';
-      if (meta.phase === 'loading') phaseLabel = '取得中';
-      else if (meta.phase === 'ready') phaseLabel = '表示準備完了';
-      else if (meta.phase === 'error') phaseLabel = 'エラー';
-
-      $('hist-debug').innerHTML = [
-        `状態: <b>${phaseLabel}</b>`,
-        `データ源: ${meta.source}`,
-        `取得手段: ${meta.transport} (${mode})`,
-        `再試行回数: ${meta.retry}`,
-        `履歴件数: ${meta.rows}`,
-        `最終更新: ${updated}`,
-        meta.lastError ? `エラー詳細: ${meta.lastError}` : 'エラー詳細: なし'
-      ].join('<br>');
+      // 履歴ページの内部処理表示は非表示運用
     }
 
     function handleRequestFailure(tab, attempt, reason){
@@ -1172,7 +881,6 @@
         authuser: '0',
         v: String(Date.now())
       });
-      if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -1186,7 +894,6 @@
         authuser: '0',
         v: String(Date.now())
       });
-      if (tab === 'songs' || tab === 'gags') params.set('limit', String(LIST_FETCH_LIMIT));
       Object.entries(extraParams || {}).forEach(([k,v]) => {
         if (v !== null && v !== undefined && `${v}` !== '') params.set(k, String(v));
       });
@@ -1810,17 +1517,11 @@
 
     function openHistory(artist, title){
       state.lastScroll = currentScrollTop();
-      document.body.classList.remove('filters-collapsed');
       showPage('page-history');
       renderHistory(artist, title);
     }
 
-    function updateCompactFilterMode(scrollY = currentScrollTop()){
-      const isMobile = window.matchMedia('(max-width: 768px)').matches;
-      const onListPage = $('page-list').classList.contains('active');
-      const autoCollapse = isMobile && onListPage && scrollY > 70;
-      const collapsed = onListPage && autoCollapse;
-      document.body.classList.toggle('filters-collapsed', collapsed);
+    function updateCompactFilterMode(){
     }
 
     function normalizeKindFilters(allKinds){
@@ -1868,9 +1569,6 @@
       }
 
       const q = normalize($('q').value||'');
-      const rawLimit = $('limit').value;
-      const limitParsed = (rawLimit === 'all') ? Number.POSITIVE_INFINITY : parseInt(rawLimit,10) || 10;
-      const effectiveLimit = Math.min(limitParsed, HARD_LIMIT);
 
       const allRows = state.cache[state.current] || [];
       const kinds = [...new Set(allRows.map(r => (r.kind || '').trim()).filter(Boolean))].slice(0, 10);
@@ -1881,7 +1579,7 @@
       let filtered = allRows;
       if(q){ filtered = filtered.filter(r => r._na.includes(q) || r._nt.includes(q)); }
       if (filterByKinds) filtered = filtered.filter(r => selectedKinds.has((r.kind || '').trim()));
-      const rows = filtered.slice(0, effectiveLimit);
+      const rows = filtered.slice(0, HARD_LIMIT);
 
       const uniqueArtists = new Set(allRows.map(r => r._na).filter(Boolean)).size;
       const stats = [
@@ -1910,10 +1608,9 @@
         });
       });
 
-      const limitLabel = (rawLimit === 'all') ? '全て' : `${effectiveLimit}件`;
       $('status').textContent = q
-        ? `${rows.length}件ヒット（全${filtered.length}件）／表示上限 ${limitLabel}`
-        : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）／表示上限 ${limitLabel}`;
+        ? `${rows.length}件ヒット（全${filtered.length}件）`
+        : `表示中 ${rows.length}件（全${(state.cache[state.current]||[]).length}件）`;
 
       if(rows.length===0){
         hint.textContent = q ? '該当なし' : '検索結果がここに表示されます。';
@@ -1993,34 +1690,19 @@
 
     getListScroller().addEventListener('scroll', ()=>{
       const y = getListScroller().scrollTop || 0;
-      if (y > 0 && !state.initialMobileOffsetConsumed) {
-        state.initialMobileOffsetConsumed = true;
-        syncInitialMobileOffset();
-      }
       $('to-top').classList.toggle('show', y > 280 && $('page-list').classList.contains('active'));
-      updateCompactFilterMode(y);
-      if (state.snapTimer) clearTimeout(state.snapTimer);
-      state.snapTimer = setTimeout(snapToNearestCard, 110);
+      document.documentElement.style.setProperty('--bg-shift', `${Math.round(y * 0.35)}px`);
     });
 
     (function init(){
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,200); });
-      $('limit').addEventListener('change', render);
-      $('server-monitor-refresh').addEventListener('click', ()=>{
-        probeServerHealth({ manual: true }).catch(()=>{});
-      });
-
       showPage('page-list');
       updateViewportMetrics();
       setActiveTab('songs');
       warmCaches().catch(()=>{});
-      renderServerMonitor();
-      probeServerHealth().catch(()=>{});
-      state.monitorTimer = setInterval(()=>{
-        probeServerHealth().catch(()=>{});
-      }, 30000);
+      renderServerResponse();
       updateCompactFilterMode();
 
     })();
