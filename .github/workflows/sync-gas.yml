@@ -23,7 +23,7 @@ jobs:
       - name: Sync data from GAS
         env:
           GAS_URL: ${{ secrets.GAS_URL }}
-          ENABLE_ARCHIVE_SYNC: "true"
+          ENABLE_ARCHIVE_SYNC: "false"
           ARCHIVE_LIMITS: "20,10,5,3,1"
           ARCHIVE_PAGE_LIMIT: "5"
           ARCHIVE_MAX_PAGES: "4000"

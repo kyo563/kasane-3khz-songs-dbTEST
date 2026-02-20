@@ -22,7 +22,7 @@ jobs:
       R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       GAS_URL: ${{ secrets.GAS_URL }}
-      ENABLE_ARCHIVE_SYNC: "true"
+      ENABLE_ARCHIVE_SYNC: "false"
       ARCHIVE_STRICT_SYNC: "true"
       ARCHIVE_LIMITS: "20,10,5,3,1"
       ARCHIVE_PAGE_LIMIT: "5"

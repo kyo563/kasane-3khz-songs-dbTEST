@@ -4,9 +4,9 @@
 
 ## 構成
 
-1. `scripts/sync-gas.mjs` が GAS API から `songs/gags/archive` を取得（`archive` は小さな `limit` と `offset` ページングで安全に同期）
+1. `scripts/sync-gas.mjs` が GAS API から `songs/gags` を取得（`archive` はフロント側で必要時にJSONP直接取得）
 2. `public-data/*.json` にスナップショットを保存
-3. GitHub Actions (`.github/workflows/sync-gas.yml`) が 15分ごとに同期（`archive` も含む）
+3. GitHub Actions (`.github/workflows/sync-gas.yml`) が 15分ごとに同期（songs/gags のみ）
 4. `index.html` は `public-data/*.json`（または `static_base` で指定したR2配信先）からのみ取得
 
 ## セットアップ
@@ -26,6 +26,7 @@
   - 同一曲（歌手名 + 楽曲名一致）の複数履歴を URL 差分まで含めて識別できます。
 - 履歴表示は `date8` 優先で新しい順に並べます。
 - `archive` 直接取得時は `exact=1` と小さめ `limit` を優先し、通信量を抑えます。
+- 履歴（archive）は `index.html` から GAS の JSONP を直接呼び出して都度取得します。
 
 ## 補足
 
