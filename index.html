@@ -207,6 +207,14 @@
         font-size:18px;
         color:#35524f;
       }
+      .stealth-link,
+      .stealth-link:hover,
+      .stealth-link:focus,
+      .stealth-link:visited{
+        color:inherit;
+        text-decoration:none;
+        font:inherit;
+      }
       .item:active,
       .item:focus-within{
         transform:translateY(-1px) scale(1.01);
@@ -1812,7 +1820,15 @@
         const blank = document.createElement('div');
         blank.className = 'item item-blank';
         blank.setAttribute('aria-hidden', 'true');
-        blank.textContent = '＼ﾅｧｧﾝ／';
+        blank.appendChild(document.createTextNode('＼'));
+        const naanLink = document.createElement('a');
+        naanLink.href = 'https://youtube.com/@kasane_3khz?si=EJw9wRmkUnRrWfCn';
+        naanLink.target = '_blank';
+        naanLink.rel = 'noopener noreferrer';
+        naanLink.className = 'stealth-link';
+        naanLink.textContent = 'ﾅｧｧﾝ';
+        blank.appendChild(naanLink);
+        blank.appendChild(document.createTextNode('／'));
         $('mblist').appendChild(blank);
 
         $('mblist').style.display = 'block'; $('table').style.display = 'none';
