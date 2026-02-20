@@ -524,6 +524,16 @@
         clearTimeout(timer);
       }
     }
+    function describeFetchError(err){
+      if (err && err.name === 'AbortError') return 'タイムアウト';
+      const msg = err instanceof Error ? (err.message || '').trim() : String(err || '').trim();
+      if (!msg) return 'ネットワーク/ブロック';
+      const lower = msg.toLowerCase();
+      if (lower.includes('failed to fetch') || lower.includes('load failed')) {
+        return `ネットワーク/ブロック (${msg})`;
+      }
+      return `通信エラー (${msg})`;
+    }
     function fetchByJsonp(tab, { timeoutMs = REQUEST_TIMEOUT_MS, extraParams = {} } = {}){
       return new Promise((resolve, reject) => {
         const callbackName = `__direct_jsonp_${tab}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -1338,9 +1348,7 @@
         req.inflight = false;
         clearRequestTimer(tab);
 
-        const reason = err && err.name === 'AbortError'
-          ? 'タイムアウト'
-          : 'ネットワーク/ブロック';
+        const reason = describeFetchError(err);
         endServerRequest(false, `${tab}/fetch`, reason);
         handleRequestFailure(tab, attempt, reason);
       }
