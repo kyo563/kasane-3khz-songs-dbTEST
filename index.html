@@ -99,7 +99,10 @@
     .quick-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:0}
     #filter-panel.compact .server-response,
     #filter-panel.compact .stats-row,
-    #filter-panel.compact .quick-filter-row{display:none}
+    #filter-panel.compact .quick-filter-row,
+    #filter-panel.auto-compact-final .server-response,
+    #filter-panel.auto-compact-final .stats-row,
+    #filter-panel.auto-compact-final .quick-filter-row{display:none}
     .filter-toggle{flex:0 0 auto;appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;line-height:1.2;white-space:nowrap}
     .filter-chip{appearance:none;border:1px solid #95c4ae;border-radius:999px;background:#eff9f2;color:#2b5244;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer}
     .filter-chip.active{background:linear-gradient(135deg,#6dd3ff,#6fb1ff);color:#05233d;border-color:transparent;font-weight:700}
@@ -1649,6 +1652,7 @@
       if (!panel) return;
       if (state.isFilterCompact) {
         panel.classList.remove('auto-collapsing');
+        panel.classList.remove('auto-compact-final');
         panel.style.setProperty('--scroll-collapse', '1');
         scheduleFilterMetrics();
         return;
@@ -1659,6 +1663,7 @@
       state.filterAutoCollapseProgress = progress;
       panel.style.setProperty('--scroll-collapse', progress.toFixed(3));
       panel.classList.toggle('auto-collapsing', progress > 0.001);
+      panel.classList.toggle('auto-compact-final', progress >= 0.999);
       scheduleFilterMetrics();
     }
 
@@ -1672,6 +1677,7 @@
       btn.textContent = state.isFilterCompact ? '展開する' : '折りたたむ';
       if (state.isFilterCompact) {
         panel.classList.remove('auto-collapsing');
+        panel.classList.remove('auto-compact-final');
         panel.style.setProperty('--scroll-collapse', '1');
       } else {
         updateAutoFilterCollapse();
