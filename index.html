@@ -1622,6 +1622,7 @@
 
     async function fetchSongHistoryFromArchive(artist, title){
       const cacheKey = `${normalize(artist)}|${normalize(title)}`;
+      const isHistoryDebug = new URLSearchParams(window.location.search).get('debug_history') === '1';
       const cachedEntries = getCachedHistoryEntries(artist, title);
       if (cachedEntries) return cachedEntries;
       if (state.historyRequests.has(cacheKey)) return state.historyRequests.get(cacheKey);
@@ -1638,6 +1639,12 @@
         beginServerRequest();
         let rows = [];
         try {
+          console.info('[history] archive exact request', {
+            artist,
+            title,
+            exact: '1',
+            limit: ARCHIVE_EXACT_FETCH_LIMIT
+          });
           const payload = await fetchByJsonp('archive', {
             extraParams: {
               artist,
@@ -1646,6 +1653,18 @@
               limit: ARCHIVE_EXACT_FETCH_LIMIT
             }
           });
+          console.info('[history] archive exact response', {
+            ok: payload?.ok,
+            sheet: payload?.sheet,
+            matched: payload?.matched,
+            rows: Array.isArray(payload?.rows) ? payload.rows.length : 0
+          });
+          if (isHistoryDebug && Array.isArray(payload?.rows) && payload.rows.length > 0) {
+            console.debug('[history] archive first row', {
+              artist: payload.rows[0]?.artist,
+              title: payload.rows[0]?.title
+            });
+          }
           rows = normalizeRowsForTab('archive', payload);
           endServerRequest(true, 'archive/jsonp(exact)');
         } catch (err) {
