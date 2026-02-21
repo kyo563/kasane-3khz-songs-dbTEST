@@ -9,7 +9,7 @@
     :root{
       --bg:#87ceeb; --bg-top:#87ceeb; --bg-bottom:#87ceeb; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
       --thead:#d3ebdd; --focus:#8a2be2; --tab-bg:#e9f7ed; --tab-active:#77c8f6; --tab-border:#9bc8b3; --link:#1f79bc;
-      --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb;
+      --chip-bg:#e3f4ea; --chip-text:#2c5646; --accent:#56adeb; --focus-ring:rgba(138,43,226,.35);
     }
     *{box-sizing:border-box}
     body{
@@ -76,6 +76,8 @@
     input[type="search"],select{width:100%;padding:12px 14px;border:1px solid #9cc8b6;border-radius:13px;font-size:16px;background:#f7fffb;color:var(--text);outline:none}
     :where(button,[href],input,select):focus-visible{outline:3px solid var(--focus);outline-offset:2px}
     :where(button,[href],input,select):active{outline:3px solid var(--focus);outline-offset:2px}
+    button:focus-visible,
+    button:active{box-shadow:0 0 0 4px var(--focus-ring)}
     input::placeholder{color:#759789}
 
     .dm-wrap{display:flex;align-items:center;gap:8px;margin-top:8px}
