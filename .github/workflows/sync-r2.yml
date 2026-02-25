@@ -7,8 +7,8 @@ concurrency:
 on:
   workflow_dispatch:
   schedule:
-    # GitHub Actions の cron は UTC 基準: 14:00 JST = 05:00 UTC
-    - cron: "0 5 * * *"
+    # GitHub Actions の cron は UTC 基準: 13:00/01:00 JST = 04:00/16:00 UTC
+    - cron: "0 4,16 * * *"
 
 permissions:
   contents: read
