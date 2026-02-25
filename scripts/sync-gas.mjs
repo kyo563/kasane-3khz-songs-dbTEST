@@ -218,22 +218,39 @@ async function verifyArchiveHealthCheck() {
   return payload;
 }
 
-async function fetchArchiveWithBackoff({ offset = 0 } = {}) {
-  const limits = (process.env.ARCHIVE_LIMITS ?? '20,10,5,3,1')
+function buildArchiveLimitCandidates(pageLimit) {
+  const envLimits = (process.env.ARCHIVE_LIMITS ?? '20,10,5,3,1')
     .split(',')
     .map((s) => parseInt(s.trim(), 10))
     .filter((n) => Number.isFinite(n) && n > 0);
 
+  const normalizedPageLimit = Number.isFinite(Number(pageLimit)) && Number(pageLimit) > 0
+    ? Math.floor(Number(pageLimit))
+    : 5;
+
+  const candidates = [normalizedPageLimit];
+  for (const limit of envLimits) {
+    if (limit > normalizedPageLimit) continue;
+    if (!candidates.includes(limit)) candidates.push(limit);
+  }
+  return candidates;
+}
+
+async function fetchArchivePageWithBackoff({ offset = 0, pageLimit = 5 } = {}) {
+  const limits = buildArchiveLimitCandidates(pageLimit);
   let lastErr;
+
   for (const limit of limits) {
     try {
-      return await fetchJsonWithRetry('archive', { limit, offset });
+      const payload = await fetchJsonWithRetry('archive', { limit, offset });
+      return { payload, usedLimit: limit };
     } catch (e) {
       lastErr = e;
       if (!isArgumentTooLargeError(e)) throw e;
       console.warn(`[archive] limit=${limit}, offset=${offset} で失敗（Argument too large）→ 縮小して再試行します`);
     }
   }
+
   throw lastErr;
 }
 
@@ -261,7 +278,7 @@ async function fetchArchivePaged() {
   const seen = new Set();
 
   for (let page = 0; page < maxPages; page += 1) {
-    const payload = await fetchArchiveWithBackoff({ offset });
+    const { payload, usedLimit } = await fetchArchivePageWithBackoff({ offset, pageLimit });
 
     if (total == null && Number.isFinite(Number(payload.total))) total = Number(payload.total);
     if (matched == null && Number.isFinite(Number(payload.matched))) matched = Number(payload.matched);
@@ -283,14 +300,14 @@ async function fetchArchivePaged() {
       console.warn(`[archive] total cap (${totalCap}) に到達したため取得を打ち切ります`);
       break;
     }
-    if (rows.length < pageLimit) break;
+    if (rows.length < usedLimit) break;
     if (newCount === 0) {
       console.warn('[archive] 同一ページ応答の可能性があるため取得を打ち切ります');
       break;
     }
     if (total != null && merged.length >= total) break;
 
-    offset += pageLimit;
+    offset += rows.length;
   }
 
   return {
