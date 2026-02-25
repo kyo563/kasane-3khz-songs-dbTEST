@@ -3,7 +3,8 @@ name: Sync GAS data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'
+    # GitHub Actions の cron は UTC 基準: 14:00/02:00 JST = 05:00/17:00 UTC
+    - cron: '0 5,17 * * *'
 
 permissions:
   contents: write
