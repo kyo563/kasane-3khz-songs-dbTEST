@@ -340,27 +340,41 @@
   <script>
     const DEFAULT_STATIC_BASE = new URL('./public-data/', window.location.href).toString();
     const DEFAULT_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwonCr_o4oHpOc--o6eIncmq_lwHmaNjYmlXsjKWTn7OjYGWFt5OqgaTvzJ3qjYTE5F/exec';
+    const UI_TEXT = {
+      loading: '読み込み中…',
+      statusIdle: 'サーバー状態：＼ﾅｧﾝ／',
+      statusError: 'サーバー状態：非稼働',
+      statusOk: 'サーバー状態：稼働中'
+    };
+    const TAB_LABELS = {
+      songs: '歌唱曲',
+      gags: '一発ネタ'
+    };
+
+    function resolveUrlFromQueryOrStorage({ queryKey, storageKey, fallback }){
+      try {
+        const queryValue = new URLSearchParams(window.location.search).get(queryKey);
+        if (queryValue) return new URL(queryValue, window.location.href).toString();
+      } catch {}
+      try {
+        const storageValue = localStorage.getItem(storageKey);
+        if (storageValue) return new URL(storageValue, window.location.href).toString();
+      } catch {}
+      return fallback;
+    }
     function resolveApiUrl(){
-      try {
-        const byQuery = new URLSearchParams(window.location.search).get('gas_url');
-        if (byQuery) return new URL(byQuery, window.location.href).toString();
-      } catch {}
-      try {
-        const byStorage = localStorage.getItem('gasApiUrl');
-        if (byStorage) return new URL(byStorage, window.location.href).toString();
-      } catch {}
-      return DEFAULT_GAS_API_URL;
+      return resolveUrlFromQueryOrStorage({
+        queryKey: 'gas_url',
+        storageKey: 'gasApiUrl',
+        fallback: DEFAULT_GAS_API_URL
+      });
     }
     function resolveStaticDataBase(){
-      try {
-        const byQuery = new URLSearchParams(window.location.search).get('static_base');
-        if (byQuery) return new URL(byQuery, window.location.href).toString();
-      } catch {}
-      try {
-        const byStorage = localStorage.getItem('staticDataBase');
-        if (byStorage) return new URL(byStorage, window.location.href).toString();
-      } catch {}
-      return DEFAULT_STATIC_BASE;
+      return resolveUrlFromQueryOrStorage({
+        queryKey: 'static_base',
+        storageKey: 'staticDataBase',
+        fallback: DEFAULT_STATIC_BASE
+      });
     }
     const API_URL = resolveApiUrl();
     const DEPLOY_URL = API_URL;
@@ -405,6 +419,7 @@
 
     const $ = id => document.getElementById(id);
     const normalize = s => (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim();
+    const setStatus = (text) => { $('status').textContent = text; };
     const showToast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1400); };
     async function copyText(text){
       try{
@@ -430,10 +445,6 @@
     function getListScroller(){
       return $('results-scroll');
     }
-    function formatTime(ts){
-      if (!ts) return '未確認';
-      return new Date(ts).toLocaleTimeString('ja-JP');
-    }
     function renderServerResponse(){
       const el = $('server-response');
       if (!el) return;
@@ -441,20 +452,20 @@
       el.className = 'server-response';
       if (probe.inflight > 0) {
         el.classList.add('loading');
-        el.textContent = 'サーバー状態：＼ﾅｧﾝ／';
+        el.textContent = UI_TEXT.statusIdle;
         return;
       }
       if (probe.lastError) {
         el.classList.add('error');
-        el.textContent = 'サーバー状態：非稼働';
+        el.textContent = UI_TEXT.statusError;
         return;
       }
       if (probe.lastOkAt) {
         el.classList.add('ok');
-        el.textContent = 'サーバー状態：稼働中';
+        el.textContent = UI_TEXT.statusOk;
         return;
       }
-      el.textContent = 'サーバー状態：＼ﾅｧﾝ／';
+      el.textContent = UI_TEXT.statusIdle;
     }
     function beginServerRequest(){
       state.serverResponse.inflight += 1;
@@ -708,7 +719,7 @@
     }
     function showRequestError(tab, reason){
       if (state.current === tab || !state.cache[state.current]) {
-        $('status').textContent = `データ取得（${tab}）に失敗しました: ${reason}`;
+        setStatus(`データ取得（${tab}）に失敗しました: ${reason}`);
       }
     }
 
@@ -933,10 +944,10 @@
         state.cache[tab] = rows;
 
         if (state.cache[state.current]) {
-          $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
+          setStatus(`読み込み完了：${state.cache[state.current].length}件`);
           render();
         } else {
-          $('status').textContent = '読み込み中…';
+          setStatus(UI_TEXT.loading);
         }
         return;
       }
@@ -972,7 +983,7 @@
       if (!$('page-list').classList.contains('active')) return;
       if (isListDataReady()) return;
       if (isListRequestInflight()) return;
-      $('status').textContent = 'データ取得に失敗しました（R2静的データ設定を確認）';
+      setStatus('データ取得に失敗しました（R2静的データ設定を確認）');
     }, INITIAL_ERROR_NOTICE_DELAY_MS);
 
     function toSafeApiBase(rawUrl){
@@ -1326,12 +1337,12 @@
       try {
         return await fetchSheetRows(tab, false, extraParams);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.startsWith('取得元不一致')) {
-          return fetchSheetRows(tab, true, extraParams);
-        }
         return fetchSheetRows(tab, true, extraParams);
       }
+    }
+
+    function getCurrentTabLabel(){
+      return TAB_LABELS[state.current] || state.current;
     }
 
     async function fetchInStages(tab, { onStage } = {}){
@@ -1365,7 +1376,7 @@
 
       state.preloadPromise = (async () => {
         beginServerRequest();
-        $('status').textContent = 'songs / gags をR2静的データから取得中…';
+        setStatus('songs / gags をR2静的データから取得中…');
 
         try {
           const [metaStatic, songsStatic, gagsStatic] = await Promise.allSettled([
@@ -1406,7 +1417,7 @@
           renderHistoryProcess();
 
           if (state.cache[state.current]) {
-            $('status').textContent = `読み込み完了：${state.cache[state.current].length}件`;
+            setStatus(`読み込み完了：${state.cache[state.current].length}件`);
             render();
           }
 
@@ -1419,7 +1430,7 @@
           state.archiveMeta.phase = 'error';
           state.archiveMeta.lastError = msg;
           renderHistoryProcess();
-          $('status').textContent = `データ取得に失敗しました: ${msg}`;
+          setStatus(`データ取得に失敗しました: ${msg}`);
           endServerRequest(false, 'warmCaches/static', msg);
           throw err;
         } finally {
@@ -1434,12 +1445,12 @@
       state.current = tab;
       state.kindFilters = [];
       document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
-      $('status').textContent='読み込み中…';
+      setStatus(UI_TEXT.loading);
       if (!state.cache[tab]) {
         warmCaches().catch(()=>{});
       }
       if (state.cache[tab]) {
-        $('status').textContent = `表示中：${state.cache[tab].length}件`;
+        setStatus(`表示中：${state.cache[tab].length}件`);
         render();
       }
     }
@@ -1730,7 +1741,7 @@
       const hint = $('hint');
 
       if (!state.cache[state.current]) {
-        $('status').textContent = '読み込み中…';
+        setStatus(UI_TEXT.loading);
         tableWrap.style.display = 'none';
         listWrap.style.display  = 'none';
         return;
@@ -1751,7 +1762,7 @@
 
       const uniqueArtists = new Set(allRows.map(r => r._na).filter(Boolean)).size;
       const stats = [
-        `${state.current === 'songs' ? '歌唱曲' : '一発ネタ'}: ${allRows.length}件`,
+        `${getCurrentTabLabel()}: ${allRows.length}件`,
         `アーティスト数: ${uniqueArtists}人`
       ];
       $('stats-row').innerHTML = stats.map(text => `<span class="pill">${text}</span>`).join('');
