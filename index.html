@@ -117,7 +117,7 @@
       position:fixed;
       left:0;
       right:0;
-      bottom:0;
+      bottom:var(--keyboard-offset, 0px);
       z-index:40;
       padding:10px 12px calc(10px + env(safe-area-inset-bottom));
       background:linear-gradient(180deg,rgba(104,170,136,0) 0%,rgba(110,170,140,.76) 30%,rgba(110,170,140,.9) 100%);
@@ -249,11 +249,12 @@
 
       .result-card{
         position:fixed;
-        width:min(760px, calc(100vw - 20px));
-        left:50%;
-        transform:translateX(-50%);
+        left:10px;
+        right:10px;
+        width:auto;
+        transform:none;
         top:calc(var(--filter-panel-height, 0px) + 6px);
-        bottom:calc(var(--dock-height, 110px) + 8px);
+        bottom:calc(var(--dock-height, 110px) + var(--keyboard-offset, 0px) + 8px);
       }
       .result-scroll{margin-top:0;}
     }
@@ -611,6 +612,34 @@
       const dockHeight = Math.ceil(dock.getBoundingClientRect().height) + 22;
       document.documentElement.style.setProperty('--dock-height', `${dockHeight}px`);
       syncInitialMobileOffset();
+    }
+
+    function updateKeyboardOffset(){
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile || !window.visualViewport) {
+        document.documentElement.style.setProperty('--keyboard-offset', '0px');
+        return;
+      }
+      const vv = window.visualViewport;
+      const raw = window.innerHeight - vv.height - vv.offsetTop;
+      const offset = Math.max(0, Math.round(raw));
+      document.documentElement.style.setProperty('--keyboard-offset', `${offset}px`);
+    }
+
+    function ensureSearchInputVisible(){
+      const input = $('q');
+      if (!input) return;
+      const dock = $('input-dock');
+      const dockHeight = dock ? Math.ceil(dock.getBoundingClientRect().height) : 0;
+      const keyboardOffset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--keyboard-offset'), 10) || 0;
+      const reservedBottom = dockHeight + keyboardOffset + 12;
+
+      const rect = input.getBoundingClientRect();
+      const safeBottom = window.innerHeight - reservedBottom;
+      if (rect.bottom > safeBottom) {
+        const delta = rect.bottom - safeBottom;
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      }
     }
 
     function syncInitialMobileOffset(){
@@ -1948,11 +1977,21 @@
     window.addEventListener('resize', ()=>{
       clearTimeout(state.debounce);
       state.debounce=setTimeout(()=>{
+        updateKeyboardOffset();
         updateViewportMetrics();
         render();
         updateCompactFilterMode();
       },150);
     });
+
+    if (window.visualViewport) {
+      const onViewportChanged = () => {
+        updateKeyboardOffset();
+        updateViewportMetrics();
+      };
+      window.visualViewport.addEventListener('resize', onViewportChanged);
+      window.visualViewport.addEventListener('scroll', onViewportChanged);
+    }
     window.addEventListener('scroll', ()=>{
       if (!$('page-list').classList.contains('active')) {
         const y = window.scrollY || document.documentElement.scrollTop || 0;
@@ -1971,11 +2010,27 @@
       document.getElementById('tab-songs').addEventListener('click', ()=> setActiveTab('songs'));
       document.getElementById('tab-gags').addEventListener('click',  ()=> setActiveTab('gags'));
       $('q').addEventListener('input', ()=>{ clearTimeout(state.debounce); state.debounce=setTimeout(render,200); });
+      $('q').addEventListener('focus', ()=>{
+        [0, 60, 150, 280].forEach(ms => {
+          window.setTimeout(() => {
+            updateKeyboardOffset();
+            updateViewportMetrics();
+            ensureSearchInputVisible();
+          }, ms);
+        });
+      });
+      $('q').addEventListener('blur', ()=>{
+        window.setTimeout(() => {
+          updateKeyboardOffset();
+          updateViewportMetrics();
+        }, 90);
+      });
       $('filter-toggle').addEventListener('click', ()=>{
         state.isFilterCompact = !state.isFilterCompact;
         updateCompactFilterMode();
       });
       showPage('page-list');
+      updateKeyboardOffset();
       updateViewportMetrics();
       setActiveTab('songs');
       warmCaches().catch(()=>{});
