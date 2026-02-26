@@ -274,7 +274,7 @@
     }
 
     .page{display:none}.page.active{display:block}
-    .history-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .history-header{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;column-gap:10px;margin-bottom:8px}
     .back{
       appearance:none;
       border:1px solid var(--line);
@@ -285,13 +285,20 @@
       font-size:14px;
       line-height:1.2;
       width:96px;
-      flex:0 0 96px;
+      min-width:96px;
+      max-width:96px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       text-align:center;
       white-space:nowrap;
+      overflow:hidden;
       cursor:pointer;
     }
     .back:hover{background:#e2f4e9}
     .title{font-weight:700;flex:1;min-width:0}
+    .history-title{font-weight:700;min-width:0;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
+    .history-title .hist-sep{white-space:nowrap}
     .history-list{margin-top:8px}
     .history-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 4px;gap:8px}
     .history-left{display:flex;align-items:center;gap:8px;min-width:0}
@@ -344,7 +351,7 @@
     <div class="card">
       <div class="history-header">
         <button id="btn-back" class="back">← 戻る</button>
-        <div class="title" id="hist-title">/</div>
+        <div class="history-title" id="hist-title">/</div>
       </div>
       <div class="muted" id="hist-sub">歌唱履歴を新しい順に表示します。</div>
     </div>
@@ -1599,10 +1606,26 @@
       }
     }
 
+    function renderHistoryTitle(artist, title){
+      const target = $('hist-title');
+      if (!target) return;
+      const artistText = (artist || '').trim();
+      const titleText = (title || '').trim();
+      target.textContent = '';
+
+      target.append(document.createTextNode(artistText));
+      const sep = document.createElement('span');
+      sep.className = 'hist-sep';
+      sep.textContent = ' /';
+      target.append(sep);
+      target.append(document.createElement('wbr'));
+      target.append(document.createTextNode(` ${titleText}`));
+    }
+
     async function renderHistory(artist, title){
       const renderSeq = ++state.historyRenderSeq;
       state.histKey = { artist, title };
-      $('hist-title').textContent = `${artist || ''} / ${title || ''}`;
+      renderHistoryTitle(artist, title);
       const latestOnly = sortHistoryEntriesDesc(
         toHistoryEntries(state.cache.songs || [], artist, title)
       ).slice(0, ARCHIVE_HISTORY_PREVIEW_LIMIT);
