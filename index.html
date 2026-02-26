@@ -334,7 +334,7 @@
 
         <div class="status-row">
           <div class="muted" id="status">読み込み中…</div>
-          <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">折りたたむ</button>
+          <button id="filter-toggle" class="filter-toggle" type="button" aria-expanded="true">表示切替</button>
         </div>
         <div class="server-response filter-collapse-target" id="server-response" aria-live="polite">サーバー状態：＼ﾅｧﾝ／</div>
         <div class="stats-row filter-collapse-target" id="stats-row" aria-live="polite"></div>
@@ -1763,7 +1763,7 @@
       if (!panel || !btn) return;
       panel.classList.toggle('compact', state.isFilterCompact);
       btn.setAttribute('aria-expanded', String(!state.isFilterCompact));
-      btn.textContent = state.isFilterCompact ? '展開する' : '折りたたむ';
+      btn.textContent = '表示切替';
       if (state.isFilterCompact) {
         panel.classList.remove('auto-collapsing');
         panel.classList.remove('auto-compact-final');
