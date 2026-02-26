@@ -180,15 +180,22 @@
       .card{padding:14px;border-radius:16px}
       .hero-title{font-size:18px}
       table{display:none}
-      .result-scroll{scroll-behavior:smooth;}
+      .result-scroll{
+        scroll-behavior:smooth;
+        overflow-x:hidden;
+        overscroll-behavior-x:none;
+        touch-action:pan-y;
+      }
       .mobile-list{
         display:block;
         margin-top:0;
         max-height:none;
-        overflow:visible;
+        overflow-x:hidden;
+        overflow-y:visible;
         -webkit-overflow-scrolling:touch;
         padding-right:2px;
         padding-bottom:calc(var(--dock-height, 110px) + 10px);
+        touch-action:pan-y;
       }
       .item{
         border:1px solid var(--line);
@@ -223,7 +230,7 @@
       }
       .item:active,
       .item:focus-within{
-        transform:translateY(-1px) scale(1.01);
+        transform:translateY(-1px);
         border-color:#84bca2;
         box-shadow:0 10px 18px rgba(29,77,60,.14);
       }
