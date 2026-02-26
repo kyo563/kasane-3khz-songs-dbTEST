@@ -249,8 +249,9 @@
 
       .result-card{
         position:fixed;
-        left:10px;
-        right:10px;
+        width:min(760px, calc(100vw - 20px));
+        left:50%;
+        transform:translateX(-50%);
         top:calc(var(--filter-panel-height, 0px) + 6px);
         bottom:calc(var(--dock-height, 110px) + 8px);
       }
