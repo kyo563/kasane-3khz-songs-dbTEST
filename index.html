@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <meta name="theme-color" content="#87ceeb">
-  <title>歌唱曲・一発ネタ 検索（履歴 高速化版）</title>
+  <title>彩興DB</title>
   <style>
     :root{
       --bg:#87ceeb; --bg-top:#87ceeb; --bg-bottom:#87ceeb; --card:#ffffff; --card-soft:#f2fbff; --text:#204034; --muted:#4f6f65; --line:#bddbc9;
@@ -244,6 +244,33 @@
         bottom:calc(var(--dock-height, 110px) + 8px);
       }
       .result-scroll{margin-top:0;}
+    }
+
+    @media (min-width:769px){
+      body{
+        overflow:auto;
+        padding-bottom:20px;
+      }
+      .list-layout{
+        height:auto;
+        min-height:0;
+      }
+      #filter-panel{
+        position:static;
+      }
+      .result-card{
+        min-height:420px;
+      }
+      .result-scroll{
+        max-height:62vh;
+      }
+      .input-dock{
+        position:static;
+        padding:0;
+        margin-top:12px;
+        background:none;
+        backdrop-filter:none;
+      }
     }
 
     .page{display:none}.page.active{display:block}
