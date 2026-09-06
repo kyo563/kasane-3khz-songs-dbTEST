@@ -1,7 +1,7 @@
 {
   "ok": true,
   "sheet": "songs",
-  "fetchedAt": "2026-09-05T01:49:43.010Z",
+  "fetchedAt": "2026-09-06T01:43:59.754Z",
   "rows": [
     {
       "artist": "キタニタツヤ",
@@ -708,7 +708,7 @@
       "date8": 20260817,
       "rowId": "冨岡愛|グッドバイバイ|歌枠|https://www.youtube.com/watch?v=cVzXs_wJjd8&t=6037s",
       "historyRef": "history/b4e9283f965d.json",
-      "historyCount": 1,
+      "historyCount": 2,
       "lastSungAt": 20260812
     },
     {
@@ -2568,8 +2568,8 @@
       "date8": 20260611,
       "rowId": "天使電影|happy?|歌ってみた|https://www.youtube.com/watch?v=S5DL6CQxpTU",
       "historyRef": "history/f9a794605b03.json",
-      "historyCount": 1,
-      "lastSungAt": 20260611
+      "historyCount": 2,
+      "lastSungAt": 20260612
     },
     {
       "artist": "Ain't It Fun",
@@ -5508,8 +5508,8 @@
       "date8": 20260220,
       "rowId": "biz×zera|loveit?|歌枠|https://www.youtube.com/watch?v=_JHUCrunBnw&t=4164s",
       "historyRef": "history/9379ce1cbafb.json",
-      "historyCount": 2,
-      "lastSungAt": 20260214
+      "historyCount": 3,
+      "lastSungAt": 20260428
     },
     {
       "artist": "DECO*27",

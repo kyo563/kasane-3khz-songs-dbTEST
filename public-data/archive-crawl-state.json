@@ -1,10 +1,10 @@
 {
-  "cursorDate8": 20260403,
-  "cursorKey": "てにをは|ヴィラン|ショート|https://www.youtube.com/watch?v=g2t--0TPwVg",
-  "batchSize": 204,
-  "wrapped": false,
-  "cycle": 6,
-  "lastCycleCompletedAt": "2026-09-01T15:38:33.122Z",
-  "lastCollisionCount": 203,
-  "updatedAt": "2026-09-05T01:49:56.174Z"
+  "cursorDate8": 0,
+  "cursorKey": "",
+  "batchSize": 205,
+  "wrapped": true,
+  "cycle": 7,
+  "lastCycleCompletedAt": "2026-09-06T01:44:08.285Z",
+  "lastCollisionCount": 128,
+  "updatedAt": "2026-09-06T01:44:08.285Z"
 }

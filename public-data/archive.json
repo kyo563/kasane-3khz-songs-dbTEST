@@ -1,7 +1,7 @@
 {
   "ok": true,
   "sheet": "archive",
-  "fetchedAt": "2026-09-05T01:49:56.174Z",
+  "fetchedAt": "2026-09-06T01:44:08.285Z",
   "rows": [
     {
       "artist": "ツミキ",
@@ -13194,6 +13194,16 @@
       "historyKey": "biz×zara|loveit？"
     },
     {
+      "artist": "biz×ZERA",
+      "title": "Loveit?",
+      "kind": "ショート",
+      "dText": "20260428 Loveit？/biz×ZARA #歌ってみた #cover #biz #zara #loveit",
+      "dUrl": "https://www.youtube.com/watch?v=x8SITTcF5N0",
+      "date8": 20260428,
+      "rowId": "biz×zera|loveit?|ショート|https://www.youtube.com/watch?v=x8SITTcF5N0",
+      "historyKey": "biz×zera|loveit?"
+    },
+    {
       "artist": "B9☆",
       "title": "赤点教室",
       "kind": "ショート",
@@ -13577,7 +13587,7 @@
       "artist": "ヨルシカ",
       "title": "雨とカプチーノ",
       "kind": "歌枠",
-      "dText": "20260521 【#歌枠 】深夜に静かな歌枠・落ち着いた曲/椎名林檎の曲🌸【#新人vtuber #作業用bgm 】",
+      "dText": "20260521 【#歌枠 】深夜に静かな歌枠🌸【#新人vtuber #作業用bgm 】",
       "dUrl": "https://www.youtube.com/watch?v=5UeDjTz3-08&t=1747s",
       "date8": 20260521,
       "rowId": "ヨルシカ|雨とカプチーノ|歌枠|https://www.youtube.com/watch?v=5UeDjTz3-08&t=1747s",
@@ -13587,7 +13597,7 @@
       "artist": "ヨルシカ",
       "title": "雨晴るる",
       "kind": "歌枠",
-      "dText": "20260521 【#歌枠 】深夜に静かな歌枠・落ち着いた曲/椎名林檎の曲🌸【#新人vtuber #作業用bgm 】",
+      "dText": "20260521 【#歌枠 】深夜に静かな歌枠🌸【#新人vtuber #作業用bgm 】",
       "dUrl": "https://www.youtube.com/watch?v=5UeDjTz3-08&t=1517s",
       "date8": 20260521,
       "rowId": "ヨルシカ|雨晴るる|歌枠|https://www.youtube.com/watch?v=5UeDjTz3-08&t=1517s",
@@ -13597,7 +13607,7 @@
       "artist": "手嶌葵",
       "title": "明日への手紙",
       "kind": "歌枠",
-      "dText": "20260521 【#歌枠 】深夜に静かな歌枠・落ち着いた曲/椎名林檎の曲🌸【#新人vtuber #作業用bgm 】",
+      "dText": "20260521 【#歌枠 】深夜に静かな歌枠🌸【#新人vtuber #作業用bgm 】",
       "dUrl": "https://www.youtube.com/watch?v=5UeDjTz3-08&t=6574s",
       "date8": 20260521,
       "rowId": "手嶌葵|明日への手紙|歌枠|https://www.youtube.com/watch?v=5UeDjTz3-08&t=6574s",
@@ -13824,6 +13834,16 @@
       "historyKey": "happy？|天使電影"
     },
     {
+      "artist": "天使電影",
+      "title": "HAPPY？",
+      "kind": "ショート",
+      "dText": "20260611 HAPPY？/天使電影 #歌ってみた #天使電影 #さんきろへるつ #新人vtuber",
+      "dUrl": "https://www.youtube.com/watch?v=BQEcCizxY38",
+      "date8": 20260611,
+      "rowId": "天使電影|happy?|ショート|https://www.youtube.com/watch?v=BQEcCizxY38",
+      "historyKey": "天使電影|happy？"
+    },
+    {
       "artist": "HAPPY？",
       "title": "天使電影",
       "kind": "ショート",
@@ -13832,6 +13852,16 @@
       "date8": 20260612,
       "rowId": "happy?|天使電影|ショート|https://www.youtube.com/watch?v=pjD67fryyFc",
       "historyKey": "happy？|天使電影"
+    },
+    {
+      "artist": "天使電影",
+      "title": "HAPPY？",
+      "kind": "ショート",
+      "dText": "20260612 HAPPY？/天使電影 #歌ってみた #天使電影 #happy #新人vtuber #ボカロ",
+      "dUrl": "https://www.youtube.com/watch?v=pjD67fryyFc",
+      "date8": 20260612,
+      "rowId": "天使電影|happy?|ショート|https://www.youtube.com/watch?v=pjD67fryyFc",
+      "historyKey": "天使電影|happy？"
     },
     {
       "artist": "ザ・ハイロウズ",
@@ -14204,6 +14234,16 @@
       "historyKey": "内緒のピアス|ハナビラ"
     },
     {
+      "artist": "天使電影",
+      "title": "HAPPY?",
+      "kind": "歌枠",
+      "dText": "20260727 【#歌枠 】暑さに負けない！月曜の癒し歌枠⚛️🌐初見さんROM歓迎🌸花彩音_3kHz【#新人vtuber #作業用bgm 】",
+      "dUrl": "https://www.youtube.com/watch?v=XNsDyqC6YtQ&t=3308s",
+      "date8": 20260727,
+      "rowId": "天使電影|happy?|歌枠|https://www.youtube.com/watch?v=XNsDyqC6YtQ&t=3308s",
+      "historyKey": "天使電影|happy?"
+    },
+    {
       "artist": "柊マグネタイト",
       "title": "テトリス",
       "kind": "歌枠",
@@ -14232,6 +14272,16 @@
       "date8": 20260807,
       "rowId": "宇多田ヒカル|in my room|歌枠|https://www.youtube.com/watch?v=WRmerIci3Sw&t=5798s",
       "historyKey": "宇多田ヒカル|in my room"
+    },
+    {
+      "artist": "冨岡愛",
+      "title": "グッドバイバイ",
+      "kind": "歌枠",
+      "dText": "20260810 【#歌枠 】chill~低音まで元気に歌います⚛️作業BGMにどうぞ🌐🌸花彩音_3kHz【#新人vtuber #作業用bgm 】",
+      "dUrl": "https://www.youtube.com/watch?v=CpWLa9P7pDg&t=307s",
+      "date8": 20260810,
+      "rowId": "冨岡愛|グッドバイバイ|歌枠|https://www.youtube.com/watch?v=CpWLa9P7pDg&t=307s",
+      "historyKey": "冨岡愛|グッドバイバイ"
     },
     {
       "artist": "冨岡愛",
@@ -14294,6 +14344,6 @@
       "historyKey": "kiki vivi lily|80denier"
     }
   ],
-  "total": 1429,
-  "matched": 1429
+  "total": 1434,
+  "matched": 1434
 }
